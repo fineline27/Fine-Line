@@ -60,9 +60,8 @@ export function SportProvider({ children }: { children: React.ReactNode }) {
         const stored = await AsyncStorage.getItem(SPORT_STORAGE_KEY);
         if (!cancelled && (stored === 'NBA' || stored === 'AFL')) {
           setSportState(stored);
-        } else if (!cancelled) {
-          setSportState(null);
         }
+        // Do not force null when storage is empty — avoids racing select-sport before setItem finishes.
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -82,8 +81,8 @@ export function SportProvider({ children }: { children: React.ReactNode }) {
     if (!option?.available) {
       return;
     }
-    setSportState(next);
     await AsyncStorage.setItem(SPORT_STORAGE_KEY, next);
+    setSportState(next);
   }, []);
 
   const clearSport = useCallback(async () => {

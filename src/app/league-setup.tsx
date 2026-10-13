@@ -42,10 +42,22 @@ export default function LeagueSetupScreen() {
       await refreshLeagues();
       router.replace('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setError(formatLeagueError(err));
     } finally {
       setBusy(null);
     }
+  }
+
+  function formatLeagueError(err: unknown): string {
+    const message = err instanceof Error ? err.message : 'Something went wrong';
+    const lower = message.toLowerCase();
+    if (lower.includes('permission denied') || lower.includes('row-level security')) {
+      return `${message} — In Supabase SQL Editor, run supabase/fix-play-solo-and-leagues.sql, then try again.`;
+    }
+    if (lower.includes('does not exist') && lower.includes('league')) {
+      return `${message} — Run supabase/00-schema.sql and supabase/fix-play-solo-and-leagues.sql in Supabase.`;
+    }
+    return message;
   }
 
   async function onSolo() {
@@ -70,14 +82,7 @@ export default function LeagueSetupScreen() {
       await setActiveLeagueId(league.id);
       await refreshLeagues();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Something went wrong';
-      if (message.toLowerCase().includes('permission denied') || message.includes('row-level security')) {
-        setError(
-          `${message} — In Supabase SQL Editor, run supabase/02-auth-rls.sql (leagues + league_members), then try again.`,
-        );
-      } else {
-        setError(message);
-      }
+      setError(formatLeagueError(err));
     } finally {
       setBusy(null);
     }
@@ -199,7 +204,12 @@ export default function LeagueSetupScreen() {
         </View>
       ) : null}
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorTitle}>Could not continue</Text>
+          <Text style={styles.error}>{error}</Text>
+        </View>
+      ) : null}
 
       <Pressable onPress={() => void signOut()}>
         <Text style={styles.signOut}>Sign out</Text>
@@ -286,7 +296,20 @@ const styles = StyleSheet.create({
   },
   leagueRowText: { color: colors.textPrimary, fontWeight: '600' },
   leagueCode: { color: colors.textMuted, fontFamily: 'monospace' },
-  error: { color: colors.statusNeedsWork, marginTop: 8 },
+  errorBox: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: colors.statusNeedsWorkBg,
+    borderWidth: 1,
+    borderColor: colors.statusNeedsWork,
+  },
+  errorTitle: {
+    color: colors.statusNeedsWork,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  error: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
   signOut: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
   sportRow: {
     flexDirection: 'row',
