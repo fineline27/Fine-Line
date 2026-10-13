@@ -5,10 +5,11 @@ import { useSport } from '../contexts/SportContext';
 import type { SportId } from '../contexts/SportContext';
 import {
   ensureBonusQuestionsForLeague,
-  fetchBonusQuestionsForLeague,
+  fetchBonusQuestionsRawForLeague,
   fetchMyBonusAnswers,
   upsertBonusAnswerForSport,
 } from '../lib/bonusQuestions';
+import { dedupeBonusQuestions, mapAnswersToDedupedQuestions } from '../lib/bonusDedupe';
 import { BONUS_SETUP_SQL_HINT, isBonusSetupError } from '../lib/bonusSchema';
 import type { BonusQuestion } from '../types/bonus';
 
@@ -37,18 +38,19 @@ export function useBonusPicks(picksLocked: boolean) {
     setError(null);
     setSetupRequired(false);
     try {
-      let qs = await fetchBonusQuestionsForLeague(leagueId);
-      if (qs.length < 3) {
+      let qsRaw = await fetchBonusQuestionsRawForLeague(leagueId);
+      if (dedupeBonusQuestions(qsRaw).length < 3) {
         try {
           await ensureBonusQuestionsForLeague(leagueId);
-          qs = await fetchBonusQuestionsForLeague(leagueId);
+          qsRaw = await fetchBonusQuestionsRawForLeague(leagueId);
         } catch {
           // Non-creators rely on supabase/06-mandatory-bonus-questions.sql for backfill.
         }
       }
-      setQuestions(qs);
-      const mine = await fetchMyBonusAnswers(qs.map((q) => q.id));
-      setAnswers(mine);
+      const qsDeduped = dedupeBonusQuestions(qsRaw);
+      setQuestions(qsDeduped);
+      const mineRaw = await fetchMyBonusAnswers(qsRaw.map((q) => q.id));
+      setAnswers(mapAnswersToDedupedQuestions(qsRaw, qsDeduped, mineRaw));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load bonus questions';
       if (isBonusSetupError(message)) {

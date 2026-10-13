@@ -1,3 +1,4 @@
+import { dedupeBonusQuestions, findBonusAnswerForUser } from './bonusDedupe';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { PickSide, Team } from '../types/team';
 
@@ -10,6 +11,7 @@ export type PlayerOuPick = {
 export type PlayerBonusPick = {
   label: string;
   answer: string;
+  key: string;
 };
 
 export function buildPlayerOuPicks(
@@ -39,11 +41,14 @@ export function buildPlayerBonusPicks(
   questions: BonusQuestion[],
   answers: BonusAnswerRow[],
 ): PlayerBonusPick[] {
-  return questions.map((q) => {
-    const row = answers.find((a) => a.question_id === q.id && a.user_id === userId);
+  const deduped = dedupeBonusQuestions(questions);
+  return deduped.map((q) => {
+    const row = findBonusAnswerForUser(userId, q, questions, answers);
+    const key = q.question_key ?? q.id;
     return {
       label: q.question_text,
       answer: row?.user_answer ?? '—',
+      key,
     };
   });
 }

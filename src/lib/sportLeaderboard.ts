@@ -1,3 +1,4 @@
+import { dedupeBonusQuestions } from './bonusDedupe';
 import { getSupabaseClient } from './supabase';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 
@@ -83,8 +84,9 @@ export async function fetchBonusBundleForSport(sport: string): Promise<{
     throw qError;
   }
 
-  const qs = (questions ?? []) as BonusQuestion[];
-  const qIds = qs.map((q) => q.id);
+  const qsRaw = (questions ?? []) as BonusQuestion[];
+  const qs = dedupeBonusQuestions(qsRaw);
+  const qIds = qsRaw.map((q) => q.id);
   if (qIds.length === 0) {
     return { questions: qs, answers: [] };
   }

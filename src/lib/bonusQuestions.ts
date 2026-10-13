@@ -1,4 +1,5 @@
 import type { SportId } from '../contexts/SportContext';
+import { dedupeBonusQuestions } from './bonusDedupe';
 import {
   NBA_BONUS_QUESTION_TEMPLATES,
   type BonusAnswerRow,
@@ -34,7 +35,7 @@ export async function ensureBonusQuestionsForLeague(leagueId: string): Promise<v
   await seedBonusQuestionsForLeague(leagueId);
 }
 
-export async function fetchBonusQuestionsForLeague(leagueId: string): Promise<BonusQuestion[]> {
+export async function fetchBonusQuestionsRawForLeague(leagueId: string): Promise<BonusQuestion[]> {
   const { data, error } = await getSupabaseClient()
     .from('bonus_questions')
     .select('id, league_id, question_key, question_text, points_worth, winning_answer')
@@ -45,6 +46,10 @@ export async function fetchBonusQuestionsForLeague(leagueId: string): Promise<Bo
     throw error;
   }
   return (data ?? []) as BonusQuestion[];
+}
+
+export async function fetchBonusQuestionsForLeague(leagueId: string): Promise<BonusQuestion[]> {
+  return dedupeBonusQuestions(await fetchBonusQuestionsRawForLeague(leagueId));
 }
 
 export async function fetchMyBonusAnswers(
@@ -82,7 +87,7 @@ export async function fetchMyBonusAnswers(
 export async function fetchBonusAnswersForLeague(
   leagueId: string,
 ): Promise<BonusAnswerRow[]> {
-  const questions = await fetchBonusQuestionsForLeague(leagueId);
+  const questions = await fetchBonusQuestionsRawForLeague(leagueId);
   const ids = questions.map((q) => q.id);
   if (ids.length === 0) {
     return [];

@@ -58,7 +58,7 @@ export function LeaderboardPlayerRow({
             <View style={styles.bonusBlock}>
               <Text style={styles.detailTitle}>Bonus tiebreakers</Text>
               {bonusPicks.map((b) => (
-                <View key={b.label} style={styles.detailRow}>
+                <View key={b.key} style={styles.detailRow}>
                   <Text style={styles.detailLabel}>{b.label}</Text>
                   <Text style={styles.detailValue}>{b.answer}</Text>
                 </View>
