@@ -40,7 +40,7 @@ export default function LeagueSetupScreen() {
     setError(null);
     try {
       await action();
-      await refreshLeagues();
+      await refreshLeagues().catch(() => undefined);
       router.replace('/');
     } catch (err) {
       setError(formatLeagueError(err));
@@ -81,7 +81,7 @@ export default function LeagueSetupScreen() {
       }
       setCreatedCode(code);
       await setActiveLeagueId(league.id);
-      await refreshLeagues();
+      await refreshLeagues().catch(() => undefined);
     } catch (err) {
       setError(formatLeagueError(err));
     } finally {

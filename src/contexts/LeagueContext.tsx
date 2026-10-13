@@ -36,7 +36,7 @@ export function LeagueProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const list = await fetchMyLeagues();
-      const forSport = sport ? list.filter((l) => l.sport === sport) : list;
+      const forSport = sport ? list.filter((l) => (l.sport ?? 'NBA') === sport) : list;
       setLeagues(forSport);
 
       const stored = await AsyncStorage.getItem(ACTIVE_LEAGUE_KEY);
@@ -46,6 +46,8 @@ export function LeagueProvider({ children }: { children: React.ReactNode }) {
       if (nextId && nextId !== stored) {
         await AsyncStorage.setItem(ACTIVE_LEAGUE_KEY, nextId);
       }
+    } catch {
+      // Keep going — create/join may succeed even if listing leagues fails (RLS).
     } finally {
       setIsLoading(false);
     }
