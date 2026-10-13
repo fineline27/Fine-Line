@@ -26,6 +26,7 @@
   },
   "scripts": {
     "start": "expo start",
+    "dev:web": "expo start --web",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
