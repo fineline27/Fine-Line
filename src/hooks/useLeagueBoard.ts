@@ -74,14 +74,10 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         predictions = await fetchAllPredictionsInLeague(activeLeague.id);
       }
 
-      const bonusEnabled = Boolean(activeLeague.bonus_questions_enabled);
-      const bonusQuestions = bonusEnabled
-        ? await fetchBonusQuestionsForLeague(activeLeague.id)
+      const bonusQuestions = await fetchBonusQuestionsForLeague(activeLeague.id);
+      const bonusAnswers = picksSubmitted
+        ? await fetchBonusAnswersForLeague(activeLeague.id)
         : [];
-      const bonusAnswers =
-        bonusEnabled && picksSubmitted
-          ? await fetchBonusAnswersForLeague(activeLeague.id)
-          : [];
       const bonusBundle =
         bonusQuestions.length > 0 ? { questions: bonusQuestions, answers: bonusAnswers } : undefined;
 

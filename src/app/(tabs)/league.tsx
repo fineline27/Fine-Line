@@ -47,7 +47,7 @@ export default function LeagueBoardScreen() {
   } = useLeagueBoard(teams, picksSubmitted);
   const [segment, setSegment] = useState<Segment>('leaderboard');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
-  const showBonus = Boolean(activeLeague?.bonus_questions_enabled && bonusQuestions.length > 0);
+  const showBonus = bonusQuestions.length > 0;
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;

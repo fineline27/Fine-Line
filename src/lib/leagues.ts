@@ -1,11 +1,7 @@
 import type { League } from '../types/league';
-import { seedBonusQuestionsForLeague } from './bonusQuestions';
+import { ensureBonusQuestionsForLeague } from './bonusQuestions';
 import { defaultDisplayName } from './leagueMembers';
 import { getSupabaseClient } from './supabase';
-
-export type CreateLeagueOptions = {
-  bonusQuestionsEnabled?: boolean;
-};
 
 function randomInviteCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -17,11 +13,7 @@ function randomInviteCode(): string {
   return code;
 }
 
-export async function createLeague(
-  name: string,
-  sport = 'NBA',
-  options: CreateLeagueOptions = {},
-): Promise<League> {
+export async function createLeague(name: string, sport = 'NBA'): Promise<League> {
   const supabase = getSupabaseClient();
   const {
     data: { user },
@@ -39,7 +31,7 @@ export async function createLeague(
         invite_code: inviteCode,
         creator_id: user.id,
         sport,
-        bonus_questions_enabled: Boolean(options.bonusQuestionsEnabled),
+        bonus_questions_enabled: true,
       })
       .select('*')
       .single();
@@ -50,9 +42,7 @@ export async function createLeague(
         user_id: user.id,
         display_name: defaultDisplayName(user.email),
       });
-      if (options.bonusQuestionsEnabled) {
-        await seedBonusQuestionsForLeague(data.id);
-      }
+      await ensureBonusQuestionsForLeague(data.id);
       return data as League;
     }
     if (error?.code === '23505') {

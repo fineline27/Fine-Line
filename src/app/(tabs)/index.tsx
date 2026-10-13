@@ -47,7 +47,6 @@ export default function StandingsScreen() {
     refresh: refreshPicks,
   } = usePredictions(picksSubmitted);
   const {
-    enabled: bonusEnabled,
     questions: bonusQuestions,
     answers: bonusAnswers,
     loading: bonusLoading,
@@ -68,7 +67,7 @@ export default function StandingsScreen() {
     !picksSubmitted &&
     requiredPicks > 0 &&
     pickCount >= requiredPicks &&
-    (!bonusEnabled || bonusAllAnswered);
+    bonusAllAnswered;
   const showListLoader = loading || picksLoading || leagueLoading;
   const supabaseProjectRef = getSupabaseProjectRef();
 
@@ -121,7 +120,6 @@ export default function StandingsScreen() {
         pickCount={pickCount}
         teamCount={teams.length}
         picksSubmitted={picksSubmitted}
-        bonusEnabled={bonusEnabled}
         bonusScore={leagueRank.bonusScore}
         overallBonusScore={overallRank.bonusScore}
         supabaseProjectRef={supabaseProjectRef}
@@ -185,7 +183,15 @@ export default function StandingsScreen() {
           )}
           ListHeaderComponent={
             <>
-              {bonusEnabled && bonusQuestions.length > 0 ? (
+              {!bonusLoading && bonusQuestions.length === 0 ? (
+                <View style={styles.bonusMissing}>
+                  <Text style={styles.bonusMissingText}>
+                    Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql
+                    in the Supabase SQL Editor, then refresh.
+                  </Text>
+                </View>
+              ) : null}
+              {bonusQuestions.length > 0 ? (
                 <BonusPicksSection
                   questions={bonusQuestions}
                   answers={bonusAnswers}
@@ -201,7 +207,7 @@ export default function StandingsScreen() {
                 <Text style={styles.submitTitle}>Finish your card</Text>
                 <Text style={styles.submitBody}>
                   Pick OVER or UNDER on every team ({pickCount}/{requiredPicks})
-                  {bonusEnabled ? ', answer the bonus questions,' : ''} then submit to open the
+                  , answer the bonus tiebreakers, then submit to open the
                   league board.
                 </Text>
                 <Pressable
@@ -222,8 +228,8 @@ export default function StandingsScreen() {
                         ? 'Submit picks'
                         : pickCount < requiredPicks
                           ? `${requiredPicks - pickCount} picks left`
-                          : bonusEnabled && !bonusAllAnswered
-                            ? 'Answer bonus questions'
+                          : !bonusAllAnswered
+                            ? 'Answer bonus tiebreakers'
                             : 'Submit picks'}
                     </Text>
                   )}
@@ -267,6 +273,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 32,
+  },
+  bonusMissing: {
+    backgroundColor: colors.statusNeedsWorkBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.statusNeedsWork,
+    padding: 12,
+    marginBottom: 12,
+  },
+  bonusMissingText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 17,
   },
   submitBanner: {
     backgroundColor: colors.surfaceElevated,

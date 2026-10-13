@@ -6,8 +6,15 @@ import {
 import { getSupabaseClient } from './supabase';
 
 export async function seedBonusQuestionsForLeague(leagueId: string): Promise<void> {
+  const existing = await fetchBonusQuestionsForLeague(leagueId);
+  const have = new Set(existing.map((q) => q.question_key).filter(Boolean));
+  const missing = NBA_BONUS_QUESTION_TEMPLATES.filter((t) => !have.has(t.key));
+  if (missing.length === 0) {
+    return;
+  }
+
   const supabase = getSupabaseClient();
-  const rows = NBA_BONUS_QUESTION_TEMPLATES.map((t) => ({
+  const rows = missing.map((t) => ({
     league_id: leagueId,
     question_key: t.key,
     question_text: t.question_text,
@@ -18,6 +25,11 @@ export async function seedBonusQuestionsForLeague(leagueId: string): Promise<voi
   if (error) {
     throw error;
   }
+}
+
+/** Ensures MVP / champion / ROY questions exist (creator-only insert via RLS). */
+export async function ensureBonusQuestionsForLeague(leagueId: string): Promise<void> {
+  await seedBonusQuestionsForLeague(leagueId);
 }
 
 export async function fetchBonusQuestionsForLeague(leagueId: string): Promise<BonusQuestion[]> {

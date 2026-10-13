@@ -25,7 +25,6 @@ export default function LeagueSetupScreen() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [createdCode, setCreatedCode] = useState<string | null>(null);
-  const [bonusQuestionsEnabled, setBonusQuestionsEnabled] = useState(true);
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -65,9 +64,7 @@ export default function LeagueSetupScreen() {
     setBusy('create');
     setError(null);
     try {
-      const league = await createLeague(name, sport ?? 'NBA', {
-        bonusQuestionsEnabled,
-      });
+      const league = await createLeague(name, sport ?? 'NBA');
       setCreatedCode(league.invite_code);
       await setActiveLeagueId(league.id);
       await refreshLeagues();
@@ -138,22 +135,10 @@ export default function LeagueSetupScreen() {
           value={leagueName}
           onChangeText={setLeagueName}
         />
-        <Pressable
-          style={styles.toggleRow}
-          onPress={() => setBonusQuestionsEnabled((v) => !v)}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: bonusQuestionsEnabled }}
-        >
-          <View style={[styles.checkbox, bonusQuestionsEnabled && styles.checkboxOn]}>
-            {bonusQuestionsEnabled ? <Text style={styles.checkmark}>✓</Text> : null}
-          </View>
-          <View style={styles.toggleCopy}>
-            <Text style={styles.toggleTitle}>Bonus tiebreakers</Text>
-            <Text style={styles.toggleDetail}>
-              NBA MVP, NBA Champion, Rookie of the Year — 1 pt each to break ties.
-            </Text>
-          </View>
-        </Pressable>
+        <Text style={styles.bonusNote}>
+          Every league includes bonus tiebreakers: NBA MVP, NBA Champion, and Rookie of the Year (1
+          pt each when results are set).
+        </Text>
         <Pressable style={styles.secondary} onPress={() => void onCreate()} disabled={!!busy}>
           <Text style={styles.secondaryText}>Create & get invite code</Text>
         </Pressable>
@@ -296,48 +281,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginLeft: 4,
   },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    marginBottom: 12,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  checkboxOn: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  checkmark: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 14,
-  },
-  toggleCopy: {
-    flex: 1,
-  },
-  toggleTitle: {
-    color: colors.textPrimary,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  toggleDetail: {
+  bonusNote: {
     color: colors.textMuted,
     fontSize: 12,
-    marginTop: 4,
     lineHeight: 17,
+    marginBottom: 12,
   },
 });

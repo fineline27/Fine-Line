@@ -26,7 +26,8 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`01-seed-30-nba-teams.sql`](supabase/01-seed-30-nba-teams.sql) | When you need all 30 NBA teams + RLS read access |
 | [`update-ou-lines-2026-27.sql`](supabase/update-ou-lines-2026-27.sql) | Update **2026–27** win-total O/U lines only (keeps records and picks) |
 | [`04-league-submit-and-roster.sql`](supabase/04-league-submit-and-roster.sql) | Submit picks, league roster, gated visibility of others’ picks |
-| [`05-bonus-questions.sql`](supabase/05-bonus-questions.sql) | Optional league tiebreakers (MVP, champion, ROY) |
+| [`05-bonus-questions.sql`](supabase/05-bonus-questions.sql) | Bonus tiebreakers (MVP, champion, ROY) |
+| [`06-mandatory-bonus-questions.sql`](supabase/06-mandatory-bonus-questions.sql) | Enable bonus on **all** leagues and backfill questions |
 
 After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points. Use exact team or player names as stored in picks. Refresh the player list with `npm run refresh:nba-players` (ESPN rosters → `src/data/nba-players.json`).
 

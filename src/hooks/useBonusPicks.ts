@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useLeague } from '../contexts/LeagueContext';
 import {
+  ensureBonusQuestionsForLeague,
   fetchBonusQuestionsForLeague,
   fetchMyBonusAnswers,
   upsertBonusAnswer,
@@ -10,7 +11,6 @@ import type { BonusQuestion } from '../types/bonus';
 
 export function useBonusPicks(picksLocked: boolean) {
   const { activeLeague } = useLeague();
-  const enabled = Boolean(activeLeague?.bonus_questions_enabled);
   const leagueId = activeLeague?.id;
 
   const [questions, setQuestions] = useState<BonusQuestion[]>([]);
@@ -20,7 +20,7 @@ export function useBonusPicks(picksLocked: boolean) {
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!leagueId || !enabled) {
+    if (!leagueId) {
       setQuestions([]);
       setAnswers({});
       setLoading(false);
@@ -30,7 +30,15 @@ export function useBonusPicks(picksLocked: boolean) {
     setLoading(true);
     setError(null);
     try {
-      const qs = await fetchBonusQuestionsForLeague(leagueId);
+      let qs = await fetchBonusQuestionsForLeague(leagueId);
+      if (qs.length < 3) {
+        try {
+          await ensureBonusQuestionsForLeague(leagueId);
+          qs = await fetchBonusQuestionsForLeague(leagueId);
+        } catch {
+          // Non-creators rely on supabase/06-mandatory-bonus-questions.sql for backfill.
+        }
+      }
       setQuestions(qs);
       const mine = await fetchMyBonusAnswers(qs.map((q) => q.id));
       setAnswers(mine);
@@ -41,7 +49,7 @@ export function useBonusPicks(picksLocked: boolean) {
     } finally {
       setLoading(false);
     }
-  }, [leagueId, enabled]);
+  }, [leagueId]);
 
   useEffect(() => {
     void refresh();
@@ -75,11 +83,10 @@ export function useBonusPicks(picksLocked: boolean) {
     [picksLocked],
   );
 
-  const allAnswered =
-    !enabled || questions.every((q) => Boolean(answers[q.id]?.trim()));
+  const allAnswered = questions.length >= 3 && questions.every((q) => Boolean(answers[q.id]?.trim()));
 
   return {
-    enabled,
+    enabled: questions.length > 0,
     questions,
     answers,
     loading,
