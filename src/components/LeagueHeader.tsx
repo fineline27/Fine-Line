@@ -3,12 +3,17 @@ import { Link } from 'expo-router';
 
 import { colors } from '../theme/colors';
 
+type RankBlock = {
+  rank: number | null;
+  totalPlayers: number;
+  loading: boolean;
+};
+
 type Props = {
   leagueName: string | null;
   sport: string | null;
-  rank: number | null;
-  rankLoading: boolean;
-  totalPlayers: number;
+  overall: RankBlock;
+  league: RankBlock;
   myScore: number;
   clinched: number;
   pickCount: number;
@@ -16,25 +21,27 @@ type Props = {
   supabaseProjectRef: string | null;
 };
 
+function formatRank({ rank, totalPlayers, loading }: RankBlock): string {
+  if (loading) {
+    return '…';
+  }
+  if (totalPlayers === 0 || rank == null) {
+    return '—';
+  }
+  return `#${rank} of ${totalPlayers}`;
+}
+
 export function LeagueHeader({
   leagueName,
   sport,
-  rank,
-  rankLoading,
-  totalPlayers,
+  overall,
+  league,
   myScore,
   clinched,
   pickCount,
   teamCount,
   supabaseProjectRef,
 }: Props) {
-  const rankLabel =
-    rankLoading || totalPlayers === 0
-      ? null
-      : rank != null
-        ? `#${rank} of ${totalPlayers}`
-        : 'Unranked';
-
   return (
     <View style={styles.container}>
       <View style={styles.titleRow}>
@@ -51,25 +58,41 @@ export function LeagueHeader({
         </Link>
       </View>
       {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
+
+      <View style={styles.rankCards}>
+        <View style={styles.rankCard}>
+          <Text style={styles.rankCardTitle}>Overall</Text>
+          <Text style={styles.rankCardHint}>All {sport ?? ''} players</Text>
+          {overall.loading ? (
+            <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
+          ) : (
+            <Text style={styles.rankCardValue}>{formatRank(overall)}</Text>
+          )}
+        </View>
+        <View style={styles.rankCard}>
+          <Text style={styles.rankCardTitle}>Your league</Text>
+          <Text style={styles.rankCardHint} numberOfLines={1}>
+            {leagueName ?? 'Current league'}
+          </Text>
+          {league.loading ? (
+            <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
+          ) : (
+            <Text style={styles.rankCardValue}>{formatRank(league)}</Text>
+          )}
+        </View>
+      </View>
+
       {teamCount > 0 ? (
         <Text style={styles.teamCount}>{teamCount} teams loaded</Text>
       ) : null}
       {supabaseProjectRef ? (
         <Text style={styles.projectRef}>Supabase: {supabaseProjectRef}</Text>
       ) : null}
-      <View style={styles.rankRow}>
-        <Text style={styles.rankLabel}>Your rank</Text>
-        {rankLoading ? (
-          <ActivityIndicator color={colors.accent} size="small" />
-        ) : (
-          <Text style={styles.rankValue}>{rankLabel ?? '—'}</Text>
-        )}
-      </View>
       <Text style={styles.scoreLine}>
         Score: {myScore} pts · {clinched} clinched · {pickCount} picks submitted
       </Text>
       <Text style={styles.picksHint}>
-        Picks update automatically as team records change in Supabase.
+        Overall rank uses your best unique picks across Fine Line. League rank is this group only.
       </Text>
     </View>
   );
@@ -112,33 +135,51 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
+  rankCards: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  rankCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 88,
+  },
+  rankCardTitle: {
+    color: colors.textPrimary,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  rankCardHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  rankCardValue: {
+    color: colors.accent,
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  spinner: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+  },
   teamCount: {
     color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
-    marginTop: 4,
+    marginTop: 10,
   },
   projectRef: {
     color: colors.textMuted,
     fontSize: 11,
     marginTop: 2,
     fontFamily: 'monospace',
-  },
-  rankRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 8,
-  },
-  rankLabel: {
-    color: colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  rankValue: {
-    color: colors.accent,
-    fontSize: 17,
-    fontWeight: '800',
   },
   scoreLine: {
     color: colors.textSecondary,

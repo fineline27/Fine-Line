@@ -44,6 +44,35 @@ export async function fetchAllPredictionsInLeague(
   return data ?? [];
 }
 
+export async function fetchAllPredictionsForSport(
+  sport: string,
+): Promise<Array<{ user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }>> {
+  const supabase = getSupabaseClient();
+  const { data: leagues, error: leagueError } = await supabase
+    .from('leagues')
+    .select('id')
+    .eq('sport', sport);
+
+  if (leagueError) {
+    throw leagueError;
+  }
+
+  const leagueIds = (leagues ?? []).map((l) => l.id);
+  if (leagueIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('team_predictions')
+    .select('user_id, team_id, pick')
+    .in('league_id', leagueIds);
+
+  if (error) {
+    throw error;
+  }
+  return data ?? [];
+}
+
 export async function upsertPrediction(
   leagueId: string,
   teamId: string,

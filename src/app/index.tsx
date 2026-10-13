@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
 import { useSport } from '../contexts/SportContext';
 import { useLeagueRank } from '../hooks/useLeagueRank';
+import { useOverallRank } from '../hooks/useOverallRank';
 import { usePredictions } from '../hooks/usePredictions';
 import { TEAMS_RLS_SQL, useTeams } from '../hooks/useTeams';
 import type { Team } from '../types/team';
@@ -35,7 +36,10 @@ export default function StandingsScreen() {
     error: picksError,
     refresh: refreshPicks,
   } = usePredictions();
-  const { rank, totalPlayers, myScore, clinched, loading: rankLoading } = useLeagueRank(teams);
+  const overallRank = useOverallRank(teams);
+  const leagueRank = useLeagueRank(teams);
+  const myScore = leagueRank.myScore;
+  const clinched = leagueRank.clinched;
 
   const pickCount = Object.keys(picks).length;
   const showListLoader = loading || picksLoading || leagueLoading;
@@ -62,9 +66,16 @@ export default function StandingsScreen() {
       <LeagueHeader
         leagueName={activeLeague?.name ?? null}
         sport={sport}
-        rank={rank}
-        rankLoading={rankLoading}
-        totalPlayers={totalPlayers}
+        overall={{
+          rank: overallRank.rank,
+          totalPlayers: overallRank.totalPlayers,
+          loading: overallRank.loading,
+        }}
+        league={{
+          rank: leagueRank.rank,
+          totalPlayers: leagueRank.totalPlayers,
+          loading: leagueRank.loading,
+        }}
         myScore={myScore}
         clinched={clinched}
         pickCount={pickCount}

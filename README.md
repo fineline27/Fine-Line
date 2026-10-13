@@ -31,6 +31,8 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 
 5. Run [`supabase/02-auth-rls.sql`](supabase/02-auth-rls.sql) for login, leagues, and saved picks.
 
+6. Run [`supabase/03-sport-leaderboard-rls.sql`](supabase/03-sport-leaderboard-rls.sql) for **overall** NBA rankings.
+
 6. In Supabase **Authentication → Providers**, enable **Email**. For local testing, you can disable **Confirm email** under email auth settings.
 
 4. Start the dev server:
