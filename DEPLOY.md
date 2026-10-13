@@ -69,9 +69,13 @@ Do **not** put the **service role** or **secret** key in the web app or Vercel �
 
    ```
    https://YOUR-PRODUCTION-DOMAIN.vercel.app/**
+   https://YOUR-PRODUCTION-DOMAIN.vercel.app/auth/callback
    https://*.vercel.app/**
    http://localhost:8081/**
+   http://localhost:8081/auth/callback
    ```
+
+3. **Email confirmation landing page:** In Vercel env, set **`EXPO_PUBLIC_SITE_URL`** to `https://YOUR-PRODUCTION-DOMAIN.vercel.app` (no trailing slash). Redeploy. New sign-ups then get a link to **`/auth/callback`** with a green “Email confirmed” screen.
 
    Replace `YOUR-PRODUCTION-DOMAIN` with your actual Vercel project hostname. The wildcard line helps **preview deployments**.
 

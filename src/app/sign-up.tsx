@@ -40,7 +40,9 @@ export default function SignUpScreen() {
     setMessage(null);
     try {
       await signUp(email.trim(), password);
-      setMessage('Account created. If email confirmation is enabled, check your inbox, then sign in.');
+      setMessage(
+        'Account created. Check your inbox for the confirmation link — it opens a “Email confirmed” page, then sign in.',
+      );
       router.replace('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed');
