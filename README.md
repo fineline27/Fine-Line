@@ -36,7 +36,7 @@ alter table public.teams enable row level security;
 create policy "Public read teams" on public.teams for select using (true);
 ```
 
-Optional: `league_members` with a `rank` column (integer) for the header rank display.
+Optional: `league_members` (`user_id uuid`, `rank integer`) for the signed-in user’s header rank.
 
 4. Start the dev server:
 

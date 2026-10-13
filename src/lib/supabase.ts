@@ -59,7 +59,19 @@ export async function fetchTeams(): Promise<Team[]> {
 
 export async function fetchUserRank(): Promise<number | null> {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.from('league_members').select('rank').maybeSingle();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('league_members')
+    .select('rank')
+    .eq('user_id', session.user.id)
+    .maybeSingle();
 
   if (error) {
     // Table may not exist yet in early setups — treat as unranked.
