@@ -9,7 +9,7 @@ create table if not exists public.app_settings (
 );
 
 insert into public.app_settings (key, value)
-values ('nba_season_pick_lock_at', '2026-10-22 04:00:00+00')
+values ('nba_season_pick_lock_at', '2026-10-20 19:00:00+00')
 on conflict (key) do update set value = excluded.value;
 
 create or replace function public.picks_editing_locked()

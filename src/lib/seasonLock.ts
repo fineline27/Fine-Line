@@ -1,7 +1,7 @@
 import Constants from 'expo-constants';
 
-/** Default: 2026–27 NBA opening night (UTC). Override with EXPO_PUBLIC_NBA_SEASON_LOCK_ISO */
-const DEFAULT_NBA_LOCK_ISO = '2026-10-22T04:00:00.000Z';
+/** First tip 5:30 am ACDT Wed 21 Oct 2026 → 2026-10-20T19:00:00.000Z. Override with EXPO_PUBLIC_NBA_SEASON_LOCK_ISO */
+const DEFAULT_NBA_LOCK_ISO = '2026-10-20T19:00:00.000Z';
 
 function readLockIso(): string {
   const extra = Constants.expoConfig?.extra as { nbaSeasonLockIso?: string } | undefined;
