@@ -1,3 +1,4 @@
+import { Redirect } from 'expo-router';
 import {
   ActivityIndicator,
   FlatList,
@@ -11,31 +12,60 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LeagueHeader } from '../components/LeagueHeader';
 import { TeamCard } from '../components/TeamCard';
-import { useTeamPicks } from '../hooks/useTeamPicks';
+import { useAuth } from '../contexts/AuthContext';
+import { useLeague } from '../contexts/LeagueContext';
+import { useLeagueRank } from '../hooks/useLeagueRank';
+import { usePredictions } from '../hooks/usePredictions';
 import { TEAMS_RLS_SQL, useTeams } from '../hooks/useTeams';
-import { useUserRank } from '../hooks/useUserRank';
 import type { Team } from '../types/team';
 import { getSupabaseProjectRef } from '../lib/supabaseConfig';
 import { colors } from '../theme/colors';
 
 export default function StandingsScreen() {
+  const { session, isLoading: authLoading } = useAuth();
+  const { activeLeague, isLoading: leagueLoading } = useLeague();
   const { teams, loading, error, refresh } = useTeams();
-  const { rank, loading: rankLoading } = useUserRank();
-  const { picks, togglePick, hydrated } = useTeamPicks();
+  const {
+    picks,
+    togglePick,
+    loading: picksLoading,
+    savingTeamId,
+    error: picksError,
+    refresh: refreshPicks,
+  } = usePredictions();
+  const { rank, totalPlayers, myScore, clinched, loading: rankLoading } = useLeagueRank(teams);
 
   const pickCount = Object.keys(picks).length;
-  const showListLoader = loading || !hydrated;
+  const showListLoader = loading || picksLoading || leagueLoading;
   const supabaseProjectRef = getSupabaseProjectRef();
+
+  if (!authLoading && !session) {
+    return <Redirect href="/login" />;
+  }
+
+  if (!authLoading && !leagueLoading && session && !activeLeague) {
+    return <Redirect href="/league-setup" />;
+  }
+
+  async function onRefresh() {
+    await Promise.all([refresh(), refreshPicks()]);
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <LeagueHeader
+        leagueName={activeLeague?.name ?? null}
         rank={rank}
         rankLoading={rankLoading}
+        totalPlayers={totalPlayers}
+        myScore={myScore}
+        clinched={clinched}
         pickCount={pickCount}
         teamCount={teams.length}
         supabaseProjectRef={supabaseProjectRef}
       />
+
+      {picksError ? <Text style={styles.pickError}>{picksError}</Text> : null}
 
       {showListLoader ? (
         <View style={styles.centered}>
@@ -55,7 +85,7 @@ export default function StandingsScreen() {
               </Text>
             </View>
           ) : null}
-          <Pressable style={styles.retryButton} onPress={() => void refresh()}>
+          <Pressable style={styles.retryButton} onPress={() => void onRefresh()}>
             <Text style={styles.retryText}>Try again</Text>
           </Pressable>
         </View>
@@ -75,8 +105,8 @@ export default function StandingsScreen() {
           initialNumToRender={30}
           refreshControl={
             <RefreshControl
-              refreshing={loading}
-              onRefresh={() => void refresh()}
+              refreshing={loading || picksLoading}
+              onRefresh={() => void onRefresh()}
               tintColor={colors.accent}
             />
           }
@@ -84,13 +114,14 @@ export default function StandingsScreen() {
             <TeamCard
               team={item}
               pick={picks[item.id]}
-              onPickChange={togglePick}
+              saving={savingTeamId === item.id}
+              onPickChange={(teamId, side) => void togglePick(teamId, side)}
             />
           )}
           ListFooterComponent={
             teams.length > 0 ? (
               <Text style={styles.footerHint}>
-                End of list · {teams.length} teams · scroll above to see all
+                End of list · {teams.length} teams · pull to refresh scores
               </Text>
             ) : null
           }
@@ -104,6 +135,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  pickError: {
+    color: colors.statusNeedsWork,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    fontSize: 13,
   },
   list: {
     flex: 1,

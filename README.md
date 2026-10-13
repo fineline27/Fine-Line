@@ -29,6 +29,10 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 
 4. Confirm: **Table Editor** → `teams` → **30 rows**. App: pull to refresh, or `npm run check:teams`.
 
+5. Run [`supabase/02-auth-rls.sql`](supabase/02-auth-rls.sql) for login, leagues, and saved picks.
+
+6. In Supabase **Authentication → Providers**, enable **Email**. For local testing, you can disable **Confirm email** under email auth settings.
+
 4. Start the dev server:
 
 ```bash

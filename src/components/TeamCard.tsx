@@ -1,8 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 
+import { evaluatePick } from '../lib/pickScoring';
 import { formatRecord, formatWinPace, getTeamStatus } from '../lib/teamStatus';
 import type { PickSide, Team } from '../types/team';
 import { colors } from '../theme/colors';
+import { PickStatusBadge } from './PickStatusBadge';
 import { PickToggle } from './PickToggle';
 import { StatusBadge } from './StatusBadge';
 import { TeamColorBadge } from './TeamColorBadge';
@@ -10,11 +12,13 @@ import { TeamColorBadge } from './TeamColorBadge';
 type Props = {
   team: Team;
   pick?: PickSide;
+  saving?: boolean;
   onPickChange: (teamId: string, side: PickSide) => void;
 };
 
-export function TeamCard({ team, pick, onPickChange }: Props) {
+export function TeamCard({ team, pick, saving, onPickChange }: Props) {
   const status = getTeamStatus(team);
+  const pickEval = pick ? evaluatePick(team, pick) : null;
 
   return (
     <View style={styles.card}>
@@ -31,10 +35,13 @@ export function TeamCard({ team, pick, onPickChange }: Props) {
 
       <StatusBadge status={status} />
 
+      {pickEval ? <PickStatusBadge evaluation={pickEval} /> : null}
+
       <PickToggle
         selected={pick}
         onSelect={(side) => onPickChange(team.id, side)}
       />
+      {saving ? <Text style={styles.saving}>Saving…</Text> : null}
     </View>
   );
 }
@@ -72,5 +79,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     marginTop: 4,
+  },
+  saving: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 8,
   },
 });

@@ -1,31 +1,49 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Link } from 'expo-router';
 
 import { colors } from '../theme/colors';
 
 type Props = {
+  leagueName: string | null;
   rank: number | null;
   rankLoading: boolean;
+  totalPlayers: number;
+  myScore: number;
+  clinched: number;
   pickCount: number;
   teamCount: number;
   supabaseProjectRef: string | null;
 };
 
 export function LeagueHeader({
+  leagueName,
   rank,
   rankLoading,
+  totalPlayers,
+  myScore,
+  clinched,
   pickCount,
   teamCount,
   supabaseProjectRef,
 }: Props) {
-  const rankLabel = rankLoading
-    ? null
-    : rank != null
-      ? `#${rank}`
-      : 'Unranked';
+  const rankLabel =
+    rankLoading || totalPlayers === 0
+      ? null
+      : rank != null
+        ? `#${rank} of ${totalPlayers}`
+        : 'Unranked';
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>League Standings</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>League Standings</Text>
+        <Link href="/league-setup" asChild>
+          <Pressable>
+            <Text style={styles.link}>League</Text>
+          </Pressable>
+        </Link>
+      </View>
+      {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
       {teamCount > 0 ? (
         <Text style={styles.teamCount}>{teamCount} teams loaded</Text>
       ) : null}
@@ -37,13 +55,14 @@ export function LeagueHeader({
         {rankLoading ? (
           <ActivityIndicator color={colors.accent} size="small" />
         ) : (
-          <Text style={styles.rankValue}>{rankLabel}</Text>
+          <Text style={styles.rankValue}>{rankLabel ?? '—'}</Text>
         )}
       </View>
+      <Text style={styles.scoreLine}>
+        Score: {myScore} pts · {clinched} clinched · {pickCount} picks submitted
+      </Text>
       <Text style={styles.picksHint}>
-        {pickCount === 0
-          ? 'Tap OVER or UNDER on each team to lock in your picks.'
-          : `${pickCount} pick${pickCount === 1 ? '' : 's'} selected`}
+        Picks update automatically as team records change in Supabase.
       </Text>
     </View>
   );
@@ -58,11 +77,27 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.headerGradientStart,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   title: {
     color: colors.textPrimary,
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: -0.5,
+  },
+  link: {
+    color: colors.accent,
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  leagueName: {
+    color: colors.textSecondary,
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 4,
   },
   teamCount: {
     color: colors.textSecondary,
@@ -92,10 +127,16 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '800',
   },
+  scoreLine: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    marginTop: 6,
+    fontWeight: '500',
+  },
   picksHint: {
     color: colors.textMuted,
-    fontSize: 13,
-    marginTop: 8,
-    lineHeight: 18,
+    fontSize: 12,
+    marginTop: 6,
+    lineHeight: 17,
   },
 });

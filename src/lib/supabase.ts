@@ -1,4 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
 
 import { assertSupabaseConfig, getSupabaseProjectRef } from './supabaseConfig';
 import type { Team } from '../types/team';
@@ -13,6 +15,12 @@ export function getSupabaseClient(): SupabaseClient {
   if (!client) {
     const { url, apiKey } = assertSupabaseConfig();
     client = createClient(url, apiKey, {
+      auth: {
+        storage: AsyncStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: Platform.OS === 'web',
+      },
       global: {
         fetch: (input, init) =>
           fetch(input, {
@@ -86,33 +94,3 @@ export async function fetchTeams(): Promise<Team[]> {
   return allTeams;
 }
 
-export async function fetchUserRank(): Promise<number | null> {
-  const supabase = getSupabaseClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.user) {
-    return null;
-  }
-
-  const { data, error } = await supabase
-    .from('league_members')
-    .select('rank')
-    .eq('user_id', session.user.id)
-    .maybeSingle();
-
-  if (error) {
-    // Table may not exist yet in early setups — treat as unranked.
-    if (error.code === 'PGRST205' || error.code === '42P01') {
-      return null;
-    }
-    throw error;
-  }
-
-  if (data?.rank == null) {
-    return null;
-  }
-
-  return Number(data.rank);
-}
