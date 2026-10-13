@@ -15,19 +15,21 @@ export default function SelectSportScreen() {
   }
 
   if (!sportLoading && sport) {
-    return <Redirect href="/league-setup" />;
+    return <Redirect href="/" />;
   }
 
   async function onSelectNba() {
     await setSport('NBA');
-    router.replace('/league-setup');
+    router.replace('/');
   }
 
   return (
     <SafeAreaView style={styles.safe}>
       <Text style={styles.brand}>Fine Line</Text>
       <Text style={styles.title}>Choose a sport</Text>
-      <Text style={styles.subtitle}>Your picks and leagues are tied to one sport at a time.</Text>
+      <Text style={styles.subtitle}>
+        Pick a sport — you&apos;ll join the overall pool automatically. Friend leagues are optional later.
+      </Text>
 
       {SPORT_OPTIONS.map((option) => {
         const locked = !option.available;

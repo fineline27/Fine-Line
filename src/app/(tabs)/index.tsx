@@ -29,7 +29,7 @@ import { colors } from '../../theme/colors';
 export default function StandingsScreen() {
   const { session, isLoading: authLoading } = useAuth();
   const { sport, isLoading: sportLoading } = useSport();
-  const { activeLeague, isLoading: leagueLoading } = useLeague();
+  const { activeLeague, isLoading: leagueLoading, poolError, refreshLeagues } = useLeague();
   const { teams, loading, error, refresh } = useTeams();
   const {
     picksSubmitted,
@@ -80,12 +80,14 @@ export default function StandingsScreen() {
     return <Redirect href="/select-sport" />;
   }
 
-  if (!authLoading && !leagueLoading && session && !activeLeague) {
-    return <Redirect href="/league-setup" />;
-  }
-
   async function onRefresh() {
-    await Promise.all([refresh(), refreshPicks(), refreshMembership(), refreshBonus()]);
+    await Promise.all([
+      refresh(),
+      refreshPicks(),
+      refreshMembership(),
+      refreshBonus(),
+      refreshLeagues(),
+    ]);
   }
 
   async function onSubmitPicks() {
@@ -132,7 +134,26 @@ export default function StandingsScreen() {
       ) : null}
       {membershipError ? <Text style={styles.pickError}>{membershipError}</Text> : null}
 
-      {showListLoader ? (
+      {poolError ? (
+        <View style={styles.centered}>
+          <Text style={styles.errorTitle}>Overall pool setup</Text>
+          <Text style={styles.errorBody}>{poolError}</Text>
+          <Pressable style={styles.retryButton} onPress={() => void refreshLeagues()}>
+            <Text style={styles.retryText}>Try again</Text>
+          </Pressable>
+        </View>
+      ) : !activeLeague && !leagueLoading ? (
+        <View style={styles.centered}>
+          <Text style={styles.errorTitle}>Joining overall pool…</Text>
+          <Text style={styles.errorBody}>
+            Run supabase/07-open-pool-league.sql and supabase/fix-play-solo-and-leagues.sql in Supabase,
+            then tap Try again.
+          </Text>
+          <Pressable style={styles.retryButton} onPress={() => void refreshLeagues()}>
+            <Text style={styles.retryText}>Try again</Text>
+          </Pressable>
+        </View>
+      ) : showListLoader ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={colors.accent} />
           <Text style={styles.loadingText}>Loading teams…</Text>

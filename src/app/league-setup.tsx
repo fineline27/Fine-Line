@@ -14,7 +14,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
 import { SPORT_OPTIONS, useSport } from '../contexts/SportContext';
 import { getErrorMessage } from '../lib/errors';
-import { createLeague, createSoloLeague, joinLeagueByCodeForSport } from '../lib/leagues';
+import { createLeague, joinLeagueByCodeForSport } from '../lib/leagues';
+import { isOpenPoolInviteCode } from '../lib/openPool';
 import { colors } from '../theme/colors';
 
 export default function LeagueSetupScreen() {
@@ -27,6 +28,8 @@ export default function LeagueSetupScreen() {
   const [error, setError] = useState<string | null>(null);
   const [createdCode, setCreatedCode] = useState<string | null>(null);
 
+  const privateLeagues = leagues.filter((l) => !isOpenPoolInviteCode(l.invite_code));
+
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
   }
@@ -35,37 +38,13 @@ export default function LeagueSetupScreen() {
     return <Redirect href="/select-sport" />;
   }
 
-  async function run(action: () => Promise<void>, label: string) {
-    setBusy(label);
-    setError(null);
-    try {
-      await action();
-      await refreshLeagues().catch(() => undefined);
-      router.replace('/');
-    } catch (err) {
-      setError(formatLeagueError(err));
-    } finally {
-      setBusy(null);
-    }
-  }
-
   function formatLeagueError(err: unknown): string {
     const message = getErrorMessage(err, 'Something went wrong');
     const lower = message.toLowerCase();
     if (lower.includes('permission denied') || lower.includes('row-level security')) {
       return `${message} — In Supabase SQL Editor, run supabase/fix-play-solo-and-leagues.sql, then try again.`;
     }
-    if (lower.includes('does not exist') && lower.includes('league')) {
-      return `${message} — Run supabase/00-schema.sql and supabase/fix-play-solo-and-leagues.sql in Supabase.`;
-    }
     return message;
-  }
-
-  async function onSolo() {
-    await run(async () => {
-      const league = await createSoloLeague(sport ?? 'NBA');
-      await setActiveLeagueId(league.id);
-    }, 'solo');
   }
 
   async function onCreate() {
@@ -77,7 +56,7 @@ export default function LeagueSetupScreen() {
       const league = await createLeague(name, sport ?? 'NBA');
       const code = league.invite_code?.trim();
       if (!code) {
-        throw new Error('League was created but no invite code came back. Check Supabase leagues table.');
+        throw new Error('League was created but no invite code came back.');
       }
       setCreatedCode(code);
       await setActiveLeagueId(league.id);
@@ -90,17 +69,33 @@ export default function LeagueSetupScreen() {
   }
 
   async function onJoin() {
-    await run(async () => {
+    setBusy('join');
+    setError(null);
+    try {
       const league = await joinLeagueByCodeForSport(inviteCode, sport ?? 'NBA');
+      if (isOpenPoolInviteCode(league.invite_code)) {
+        throw new Error('You are already in the overall pool. Enter a friend league code.');
+      }
       await setActiveLeagueId(league.id);
-    }, 'join');
+      await refreshLeagues().catch(() => undefined);
+      router.replace('/');
+    } catch (err) {
+      setError(formatLeagueError(err));
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <Text style={styles.title}>Choose how to play</Text>
+      <Pressable onPress={() => router.replace('/')} style={styles.backRow}>
+        <Text style={styles.backText}>← Back to picks</Text>
+      </Pressable>
+
+      <Text style={styles.title}>Private leagues</Text>
       <Text style={styles.subtitle}>
-        {sport} · Solo keeps stats just for you. Leagues share a leaderboard.
+        You&apos;re already in the overall {sport ?? 'NBA'} pool for worldwide rankings. Create or join a
+        friends league here if you want a smaller leaderboard.
       </Text>
 
       <View style={styles.sportRow}>
@@ -123,25 +118,16 @@ export default function LeagueSetupScreen() {
               ]}
             >
               {option.label}
-              {!option.available ? ' 🔒' : ''}
             </Text>
           </Pressable>
         ))}
         <Pressable onPress={() => void clearSport().then(() => router.replace('/select-sport'))}>
-          <Text style={styles.changeSport}>Change</Text>
+          <Text style={styles.changeSport}>Change sport</Text>
         </Pressable>
       </View>
 
-      <Pressable style={styles.primary} onPress={() => void onSolo()} disabled={!!busy}>
-        {busy === 'solo' ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.primaryText}>Play solo</Text>
-        )}
-      </Pressable>
-
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Create a league</Text>
+        <Text style={styles.sectionTitle}>Create a friends league</Text>
         <TextInput
           style={styles.input}
           placeholder="League name"
@@ -149,10 +135,6 @@ export default function LeagueSetupScreen() {
           value={leagueName}
           onChangeText={setLeagueName}
         />
-        <Text style={styles.bonusNote}>
-          Every league includes bonus tiebreakers: NBA MVP, NBA Champion, and Rookie of the Year (1
-          pt each when results are set).
-        </Text>
         <Pressable style={styles.secondary} onPress={() => void onCreate()} disabled={!!busy}>
           {busy === 'create' ? (
             <ActivityIndicator color={colors.accent} />
@@ -162,13 +144,12 @@ export default function LeagueSetupScreen() {
         </Pressable>
         {createdCode ? (
           <View style={styles.codeBox}>
-            <Text style={styles.codeLabel}>Share this invite code</Text>
+            <Text style={styles.codeLabel}>Invite code</Text>
             <Text style={styles.code} selectable>
               {createdCode}
             </Text>
-            <Text style={styles.codeHint}>Friends enter this on Join with code (6 characters).</Text>
             <Pressable style={styles.secondary} onPress={() => router.replace('/')}>
-              <Text style={styles.secondaryText}>Continue to standings</Text>
+              <Text style={styles.secondaryText}>Use this league for picks</Text>
             </Pressable>
           </View>
         ) : null}
@@ -185,14 +166,18 @@ export default function LeagueSetupScreen() {
           onChangeText={setInviteCode}
         />
         <Pressable style={styles.secondary} onPress={() => void onJoin()} disabled={!!busy}>
-          <Text style={styles.secondaryText}>Join league</Text>
+          {busy === 'join' ? (
+            <ActivityIndicator color={colors.accent} />
+          ) : (
+            <Text style={styles.secondaryText}>Join league</Text>
+          )}
         </Pressable>
       </View>
 
-      {leagues.length > 0 ? (
+      {privateLeagues.length > 0 ? (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your leagues</Text>
-          {leagues.map((l) => (
+          <Text style={styles.sectionTitle}>Your private leagues</Text>
+          {privateLeagues.map((l) => (
             <Pressable
               key={l.id}
               style={styles.leagueRow}
@@ -208,7 +193,7 @@ export default function LeagueSetupScreen() {
       {error ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorTitle}>Could not continue</Text>
-          <Text style={styles.error}>{error}</Text>
+          <Text style={styles.errorBody}>{error}</Text>
         </View>
       ) : null}
 
@@ -221,16 +206,10 @@ export default function LeagueSetupScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background, padding: 20 },
+  backRow: { marginBottom: 8 },
+  backText: { color: colors.accent, fontWeight: '700', fontSize: 15 },
   title: { color: colors.textPrimary, fontSize: 28, fontWeight: '800' },
-  subtitle: { color: colors.textSecondary, marginTop: 8, marginBottom: 20 },
-  primary: {
-    backgroundColor: colors.accent,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  primaryText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  subtitle: { color: colors.textSecondary, marginTop: 8, marginBottom: 20, lineHeight: 20 },
   section: {
     backgroundColor: colors.surface,
     borderRadius: 12,
@@ -271,7 +250,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   code: {
     color: colors.statusOnTrack,
@@ -280,13 +258,6 @@ const styles = StyleSheet.create({
     fontSize: 28,
     letterSpacing: 4,
     fontFamily: 'monospace',
-  },
-  codeHint: {
-    color: colors.textMuted,
-    fontSize: 12,
-    marginTop: 8,
-    marginBottom: 12,
-    lineHeight: 17,
   },
   leagueRow: {
     flexDirection: 'row',
@@ -298,19 +269,15 @@ const styles = StyleSheet.create({
   leagueRowText: { color: colors.textPrimary, fontWeight: '600' },
   leagueCode: { color: colors.textMuted, fontFamily: 'monospace' },
   errorBox: {
-    marginTop: 16,
+    marginTop: 8,
     padding: 14,
     borderRadius: 12,
     backgroundColor: colors.statusNeedsWorkBg,
     borderWidth: 1,
     borderColor: colors.statusNeedsWork,
   },
-  errorTitle: {
-    color: colors.statusNeedsWork,
-    fontWeight: '800',
-    marginBottom: 6,
-  },
-  error: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  errorTitle: { color: colors.statusNeedsWork, fontWeight: '800', marginBottom: 6 },
+  errorBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
   signOut: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
   sportRow: {
     flexDirection: 'row',
@@ -331,29 +298,9 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
     backgroundColor: colors.accent,
   },
-  sportChipLocked: {
-    opacity: 0.5,
-  },
-  sportChipText: {
-    color: colors.textSecondary,
-    fontWeight: '700',
-  },
-  sportChipTextActive: {
-    color: '#fff',
-  },
-  sportChipTextLocked: {
-    color: colors.textMuted,
-  },
-  changeSport: {
-    color: colors.accent,
-    fontWeight: '600',
-    fontSize: 13,
-    marginLeft: 4,
-  },
-  bonusNote: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 12,
-  },
+  sportChipLocked: { opacity: 0.5 },
+  sportChipText: { color: colors.textSecondary, fontWeight: '700' },
+  sportChipTextActive: { color: '#fff' },
+  sportChipTextLocked: { color: colors.textMuted },
+  changeSport: { color: colors.accent, fontWeight: '600', fontSize: 13, marginLeft: 4 },
 });

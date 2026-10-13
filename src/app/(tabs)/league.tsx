@@ -57,9 +57,6 @@ export default function LeagueBoardScreen() {
     return <Redirect href="/select-sport" />;
   }
 
-  if (!authLoading && !leagueLoading && session && !activeLeague) {
-    return <Redirect href="/league-setup" />;
-  }
 
   const busy = teamsLoading || membershipLoading || loading;
 

@@ -59,7 +59,7 @@ export function LeagueHeader({
         </View>
         <Link href="/league-setup" asChild>
           <Pressable>
-            <Text style={styles.link}>League</Text>
+            <Text style={styles.link}>Private leagues</Text>
           </Pressable>
         </Link>
       </View>
