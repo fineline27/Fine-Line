@@ -46,6 +46,10 @@ create policy "Public read teams"
 
 Optional: `league_members` (`user_id uuid`, `rank integer`) for the signed-in user’s header rank.
 
+### Seed all 30 NBA teams
+
+In **SQL Editor**, run the script [`supabase/seed-nba-teams.sql`](supabase/seed-nba-teams.sql). It upserts every franchise by `abbreviation` (82-game season, sample O/U lines). Edit `ou_line`, `current_wins`, and `current_losses` in that file before running if you want different numbers.
+
 4. Start the dev server:
 
 ```bash
