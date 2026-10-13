@@ -29,8 +29,11 @@ EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_sb_publishable_key
 npm run web
 ```
 
-Wait until the terminal says the URL (usually **http://localhost:8081**).  
-If the browser does not open automatically, paste that URL into Chrome/Safari.
+Look for a big banner **`Open this URL in your browser: http://localhost:8081`**  
+(or the line **`Waiting on http://localhost:8081`**).  
+The browser may not open by itself — **copy that address into Chrome/Safari manually**.
+
+If nothing works, try **http://localhost:8081** and **http://localhost:8082** while Expo is running.
 
 ### Option B — Expo menu
 

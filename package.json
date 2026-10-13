@@ -26,11 +26,11 @@
   },
   "scripts": {
     "start": "expo start",
-    "dev:web": "expo start --web",
-    "web:clean": "expo start --web --clear",
+    "dev:web": "node scripts/print-web-url.mjs 8081 && expo start --web --port 8081",
+    "web:clean": "node scripts/print-web-url.mjs 8081 && expo start --web --clear --port 8081",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "web": "node scripts/print-web-url.mjs 8081 && expo start --web --port 8081",
     "check:teams": "node scripts/check-teams.mjs"
   },
   "private": true
