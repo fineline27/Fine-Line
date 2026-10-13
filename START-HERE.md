@@ -35,6 +35,21 @@ The browser may not open by itself — **copy that address into Chrome/Safari ma
 
 If nothing works, try **http://localhost:8081** and **http://localhost:8082** while Expo is running.
 
+### “localhost refused to connect”
+
+That means **nothing is serving the app on your machine** at that moment. Check:
+
+1. **Terminal still running?** You must keep the `npm run web` window open. If you closed it or see red errors, start again:
+   ```bash
+   npm run web:clean
+   ```
+2. **Same computer?** `localhost` in Chrome on your laptop only works if Expo is running **on that laptop**. It does **not** reach a Cursor **cloud agent** VM by itself.
+3. **Cursor cloud / remote workspace:** Use the chat **Preview** button, or **Ports** (forward **8081** → open in browser). Do not use your laptop’s `localhost` unless you forwarded the port.
+4. Try **http://127.0.0.1:8081** instead of `localhost`.
+5. If Expo asked for **8082**, use **http://localhost:8082**.
+
+When Expo is healthy you will see **`Waiting on http://localhost:8081`** and the page will load (not “refused”).
+
 ### Option B — Expo menu
 
 ```bash
