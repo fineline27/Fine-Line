@@ -87,6 +87,13 @@ export default function StandingsScreen() {
               onPickChange={togglePick}
             />
           )}
+          ListFooterComponent={
+            teams.length > 0 ? (
+              <Text style={styles.footerHint}>
+                End of list · {teams.length} teams · scroll above to see all
+              </Text>
+            ) : null
+          }
         />
       )}
     </SafeAreaView>
@@ -175,5 +182,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  footerHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });
