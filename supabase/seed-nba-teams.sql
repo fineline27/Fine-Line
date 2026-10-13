@@ -1,7 +1,12 @@
--- All 30 NBA teams for the OU League app.
--- Run in Supabase Dashboard → SQL Editor (uses postgres role; bypasses RLS).
+-- =============================================================================
+-- LOAD ALL 30 NBA TEAMS
+-- Supabase Dashboard → SQL Editor → New query → paste ALL of this → Run
+-- Success: last line should show team_count = 30
+-- =============================================================================
 
-create unique index if not exists teams_abbreviation_key on public.teams (abbreviation);
+grant select on public.teams to anon, authenticated;
+
+delete from public.teams;
 
 insert into public.teams (
   name,
@@ -14,14 +19,14 @@ insert into public.teams (
 )
 values
   ('Atlanta Hawks', 'ATL', '#E03A3E', 82, 46.5, 0, 0),
-  ('Boston Celtics', 'BOS', '#007A33', 82, 54.5, 32, 10),
+  ('Boston Celtics', 'BOS', '#007A33', 82, 54.5, 0, 0),
   ('Brooklyn Nets', 'BKN', '#000000', 82, 38.5, 0, 0),
   ('Charlotte Hornets', 'CHA', '#1D1160', 82, 32.5, 0, 0),
   ('Chicago Bulls', 'CHI', '#CE1141', 82, 40.5, 0, 0),
   ('Cleveland Cavaliers', 'CLE', '#860038', 82, 48.5, 0, 0),
   ('Detroit Pistons', 'DET', '#C8102E', 82, 35.5, 0, 0),
   ('Indiana Pacers', 'IND', '#002D62', 82, 44.5, 0, 0),
-  ('Miami Heat', 'MIA', '#98002E', 82, 46.5, 18, 24),
+  ('Miami Heat', 'MIA', '#98002E', 82, 46.5, 0, 0),
   ('Milwaukee Bucks', 'MIL', '#00471B', 82, 49.5, 0, 0),
   ('New York Knicks', 'NYK', '#006BB6', 82, 50.5, 0, 0),
   ('Orlando Magic', 'ORL', '#0077C0', 82, 47.5, 0, 0),
@@ -33,7 +38,7 @@ values
   ('Golden State Warriors', 'GSW', '#1D428A', 82, 43.5, 0, 0),
   ('Houston Rockets', 'HOU', '#CE1141', 82, 42.5, 0, 0),
   ('Los Angeles Clippers', 'LAC', '#C8102E', 82, 48.5, 0, 0),
-  ('Los Angeles Lakers', 'LAL', '#552583', 82, 44.5, 22, 20),
+  ('Los Angeles Lakers', 'LAL', '#552583', 82, 44.5, 0, 0),
   ('Memphis Grizzlies', 'MEM', '#5D76A9', 82, 41.5, 0, 0),
   ('Minnesota Timberwolves', 'MIN', '#0C2340', 82, 51.5, 0, 0),
   ('New Orleans Pelicans', 'NOP', '#0C2340', 82, 45.5, 0, 0),
@@ -42,14 +47,6 @@ values
   ('Portland Trail Blazers', 'POR', '#E03A3E', 82, 34.5, 0, 0),
   ('Sacramento Kings', 'SAC', '#5A2D81', 82, 43.5, 0, 0),
   ('San Antonio Spurs', 'SAS', '#C4CED4', 82, 37.5, 0, 0),
-  ('Utah Jazz', 'UTA', '#002B5C', 82, 33.5, 0, 0)
-on conflict (abbreviation) do update set
-  name = excluded.name,
-  primary_color = excluded.primary_color,
-  total_season_games = excluded.total_season_games,
-  ou_line = excluded.ou_line,
-  current_wins = excluded.current_wins,
-  current_losses = excluded.current_losses;
+  ('Utah Jazz', 'UTA', '#002B5C', 82, 33.5, 0, 0);
 
--- Verify
 select count(*) as team_count from public.teams;
