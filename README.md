@@ -28,7 +28,7 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`04-league-submit-and-roster.sql`](supabase/04-league-submit-and-roster.sql) | Submit picks, league roster, gated visibility of others’ picks |
 | [`05-bonus-questions.sql`](supabase/05-bonus-questions.sql) | Optional league tiebreakers (MVP, champion, ROY) |
 
-After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points.
+After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points. Use exact team or player names as stored in picks. Refresh the player list with `npm run refresh:nba-players` (ESPN rosters → `src/data/nba-players.json`).
 
 **Do not** mix schema + sample 3-team inserts + delete/insert in one paste from chat. Tables already exist → run **`01-seed-30-nba-teams.sql` only** (copy from the repo file in Cursor).
 

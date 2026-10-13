@@ -189,6 +189,7 @@ export default function StandingsScreen() {
                 <BonusPicksSection
                   questions={bonusQuestions}
                   answers={bonusAnswers}
+                  teamNames={teams.map((t) => t.name)}
                   loading={bonusLoading}
                   locked={picksSubmitted}
                   savingQuestionId={bonusSavingId}
