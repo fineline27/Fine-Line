@@ -7,6 +7,7 @@ export function isMissingRpcError(message: string): boolean {
     lower.includes('could not find the function') ||
     lower.includes('schema cache') ||
     lower.includes('join_open_nba_pool') ||
-    lower.includes('create_private_league')
+    lower.includes('create_private_league') ||
+    lower.includes('delete_private_league')
   );
 }

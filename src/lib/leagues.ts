@@ -3,6 +3,7 @@ import { ensureBonusQuestionsForLeague } from './bonusQuestions';
 import { getErrorMessage } from './errors';
 import { isMissingRpcError, LEAGUE_POOL_FIX_HINT } from './leagueFixHint';
 import { defaultDisplayName } from './leagueMembers';
+import { isOpenPoolInviteCode } from './openPool';
 import { getSupabaseClient } from './supabase';
 
 function randomInviteCode(): string {
@@ -157,6 +158,65 @@ export async function joinLeagueByCodeForSport(
     throw new Error(`That league is for ${league.sport}. Switch sport to join it.`);
   }
   return league;
+}
+
+export function isLeagueOwner(league: League, userId: string | undefined): boolean {
+  return Boolean(userId && league.creator_id && league.creator_id === userId);
+}
+
+export function canDeleteLeague(league: League, userId: string | undefined): boolean {
+  if (isOpenPoolInviteCode(league.invite_code)) {
+    return false;
+  }
+  return isLeagueOwner(league, userId);
+}
+
+export async function deleteLeague(leagueId: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('You must be signed in to delete a league.');
+  }
+
+  const { error: rpcError } = await supabase.rpc('delete_private_league', {
+    p_league_id: leagueId,
+  });
+
+  if (!rpcError) {
+    return;
+  }
+
+  const rpcMessage = getErrorMessage(rpcError, '');
+  if (!isMissingRpcError(rpcMessage)) {
+    throw new Error(rpcMessage);
+  }
+
+  const { data: league, error: loadError } = await supabase
+    .from('leagues')
+    .select('id, creator_id, invite_code')
+    .eq('id', leagueId)
+    .maybeSingle();
+
+  if (loadError) {
+    throw new Error(getErrorMessage(loadError, 'Could not load league'));
+  }
+  if (!league) {
+    throw new Error('League not found.');
+  }
+  if (isOpenPoolInviteCode(league.invite_code)) {
+    throw new Error('You cannot delete the overall pool.');
+  }
+  if (league.creator_id !== user.id) {
+    throw new Error('Only the league owner can delete this league.');
+  }
+
+  const { error: deleteError } = await supabase.from('leagues').delete().eq('id', leagueId);
+
+  if (deleteError) {
+    throw new Error(getErrorMessage(deleteError, 'Could not delete league'));
+  }
 }
 
 export async function fetchMyLeagues(): Promise<League[]> {

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,19 +16,25 @@ import { useLeague } from '../contexts/LeagueContext';
 import { SPORT_OPTIONS, useSport } from '../contexts/SportContext';
 import { getErrorMessage } from '../lib/errors';
 import { LEAGUE_POOL_FIX_HINT } from '../lib/leagueFixHint';
-import { createLeague, joinLeagueByCodeForSport } from '../lib/leagues';
+import {
+  canDeleteLeague,
+  createLeague,
+  deleteLeague,
+  joinLeagueByCodeForSport,
+} from '../lib/leagues';
 import { isOpenPoolInviteCode } from '../lib/openPool';
 import { colors } from '../theme/colors';
 
 export default function LeagueSetupScreen() {
-  const { session, isLoading: authLoading, signOut } = useAuth();
+  const { session, user, isLoading: authLoading, signOut } = useAuth();
   const { sport, isLoading: sportLoading, setSport, clearSport } = useSport();
-  const { leagues, refreshLeagues, setActiveLeagueId } = useLeague();
+  const { leagues, activeLeague, refreshLeagues, setActiveLeagueId } = useLeague();
   const [inviteCode, setInviteCode] = useState('');
   const [leagueName, setLeagueName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [createdCode, setCreatedCode] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const privateLeagues = leagues.filter((l) => !isOpenPoolInviteCode(l.invite_code));
 
@@ -69,6 +76,25 @@ export default function LeagueSetupScreen() {
     }
   }
 
+  async function onDeleteLeague(leagueId: string) {
+    setBusy(`delete-${leagueId}`);
+    setError(null);
+    try {
+      await deleteLeague(leagueId);
+      setConfirmDeleteId(null);
+      if (activeLeague?.id === leagueId) {
+        await refreshLeagues();
+        router.replace('/');
+        return;
+      }
+      await refreshLeagues();
+    } catch (err) {
+      setError(formatLeagueError(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function onJoin() {
     setBusy('join');
     setError(null);
@@ -89,6 +115,7 @@ export default function LeagueSetupScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
       <Pressable onPress={() => router.replace('/')} style={styles.backRow}>
         <Text style={styles.backText}>← Back to picks</Text>
       </Pressable>
@@ -178,16 +205,64 @@ export default function LeagueSetupScreen() {
       {privateLeagues.length > 0 ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your private leagues</Text>
-          {privateLeagues.map((l) => (
-            <Pressable
-              key={l.id}
-              style={styles.leagueRow}
-              onPress={() => void setActiveLeagueId(l.id).then(() => router.replace('/'))}
-            >
-              <Text style={styles.leagueRowText}>{l.name}</Text>
-              <Text style={styles.leagueCode}>{l.invite_code}</Text>
-            </Pressable>
-          ))}
+          <Text style={styles.sectionHint}>Tap a league to use it for picks. Owners can delete a league permanently.</Text>
+          {privateLeagues.map((l) => {
+            const owner = canDeleteLeague(l, user?.id);
+            const confirming = confirmDeleteId === l.id;
+            return (
+              <View key={l.id} style={styles.leagueRowWrap}>
+                <Pressable
+                  style={styles.leagueRow}
+                  onPress={() => void setActiveLeagueId(l.id).then(() => router.replace('/'))}
+                  disabled={!!busy}
+                >
+                  <View style={styles.leagueRowMain}>
+                    <Text style={styles.leagueRowText}>{l.name}</Text>
+                    {owner ? <Text style={styles.ownerBadge}>Owner</Text> : null}
+                  </View>
+                  <Text style={styles.leagueCode}>{l.invite_code}</Text>
+                </Pressable>
+                {owner ? (
+                  confirming ? (
+                    <View style={styles.deleteConfirmBox}>
+                      <Text style={styles.deleteConfirmText}>
+                        Delete &quot;{l.name}&quot;? All members, picks, and bonus answers for this league
+                        will be removed. This cannot be undone.
+                      </Text>
+                      <View style={styles.deleteConfirmActions}>
+                        <Pressable
+                          style={styles.deleteCancel}
+                          onPress={() => setConfirmDeleteId(null)}
+                          disabled={!!busy}
+                        >
+                          <Text style={styles.deleteCancelText}>Cancel</Text>
+                        </Pressable>
+                        <Pressable
+                          style={styles.deleteConfirm}
+                          onPress={() => void onDeleteLeague(l.id)}
+                          disabled={!!busy}
+                        >
+                          {busy === `delete-${l.id}` ? (
+                            <ActivityIndicator color="#fff" />
+                          ) : (
+                            <Text style={styles.deleteConfirmTextBtn}>Delete league</Text>
+                          )}
+                        </Pressable>
+                      </View>
+                    </View>
+                  ) : (
+                    <Pressable
+                      style={styles.deleteLink}
+                      onPress={() => setConfirmDeleteId(l.id)}
+                      disabled={!!busy}
+                    >
+                      <Text style={styles.deleteLinkText}>Delete league</Text>
+                    </Pressable>
+                  )
+                ) : null}
+              </View>
+            );
+          })}
         </View>
       ) : null}
 
@@ -201,12 +276,14 @@ export default function LeagueSetupScreen() {
       <Pressable onPress={() => void signOut()}>
         <Text style={styles.signOut}>Sign out</Text>
       </Pressable>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background, padding: 20 },
+  safe: { flex: 1, backgroundColor: colors.background },
+  scrollContent: { padding: 20, paddingBottom: 40 },
   backRow: { marginBottom: 8 },
   backText: { color: colors.accent, fontWeight: '700', fontSize: 15 },
   title: { color: colors.textPrimary, fontSize: 28, fontWeight: '800' },
@@ -220,6 +297,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   sectionTitle: { color: colors.textPrimary, fontWeight: '700', marginBottom: 10 },
+  sectionHint: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginBottom: 12 },
   input: {
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
@@ -260,15 +338,57 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
     fontFamily: 'monospace',
   },
+  leagueRowWrap: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 8,
+    marginBottom: 4,
+  },
   leagueRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  leagueRowText: { color: colors.textPrimary, fontWeight: '600' },
+  leagueRowMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
+  leagueRowText: { color: colors.textPrimary, fontWeight: '600', flexShrink: 1 },
+  ownerBadge: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
   leagueCode: { color: colors.textMuted, fontFamily: 'monospace' },
+  deleteLink: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 2 },
+  deleteLinkText: { color: colors.statusNeedsWork, fontWeight: '700', fontSize: 13 },
+  deleteConfirmBox: {
+    marginTop: 6,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: colors.statusNeedsWorkBg,
+    borderWidth: 1,
+    borderColor: colors.statusNeedsWork,
+  },
+  deleteConfirmText: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  deleteConfirmActions: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  deleteCancel: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
+  },
+  deleteCancelText: { color: colors.textPrimary, fontWeight: '700' },
+  deleteConfirm: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: colors.statusNeedsWork,
+  },
+  deleteConfirmTextBtn: { color: '#fff', fontWeight: '800' },
   errorBox: {
     marginTop: 8,
     padding: 14,
