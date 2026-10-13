@@ -11,12 +11,20 @@ const FEATURES = [
 export function AuthLandingHero() {
   return (
     <View style={styles.wrap}>
-      <View style={styles.glowA} />
       <View style={styles.glowB} />
 
-      <Text style={styles.eyebrow}>Season-long sports picks</Text>
-      <Text style={styles.brandFine}>Fine</Text>
-      <Text style={styles.brandLine}>Line</Text>
+      <View style={styles.brandHeader}>
+        <View style={styles.brandTextCol}>
+          <Text style={styles.eyebrow}>Season-long sports picks</Text>
+          <Text style={styles.brandFine}>Fine</Text>
+          <Text style={styles.brandLine}>Line</Text>
+        </View>
+        <View style={styles.ouCircleOuter}>
+          <View style={styles.ouCircle}>
+            <Text style={styles.ouCircleText}>O/U</Text>
+          </View>
+        </View>
+      </View>
 
       <Text style={styles.headline}>
         Predict results and play against your mates.{' '}
@@ -27,7 +35,9 @@ export function AuthLandingHero() {
         <View style={styles.demoTop}>
           <Text style={styles.demoTeam}>OKC Thunder</Text>
           <View style={styles.demoOu}>
-            <Text style={styles.demoOuLabel}>O/U</Text>
+            <View style={styles.demoOuCircle}>
+              <Text style={styles.demoOuCircleText}>O/U</Text>
+            </View>
             <Text style={styles.demoOuValue}>62.5</Text>
           </View>
         </View>
@@ -62,14 +72,38 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingBottom: 8,
   },
-  glowA: {
-    position: 'absolute',
-    top: -40,
-    right: -20,
-    width: 200,
-    height: 200,
+  brandHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  brandTextCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  ouCircleOuter: {
+    paddingTop: 28,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  ouCircle: {
+    width: Platform.select({ web: 108, default: 88 }) ?? 88,
+    height: Platform.select({ web: 108, default: 88 }) ?? 88,
     borderRadius: 999,
-    backgroundColor: 'rgba(59, 130, 246, 0.22)',
+    borderWidth: 3,
+    borderColor: colors.accent,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ouCircleText: {
+    color: colors.textPrimary,
+    fontSize: Platform.select({ web: 26, default: 22 }) ?? 22,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   glowB: {
     position: 'absolute',
@@ -134,13 +168,24 @@ const styles = StyleSheet.create({
   },
   demoOu: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6,
+    alignItems: 'center',
+    gap: 10,
   },
-  demoOuLabel: {
-    color: colors.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+  demoOuCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.accent,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  demoOuCircleText: {
+    color: colors.textPrimary,
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: -0.3,
   },
   demoOuValue: {
     color: colors.accent,
