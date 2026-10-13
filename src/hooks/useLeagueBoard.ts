@@ -2,9 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
+import {
+  fetchBonusAnswersForLeague,
+  fetchBonusQuestionsForLeague,
+} from '../lib/bonusQuestions';
 import { fetchLeagueMembers } from '../lib/leagueMembers';
 import { fetchAllPredictionsInLeague } from '../lib/predictions';
 import { computeLeaderboard, type LeaderboardEntry } from '../lib/rankings';
+import type { BonusQuestion } from '../types/bonus';
 import type { LeagueMember } from '../types/leagueMember';
 import type { PickSide, Team } from '../types/team';
 
@@ -17,6 +22,8 @@ type BoardState = {
   members: LeagueMember[];
   leaderboard: LeaderboardEntry[];
   teamPicks: TeamGroupPick[];
+  bonusQuestions: BonusQuestion[];
+  bonusAnswers: Array<{ question_id: string; user_id: string; user_answer: string }>;
   loading: boolean;
   error: string | null;
 };
@@ -28,6 +35,8 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
     members: [],
     leaderboard: [],
     teamPicks: [],
+    bonusQuestions: [],
+    bonusAnswers: [],
     loading: true,
     error: null,
   });
@@ -38,6 +47,8 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         members: [],
         leaderboard: [],
         teamPicks: [],
+        bonusQuestions: [],
+        bonusAnswers: [],
         loading: false,
         error: null,
       });
@@ -60,7 +71,18 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         predictions = await fetchAllPredictionsInLeague(activeLeague.id);
       }
 
-      const leaderboard = computeLeaderboard(user.id, predictions, teams, members);
+      const bonusEnabled = Boolean(activeLeague.bonus_questions_enabled);
+      const bonusQuestions = bonusEnabled
+        ? await fetchBonusQuestionsForLeague(activeLeague.id)
+        : [];
+      const bonusAnswers =
+        bonusEnabled && picksSubmitted
+          ? await fetchBonusAnswersForLeague(activeLeague.id)
+          : [];
+      const bonusBundle =
+        bonusQuestions.length > 0 ? { questions: bonusQuestions, answers: bonusAnswers } : undefined;
+
+      const leaderboard = computeLeaderboard(user.id, predictions, teams, members, bonusBundle);
 
       const picksByTeam = new Map<string, TeamGroupPick['entries']>();
       if (picksSubmitted) {
@@ -96,6 +118,8 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         members,
         leaderboard,
         teamPicks,
+        bonusQuestions,
+        bonusAnswers,
         loading: false,
         error: null,
       });
@@ -104,6 +128,8 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         members: [],
         leaderboard: [],
         teamPicks: [],
+        bonusQuestions: [],
+        bonusAnswers: [],
         loading: false,
         error: err instanceof Error ? err.message : 'Failed to load league board',
       });

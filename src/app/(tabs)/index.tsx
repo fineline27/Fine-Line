@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BonusPicksSection } from '../../components/BonusPicksSection';
 import { LeagueHeader } from '../../components/LeagueHeader';
 import { TeamCard } from '../../components/TeamCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLeague } from '../../contexts/LeagueContext';
 import { useSport } from '../../contexts/SportContext';
+import { useBonusPicks } from '../../hooks/useBonusPicks';
 import { useLeagueMembership } from '../../hooks/useLeagueMembership';
 import { useLeagueRank } from '../../hooks/useLeagueRank';
 import { useOverallRank } from '../../hooks/useOverallRank';
@@ -44,6 +46,17 @@ export default function StandingsScreen() {
     error: picksError,
     refresh: refreshPicks,
   } = usePredictions(picksSubmitted);
+  const {
+    enabled: bonusEnabled,
+    questions: bonusQuestions,
+    answers: bonusAnswers,
+    loading: bonusLoading,
+    savingQuestionId: bonusSavingId,
+    error: bonusError,
+    allAnswered: bonusAllAnswered,
+    refresh: refreshBonus,
+    setAnswer: setBonusAnswer,
+  } = useBonusPicks(picksSubmitted);
   const overallRank = useOverallRank(teams);
   const leagueRank = useLeagueRank(teams, picksSubmitted);
   const myScore = leagueRank.myScore;
@@ -51,7 +64,11 @@ export default function StandingsScreen() {
 
   const pickCount = Object.keys(picks).length;
   const requiredPicks = teams.length;
-  const canSubmit = !picksSubmitted && requiredPicks > 0 && pickCount >= requiredPicks;
+  const canSubmit =
+    !picksSubmitted &&
+    requiredPicks > 0 &&
+    pickCount >= requiredPicks &&
+    (!bonusEnabled || bonusAllAnswered);
   const showListLoader = loading || picksLoading || leagueLoading;
   const supabaseProjectRef = getSupabaseProjectRef();
 
@@ -68,7 +85,7 @@ export default function StandingsScreen() {
   }
 
   async function onRefresh() {
-    await Promise.all([refresh(), refreshPicks(), refreshMembership()]);
+    await Promise.all([refresh(), refreshPicks(), refreshMembership(), refreshBonus()]);
   }
 
   async function onSubmitPicks() {
@@ -104,10 +121,13 @@ export default function StandingsScreen() {
         pickCount={pickCount}
         teamCount={teams.length}
         picksSubmitted={picksSubmitted}
+        bonusEnabled={bonusEnabled}
+        bonusScore={leagueRank.bonusScore}
         supabaseProjectRef={supabaseProjectRef}
       />
 
       {picksError ? <Text style={styles.pickError}>{picksError}</Text> : null}
+      {bonusError ? <Text style={styles.pickError}>{bonusError}</Text> : null}
       {membershipError ? <Text style={styles.pickError}>{membershipError}</Text> : null}
 
       {showListLoader ? (
@@ -163,12 +183,24 @@ export default function StandingsScreen() {
             />
           )}
           ListHeaderComponent={
-            !picksSubmitted ? (
+            <>
+              {bonusEnabled && bonusQuestions.length > 0 ? (
+                <BonusPicksSection
+                  questions={bonusQuestions}
+                  answers={bonusAnswers}
+                  loading={bonusLoading}
+                  locked={picksSubmitted}
+                  savingQuestionId={bonusSavingId}
+                  onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
+                />
+              ) : null}
+              {!picksSubmitted ? (
               <View style={styles.submitBanner}>
                 <Text style={styles.submitTitle}>Finish your card</Text>
                 <Text style={styles.submitBody}>
-                  Pick OVER or UNDER on every team ({pickCount}/{requiredPicks}), then submit to
-                  open the league board.
+                  Pick OVER or UNDER on every team ({pickCount}/{requiredPicks})
+                  {bonusEnabled ? ', answer the bonus questions,' : ''} then submit to open the
+                  league board.
                 </Text>
                 <Pressable
                   style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
@@ -184,7 +216,13 @@ export default function StandingsScreen() {
                         canSubmit && styles.submitButtonTextActive,
                       ]}
                     >
-                      {canSubmit ? 'Submit picks' : `${requiredPicks - pickCount} picks left`}
+                      {canSubmit
+                        ? 'Submit picks'
+                        : pickCount < requiredPicks
+                          ? `${requiredPicks - pickCount} picks left`
+                          : bonusEnabled && !bonusAllAnswered
+                            ? 'Answer bonus questions'
+                            : 'Submit picks'}
                     </Text>
                   )}
                 </Pressable>
@@ -193,7 +231,8 @@ export default function StandingsScreen() {
               <View style={styles.lockedBanner}>
                 <Text style={styles.lockedText}>Picks locked · view the League tab for the board</Text>
               </View>
-            )
+            )}
+            </>
           }
           ListFooterComponent={
             teams.length > 0 ? (
@@ -259,9 +298,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   submitButtonText: {
-    color: colors.textPrimary,
+    color: colors.textSecondary,
     fontWeight: '800',
     fontSize: 15,
+  },
+  submitButtonTextActive: {
+    color: '#fff',
   },
   lockedBanner: {
     marginBottom: 12,

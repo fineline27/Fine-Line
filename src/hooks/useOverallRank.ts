@@ -11,6 +11,7 @@ type RankState = {
   totalPlayers: number;
   myScore: number;
   clinched: number;
+  bonusScore: number;
   loading: boolean;
 };
 
@@ -22,12 +23,20 @@ export function useOverallRank(teams: Team[]): RankState {
     totalPlayers: 0,
     myScore: 0,
     clinched: 0,
+    bonusScore: 0,
     loading: true,
   });
 
   const refresh = useCallback(async () => {
     if (!user || !sport || teams.length === 0) {
-      setState({ rank: null, totalPlayers: 0, myScore: 0, clinched: 0, loading: false });
+      setState({
+        rank: null,
+        totalPlayers: 0,
+        myScore: 0,
+        clinched: 0,
+        bonusScore: 0,
+        loading: false,
+      });
       return;
     }
 
@@ -38,7 +47,14 @@ export function useOverallRank(teams: Team[]): RankState {
       const result = computeStandings(user.id, predictions, teams);
       setState({ ...result, loading: false });
     } catch {
-      setState({ rank: null, totalPlayers: 0, myScore: 0, clinched: 0, loading: false });
+      setState({
+        rank: null,
+        totalPlayers: 0,
+        myScore: 0,
+        clinched: 0,
+        bonusScore: 0,
+        loading: false,
+      });
     }
   }, [user, sport, teams]);
 

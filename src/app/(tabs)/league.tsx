@@ -20,7 +20,7 @@ import { useLeagueMembership } from '../../hooks/useLeagueMembership';
 import { useTeams } from '../../hooks/useTeams';
 import { colors } from '../../theme/colors';
 
-type Segment = 'leaderboard' | 'picks';
+type Segment = 'leaderboard' | 'picks' | 'bonus';
 
 export default function LeagueBoardScreen() {
   const { session, isLoading: authLoading } = useAuth();
@@ -29,11 +29,18 @@ export default function LeagueBoardScreen() {
   const { teams, loading: teamsLoading, refresh: refreshTeams } = useTeams();
   const { picksSubmitted, loading: membershipLoading, refresh: refreshMembership } =
     useLeagueMembership();
-  const { leaderboard, teamPicks, loading, error, refresh } = useLeagueBoard(
-    teams,
-    picksSubmitted,
-  );
+  const {
+    leaderboard,
+    teamPicks,
+    bonusQuestions,
+    bonusAnswers,
+    members,
+    loading,
+    error,
+    refresh,
+  } = useLeagueBoard(teams, picksSubmitted);
   const [segment, setSegment] = useState<Segment>('leaderboard');
+  const showBonus = Boolean(activeLeague?.bonus_questions_enabled && bonusQuestions.length > 0);
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -91,9 +98,21 @@ export default function LeagueBoardScreen() {
               <Text
                 style={[styles.segmentText, segment === 'picks' && styles.segmentTextActive]}
               >
-                All picks
+                O/U picks
               </Text>
             </Pressable>
+            {showBonus ? (
+              <Pressable
+                style={[styles.segment, segment === 'bonus' && styles.segmentActive]}
+                onPress={() => setSegment('bonus')}
+              >
+                <Text
+                  style={[styles.segmentText, segment === 'bonus' && styles.segmentTextActive]}
+                >
+                  Bonus
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -125,7 +144,10 @@ export default function LeagueBoardScreen() {
                     {!item.picksSubmitted ? (
                       <Text style={styles.pendingText}>Hasn’t submitted yet</Text>
                     ) : (
-                      <Text style={styles.metaText}>{item.clinched} clinched</Text>
+                      <Text style={styles.metaText}>
+                        {item.clinched} clinched
+                        {showBonus ? ` · ${item.bonusScore} bonus` : ''}
+                      </Text>
                     )}
                   </View>
                   <Text style={styles.scoreText}>{item.picksSubmitted ? item.score : '—'}</Text>
@@ -134,10 +156,11 @@ export default function LeagueBoardScreen() {
               ListHeaderComponent={
                 <Text style={styles.listHint}>
                   Rankings update when you refresh after NBA wins and losses change team records.
+                  {showBonus ? ' Ties break on bonus points (MVP, champion, ROY).' : ''}
                 </Text>
               }
             />
-          ) : (
+          ) : segment === 'picks' ? (
             <ScrollView
               contentContainerStyle={styles.listContent}
               refreshControl={
@@ -171,6 +194,40 @@ export default function LeagueBoardScreen() {
                   )}
                 </View>
               ))}
+            </ScrollView>
+          ) : (
+            <ScrollView
+              contentContainerStyle={styles.listContent}
+              refreshControl={
+                <RefreshControl refreshing={busy} onRefresh={() => void onRefresh()} tintColor={colors.accent} />
+              }
+            >
+              <Text style={styles.listHint}>
+                Bonus answers from members who submitted. Points count once official results are
+                set on each question.
+              </Text>
+              {members
+                .filter((m) => m.picks_submitted_at)
+                .map((member) => {
+                  const name = member.display_name?.trim() || 'Player';
+                  return (
+                    <View key={member.user_id} style={styles.teamBlock}>
+                      <Text style={styles.teamTitle}>{name}</Text>
+                      {bonusQuestions.map((q) => {
+                        const ans = bonusAnswers.find(
+                          (a) =>
+                            a.question_id === q.id && a.user_id === member.user_id,
+                        );
+                        return (
+                          <View key={q.id} style={styles.pickRow}>
+                            <Text style={styles.pickName}>{q.question_text}</Text>
+                            <Text style={styles.pickSide}>{ans?.user_answer ?? '—'}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  );
+                })}
             </ScrollView>
           )}
         </>

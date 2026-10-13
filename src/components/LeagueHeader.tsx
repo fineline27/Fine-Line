@@ -19,6 +19,8 @@ type Props = {
   pickCount: number;
   teamCount: number;
   picksSubmitted: boolean;
+  bonusEnabled?: boolean;
+  bonusScore?: number;
   supabaseProjectRef: string | null;
 };
 
@@ -42,6 +44,8 @@ export function LeagueHeader({
   pickCount,
   teamCount,
   picksSubmitted,
+  bonusEnabled,
+  bonusScore = 0,
   supabaseProjectRef,
 }: Props) {
   return (
@@ -93,7 +97,9 @@ export function LeagueHeader({
         <Text style={styles.projectRef}>Supabase: {supabaseProjectRef}</Text>
       ) : null}
       <Text style={styles.scoreLine}>
-        Score: {myScore} pts · {clinched} clinched · {pickCount}/{teamCount || 30} picks
+        Score: {myScore} pts
+        {bonusEnabled ? ` · ${bonusScore} bonus` : ''} · {clinched} clinched · {pickCount}/
+        {teamCount || 30} picks
         {picksSubmitted ? ' · locked in' : ''}
       </Text>
       <Text style={styles.picksHint}>

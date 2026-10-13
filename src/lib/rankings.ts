@@ -1,4 +1,6 @@
+import { bonusPointsForUser } from './bonusScoring';
 import { scorePick } from './pickScoring';
+import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { Team } from '../types/team';
 
 export type PredictionRow = {
@@ -12,12 +14,14 @@ export type StandingsResult = {
   totalPlayers: number;
   myScore: number;
   clinched: number;
+  bonusScore: number;
 };
 
 export type LeaderboardEntry = {
   userId: string;
   displayName: string;
   score: number;
+  bonusScore: number;
   clinched: number;
   rank: number;
   picksSubmitted: boolean;
@@ -29,6 +33,7 @@ export function computeStandings(
   userId: string,
   predictions: PredictionRow[],
   teams: Team[],
+  bonus?: { questions: BonusQuestion[]; answers: BonusAnswerRow[] },
 ): StandingsResult {
   const teamById = new Map(teams.map((t) => [t.id, t]));
   const picksByUser = new Map<string, Map<string, 'over' | 'under'>>();
@@ -61,9 +66,22 @@ export function computeStandings(
     clinched.set(uid, clinchedCount);
   }
 
+  const bonusQuestions = bonus?.questions ?? [];
+  const bonusAnswers = bonus?.answers ?? [];
+  const bonusByUser = new Map<string, number>();
+  for (const uid of scores.keys()) {
+    bonusByUser.set(uid, bonusPointsForUser(uid, bonusQuestions, bonusAnswers));
+  }
+
   const myScore = scores.get(userId) ?? 0;
   const myClinched = clinched.get(userId) ?? 0;
-  const sorted = [...scores.entries()].sort((a, b) => b[1] - a[1]);
+  const myBonus = bonusByUser.get(userId) ?? 0;
+  const sorted = [...scores.entries()].sort(
+    (a, b) =>
+      b[1] - a[1] ||
+      (bonusByUser.get(b[0]) ?? 0) - (bonusByUser.get(a[0]) ?? 0) ||
+      (clinched.get(b[0]) ?? 0) - (clinched.get(a[0]) ?? 0),
+  );
   const rankIndex = sorted.findIndex(([id]) => id === userId);
   const rank = rankIndex >= 0 ? rankIndex + 1 : null;
 
@@ -72,6 +90,7 @@ export function computeStandings(
     totalPlayers: sorted.length,
     myScore,
     clinched: myClinched,
+    bonusScore: myBonus,
   };
 }
 
@@ -80,6 +99,7 @@ export function computeLeaderboard(
   predictions: PredictionRow[],
   teams: Team[],
   members: Array<{ user_id: string; display_name: string | null; picks_submitted_at: string | null }>,
+  bonus?: { questions: BonusQuestion[]; answers: BonusAnswerRow[] },
 ): LeaderboardEntry[] {
   const submittedMemberIds = new Set(
     members.filter((m) => m.picks_submitted_at).map((m) => m.user_id),
@@ -113,10 +133,14 @@ export function computeLeaderboard(
       }
     }
     const picksSubmitted = Boolean(member.picks_submitted_at);
+    const bonusScore = picksSubmitted
+      ? bonusPointsForUser(member.user_id, bonus?.questions ?? [], bonus?.answers ?? [])
+      : 0;
     return {
       userId: member.user_id,
       displayName: member.display_name?.trim() || 'Player',
       score: picksSubmitted ? score : 0,
+      bonusScore,
       clinched: picksSubmitted ? clinched : 0,
       rank: 0,
       picksSubmitted,
@@ -126,7 +150,13 @@ export function computeLeaderboard(
 
   const ranked = [...scored]
     .filter((e) => e.picksSubmitted)
-    .sort((a, b) => b.score - a.score || b.clinched - a.clinched || a.displayName.localeCompare(b.displayName));
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        b.bonusScore - a.bonusScore ||
+        b.clinched - a.clinched ||
+        a.displayName.localeCompare(b.displayName),
+    );
 
   let lastScore: number | null = null;
   let lastRank = 0;
@@ -149,7 +179,12 @@ export function computeLeaderboard(
         return a.picksSubmitted ? -1 : 1;
       }
       if (a.picksSubmitted && b.picksSubmitted) {
-        return a.rank - b.rank || b.score - a.score || a.displayName.localeCompare(b.displayName);
+        return (
+          a.rank - b.rank ||
+          b.score - a.score ||
+          b.bonusScore - a.bonusScore ||
+          a.displayName.localeCompare(b.displayName)
+        );
       }
       return a.displayName.localeCompare(b.displayName);
     });

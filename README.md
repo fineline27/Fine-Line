@@ -26,6 +26,9 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`01-seed-30-nba-teams.sql`](supabase/01-seed-30-nba-teams.sql) | When you need all 30 NBA teams + RLS read access |
 | [`update-ou-lines-2026-27.sql`](supabase/update-ou-lines-2026-27.sql) | Update **2026–27** win-total O/U lines only (keeps records and picks) |
 | [`04-league-submit-and-roster.sql`](supabase/04-league-submit-and-roster.sql) | Submit picks, league roster, gated visibility of others’ picks |
+| [`05-bonus-questions.sql`](supabase/05-bonus-questions.sql) | Optional league tiebreakers (MVP, champion, ROY) |
+
+After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points.
 
 **Do not** mix schema + sample 3-team inserts + delete/insert in one paste from chat. Tables already exist → run **`01-seed-30-nba-teams.sql` only** (copy from the repo file in Cursor).
 

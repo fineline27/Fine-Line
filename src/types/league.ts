@@ -4,6 +4,7 @@ export type League = {
   invite_code: string;
   creator_id: string | null;
   sport: string;
+  bonus_questions_enabled?: boolean;
   created_at?: string;
 };
 
