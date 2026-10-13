@@ -27,7 +27,7 @@ export async function fetchTeams(): Promise<Team[]> {
   const { data, error } = await supabase
     .from('teams')
     .select(
-      'id, name, abbreviation, primary_color, total_season_games, ou_line, current_wins, current_losses',
+      'id, sport, name, abbreviation, primary_color, secondary_color, total_season_games, ou_line, current_wins, current_losses',
     )
     .order('name');
 

@@ -23,9 +23,11 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 ```sql
 create table public.teams (
   id uuid primary key default gen_random_uuid(),
+  sport text not null,
   name text not null,
   abbreviation text not null,
   primary_color text not null default '#334155',
+  secondary_color text,
   total_season_games integer not null,
   ou_line numeric not null,
   current_wins integer not null default 0,
