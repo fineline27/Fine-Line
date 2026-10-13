@@ -39,9 +39,14 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <View style={styles.hero}>
+        <Text style={styles.brand}>Fine Line</Text>
+        <Text style={styles.blurb}>
+          Predict season results and play against your mates. Who knows more sport?
+        </Text>
+      </View>
       <View style={styles.card}>
-        <Text style={styles.title}>Sign in</Text>
-        <Text style={styles.subtitle}>Fine Line — O/U picks solo or with a league.</Text>
+        <Text style={styles.formTitle}>Sign in</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"
