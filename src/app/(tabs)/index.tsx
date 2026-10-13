@@ -52,6 +52,7 @@ export default function StandingsScreen() {
     loading: bonusLoading,
     savingQuestionId: bonusSavingId,
     error: bonusError,
+    setupRequired: bonusSetupRequired,
     allAnswered: bonusAllAnswered,
     refresh: refreshBonus,
     setAnswer: setBonusAnswer,
@@ -126,7 +127,9 @@ export default function StandingsScreen() {
       />
 
       {picksError ? <Text style={styles.pickError}>{picksError}</Text> : null}
-      {bonusError ? <Text style={styles.pickError}>{bonusError}</Text> : null}
+      {bonusError && !bonusSetupRequired ? (
+        <Text style={styles.pickError}>{bonusError}</Text>
+      ) : null}
       {membershipError ? <Text style={styles.pickError}>{membershipError}</Text> : null}
 
       {showListLoader ? (
@@ -183,11 +186,13 @@ export default function StandingsScreen() {
           )}
           ListHeaderComponent={
             <>
-              {!bonusLoading && bonusQuestions.length === 0 ? (
+              {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
                 <View style={styles.bonusMissing}>
                   <Text style={styles.bonusMissingText}>
-                    Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql
-                    in the Supabase SQL Editor, then refresh.
+                    {bonusSetupRequired
+                      ? bonusError ??
+                        'Bonus tiebreakers need a one-time Supabase setup. Run supabase/05-bonus-questions.sql then supabase/06-mandatory-bonus-questions.sql in the SQL Editor, then pull to refresh. You can still pick O/U and submit without bonus until then.'
+                      : 'Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql in the Supabase SQL Editor, then refresh.'}
                   </Text>
                 </View>
               ) : null}
@@ -207,8 +212,9 @@ export default function StandingsScreen() {
                 <Text style={styles.submitTitle}>Finish your card</Text>
                 <Text style={styles.submitBody}>
                   Pick OVER or UNDER on every team ({pickCount}/{requiredPicks})
-                  , answer the bonus tiebreakers, then submit to open the
-                  league board.
+                  {bonusSetupRequired
+                    ? ', then submit to open the league board (bonus tiebreakers unlock after Supabase setup above).'
+                    : ', answer the bonus tiebreakers, then submit to open the league board.'}
                 </Text>
                 <Pressable
                   style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}

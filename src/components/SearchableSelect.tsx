@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
-  FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -86,21 +86,21 @@ export function SearchableSelect({
       />
       {open && !disabled && suggestions.length > 0 ? (
         <View style={styles.dropdown}>
-          <FlatList
+          <ScrollView
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
-            data={suggestions}
-            keyExtractor={(item) => item}
             style={styles.list}
-            renderItem={({ item }) => (
+          >
+            {suggestions.map((item) => (
               <Pressable
+                key={item}
                 style={({ pressed }) => [styles.option, pressed && styles.optionPressed]}
                 onPress={() => commitSelection(item)}
               >
                 <Text style={styles.optionText}>{item}</Text>
               </Pressable>
-            )}
-          />
+            ))}
+          </ScrollView>
         </View>
       ) : open && !disabled && query.trim() ? (
         <View style={styles.dropdown}>

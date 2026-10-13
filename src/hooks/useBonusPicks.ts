@@ -7,6 +7,7 @@ import {
   fetchMyBonusAnswers,
   upsertBonusAnswer,
 } from '../lib/bonusQuestions';
+import { BONUS_SETUP_SQL_HINT, isBonusSetupError } from '../lib/bonusSchema';
 import type { BonusQuestion } from '../types/bonus';
 
 export function useBonusPicks(picksLocked: boolean) {
@@ -18,6 +19,7 @@ export function useBonusPicks(picksLocked: boolean) {
   const [loading, setLoading] = useState(true);
   const [savingQuestionId, setSavingQuestionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [setupRequired, setSetupRequired] = useState(false);
 
   const refresh = useCallback(async () => {
     if (!leagueId) {
@@ -29,6 +31,7 @@ export function useBonusPicks(picksLocked: boolean) {
 
     setLoading(true);
     setError(null);
+    setSetupRequired(false);
     try {
       let qs = await fetchBonusQuestionsForLeague(leagueId);
       if (qs.length < 3) {
@@ -43,7 +46,13 @@ export function useBonusPicks(picksLocked: boolean) {
       const mine = await fetchMyBonusAnswers(qs.map((q) => q.id));
       setAnswers(mine);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load bonus questions');
+      const message = err instanceof Error ? err.message : 'Failed to load bonus questions';
+      if (isBonusSetupError(message)) {
+        setSetupRequired(true);
+        setError(BONUS_SETUP_SQL_HINT);
+      } else {
+        setError(message);
+      }
       setQuestions([]);
       setAnswers({});
     } finally {
@@ -83,10 +92,14 @@ export function useBonusPicks(picksLocked: boolean) {
     [picksLocked],
   );
 
-  const allAnswered = questions.length >= 3 && questions.every((q) => Boolean(answers[q.id]?.trim()));
+  const allAnswered =
+    setupRequired ||
+    (questions.length >= 3 &&
+      questions.every((q) => Boolean(answers[q.id]?.trim())));
 
   return {
     enabled: questions.length > 0,
+    setupRequired,
     questions,
     answers,
     loading,

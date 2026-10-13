@@ -24,17 +24,20 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
 
   let inviteCode = randomInviteCode();
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const { data, error } = await supabase
-      .from('leagues')
-      .insert({
-        name,
-        invite_code: inviteCode,
-        creator_id: user.id,
-        sport,
-        bonus_questions_enabled: true,
-      })
-      .select('*')
-      .single();
+    const payload = {
+      name,
+      invite_code: inviteCode,
+      creator_id: user.id,
+      sport,
+      bonus_questions_enabled: true as boolean | undefined,
+    };
+
+    let { data, error } = await supabase.from('leagues').insert(payload).select('*').single();
+
+    if (error?.message?.includes('bonus_questions_enabled')) {
+      delete payload.bonus_questions_enabled;
+      ({ data, error } = await supabase.from('leagues').insert(payload).select('*').single());
+    }
 
     if (!error && data) {
       await supabase.from('league_members').insert({
@@ -42,7 +45,11 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
         user_id: user.id,
         display_name: defaultDisplayName(user.email),
       });
-      await ensureBonusQuestionsForLeague(data.id);
+      try {
+        await ensureBonusQuestionsForLeague(data.id);
+      } catch {
+        // League still created; run bonus SQL migrations to enable tiebreakers.
+      }
       return data as League;
     }
     if (error?.code === '23505') {

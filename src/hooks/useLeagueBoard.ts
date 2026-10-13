@@ -74,10 +74,17 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         predictions = await fetchAllPredictionsInLeague(activeLeague.id);
       }
 
-      const bonusQuestions = await fetchBonusQuestionsForLeague(activeLeague.id);
-      const bonusAnswers = picksSubmitted
-        ? await fetchBonusAnswersForLeague(activeLeague.id)
-        : [];
+      let bonusQuestions: BonusQuestion[] = [];
+      let bonusAnswers: BonusAnswerRow[] = [];
+      try {
+        bonusQuestions = await fetchBonusQuestionsForLeague(activeLeague.id);
+        if (picksSubmitted) {
+          bonusAnswers = await fetchBonusAnswersForLeague(activeLeague.id);
+        }
+      } catch {
+        bonusQuestions = [];
+        bonusAnswers = [];
+      }
       const bonusBundle =
         bonusQuestions.length > 0 ? { questions: bonusQuestions, answers: bonusAnswers } : undefined;
 
