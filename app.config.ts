@@ -49,5 +49,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'SUPABASE_ANON_KEY',
       'EXPO_PUBLIC_SUPABASE_ANON_KEY',
     ),
+    legalContactEmail: envFirst('EXPO_PUBLIC_LEGAL_CONTACT_EMAIL', 'LEGAL_CONTACT_EMAIL'),
   },
 });

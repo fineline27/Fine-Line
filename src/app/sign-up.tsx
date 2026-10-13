@@ -1,4 +1,7 @@
-import { Link, Redirect, router } from 'expo-router';
+import { Link, Redirect, router, type Href } from 'expo-router';
+
+const TERMS_HREF = '/terms' as Href;
+const PRIVACY_HREF = '/privacy' as Href;
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -10,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LegalFooterLinks } from '../components/LegalFooterLinks';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 
@@ -17,6 +21,7 @@ export default function SignUpScreen() {
   const { session, isLoading, signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -26,6 +31,10 @@ export default function SignUpScreen() {
   }
 
   async function onSubmit() {
+    if (!acceptedLegal) {
+      setError('Please agree to the Terms and Privacy Policy to create an account.');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setMessage(null);
@@ -63,7 +72,32 @@ export default function SignUpScreen() {
         />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {message ? <Text style={styles.message}>{message}</Text> : null}
-        <Pressable style={styles.button} onPress={() => void onSubmit()} disabled={submitting}>
+        <Pressable
+          style={styles.consentRow}
+          onPress={() => setAcceptedLegal((v) => !v)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: acceptedLegal }}
+        >
+          <View style={[styles.checkbox, acceptedLegal && styles.checkboxOn]}>
+            {acceptedLegal ? <Text style={styles.checkmark}>✓</Text> : null}
+          </View>
+          <View style={styles.consentTextWrap}>
+            <Text style={styles.consentText}>I am at least 13 and agree to the </Text>
+            <Link href={TERMS_HREF} style={styles.consentLink}>
+              Terms
+            </Link>
+            <Text style={styles.consentText}> and </Text>
+            <Link href={PRIVACY_HREF} style={styles.consentLink}>
+              Privacy Policy
+            </Link>
+            <Text style={styles.consentText}>.</Text>
+          </View>
+        </Pressable>
+        <Pressable
+          style={[styles.button, !acceptedLegal && styles.buttonDisabled]}
+          onPress={() => void onSubmit()}
+          disabled={submitting || !acceptedLegal}
+        >
           {submitting ? (
             <ActivityIndicator color="#fff" />
           ) : (
@@ -73,6 +107,7 @@ export default function SignUpScreen() {
         <Link href="/login" style={styles.link}>
           Back to sign in
         </Link>
+        <LegalFooterLinks compact />
       </View>
     </SafeAreaView>
   );
@@ -97,12 +132,58 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: 12,
   },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxOn: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent,
+  },
+  checkmark: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  consentTextWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  consentText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  consentLink: {
+    color: colors.accent,
+    fontWeight: '700',
+    fontSize: 13,
+    lineHeight: 19,
+  },
   button: {
     backgroundColor: colors.accent,
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',
     marginTop: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.45,
   },
   buttonText: { color: '#fff', fontWeight: '700' },
   error: { color: colors.statusNeedsWork, marginBottom: 8 },

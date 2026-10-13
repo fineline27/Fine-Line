@@ -41,6 +41,19 @@ After the season, set `winning_answer` on rows in **`bonus_questions`** (Table E
 
 6. In Supabase **Authentication → Providers**, enable **Email**. For local testing, you can disable **Confirm email** under email auth settings.
 
+### Going public (privacy & accounts)
+
+Before inviting strangers or shipping to app stores:
+
+1. Set **`EXPO_PUBLIC_LEGAL_CONTACT_EMAIL`** in `.env` (privacy requests and account deletion). Restart Expo after changing env.
+2. In Supabase **Authentication → Email**, turn **Confirm email** on so sign-ups are verified.
+3. Review in-app **Privacy** and **Terms** (`/privacy`, `/terms`) with a lawyer for your country and user base.
+4. Honor **deletion requests** at that email (remove auth user + related rows, or use Supabase dashboard / a secure admin script).
+5. Optional but recommended: enable Supabase **Auth rate limits** and CAPTCHA if you see abuse.
+6. App Store / Play Console will ask for a **privacy policy URL** — use your deployed web URL + `/privacy`.
+
+Fine Line stores: email, display name, league membership, picks, and bonus answers via Supabase; session and preferences locally on device. No ad trackers today.
+
 4. Start the dev server:
 
 ```bash

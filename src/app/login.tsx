@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthLandingHero } from '../components/AuthLandingHero';
+import { LegalFooterLinks } from '../components/LegalFooterLinks';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 
@@ -98,6 +99,8 @@ export default function LoginScreen() {
               </Pressable>
             </Link>
           </View>
+
+          <LegalFooterLinks />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
