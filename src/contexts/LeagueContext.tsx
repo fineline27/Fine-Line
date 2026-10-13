@@ -3,7 +3,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import { useAuth } from './AuthContext';
 import { useSport } from './SportContext';
+import { getErrorMessage } from '../lib/errors';
 import { fetchMyLeagues } from '../lib/leagues';
+import { LEAGUE_POOL_FIX_HINT } from '../lib/leagueFixHint';
 import { ensureOpenPoolMembership, OPEN_POOL_INVITE } from '../lib/openPool';
 import type { SportId } from './SportContext';
 import type { League } from '../types/league';
@@ -45,7 +47,7 @@ export function LeagueProvider({ children }: { children: React.ReactNode }) {
         try {
           await ensureOpenPoolMembership(sport as SportId);
         } catch (err) {
-          setPoolError(err instanceof Error ? err.message : 'Could not join overall pool');
+          setPoolError(getErrorMessage(err, 'Could not join overall pool'));
         }
       }
 
@@ -64,8 +66,9 @@ export function LeagueProvider({ children }: { children: React.ReactNode }) {
       if (nextId && nextId !== stored) {
         await AsyncStorage.setItem(ACTIVE_LEAGUE_KEY, nextId);
       }
-    } catch {
-      // Keep going — create/join may succeed even if listing leagues fails (RLS).
+    } catch (err) {
+      const message = getErrorMessage(err, 'Could not load your leagues');
+      setPoolError((prev) => prev ?? `${message} ${LEAGUE_POOL_FIX_HINT}`);
     } finally {
       setIsLoading(false);
     }

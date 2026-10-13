@@ -1,5 +1,7 @@
 import type { League } from '../types/league';
 import { ensureBonusQuestionsForLeague } from './bonusQuestions';
+import { getErrorMessage } from './errors';
+import { isMissingRpcError, LEAGUE_POOL_FIX_HINT } from './leagueFixHint';
 import { defaultDisplayName } from './leagueMembers';
 import { getSupabaseClient } from './supabase';
 
@@ -20,6 +22,28 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
   } = await supabase.auth.getUser();
   if (!user) {
     throw new Error('You must be signed in to create a league.');
+  }
+
+  const { data: rpcLeague, error: rpcError } = await supabase.rpc('create_private_league', {
+    p_name: name,
+    p_sport: sport,
+  });
+
+  if (!rpcError && rpcLeague && typeof rpcLeague === 'object') {
+    const league = rpcLeague as League;
+    try {
+      await ensureBonusQuestionsForLeague(league.id);
+    } catch {
+      // League still created; run bonus SQL migrations to enable tiebreakers.
+    }
+    return league;
+  }
+
+  if (rpcError) {
+    const rpcMessage = getErrorMessage(rpcError, '');
+    if (!isMissingRpcError(rpcMessage)) {
+      throw new Error(`${rpcMessage} ${LEAGUE_POOL_FIX_HINT}`);
+    }
   }
 
   let inviteCode = randomInviteCode();
@@ -55,7 +79,7 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
         display_name: defaultDisplayName(user.email),
       });
       if (memberError) {
-        throw memberError;
+        throw new Error(getErrorMessage(memberError, 'Could not add you to the league'));
       }
       try {
         await ensureBonusQuestionsForLeague(data.id);

@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
 import { SPORT_OPTIONS, useSport } from '../contexts/SportContext';
 import { getErrorMessage } from '../lib/errors';
+import { LEAGUE_POOL_FIX_HINT } from '../lib/leagueFixHint';
 import { createLeague, joinLeagueByCodeForSport } from '../lib/leagues';
 import { isOpenPoolInviteCode } from '../lib/openPool';
 import { colors } from '../theme/colors';
@@ -42,7 +43,7 @@ export default function LeagueSetupScreen() {
     const message = getErrorMessage(err, 'Something went wrong');
     const lower = message.toLowerCase();
     if (lower.includes('permission denied') || lower.includes('row-level security')) {
-      return `${message} — In Supabase SQL Editor, run supabase/fix-play-solo-and-leagues.sql, then try again.`;
+      return `${message} ${LEAGUE_POOL_FIX_HINT}`;
     }
     return message;
   }

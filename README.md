@@ -29,7 +29,8 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`05-bonus-questions.sql`](supabase/05-bonus-questions.sql) | Bonus tiebreakers (MVP, champion, ROY) |
 | [`06-mandatory-bonus-questions.sql`](supabase/06-mandatory-bonus-questions.sql) | Enable bonus on **all** leagues and backfill questions |
 | [`07-open-pool-league.sql`](supabase/07-open-pool-league.sql) | Shared **overall pool** (auto-join; invite `OPENNBA`) |
-| [`fix-play-solo-and-leagues.sql`](supabase/fix-play-solo-and-leagues.sql) | Fix create/join if RLS or columns break |
+| [`RUN-THIS-league-and-pool-fix.sql`](supabase/RUN-THIS-league-and-pool-fix.sql) | **Start here** if overall pool / create league fails |
+| [`fix-play-solo-and-leagues.sql`](supabase/fix-play-solo-and-leagues.sql) | Same fixes (included in RUN-THIS file) |
 
 After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points. Use exact team or player names as stored in picks. Refresh the player list with `npm run refresh:nba-players` (ESPN rosters → `src/data/nba-players.json`).
 

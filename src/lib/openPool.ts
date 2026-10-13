@@ -1,7 +1,10 @@
 import type { SportId } from '../contexts/SportContext';
+import { getErrorMessage } from './errors';
+import { isMissingRpcError, LEAGUE_POOL_FIX_HINT } from './leagueFixHint';
 import { joinLeagueByCodeForSport } from './leagues';
+import { getSupabaseClient } from './supabase';
 
-/** Fixed invite codes for shared overall pools (seeded in supabase/07-open-pool-league.sql). */
+/** Fixed invite codes for shared overall pools. */
 export const OPEN_POOL_INVITE: Record<SportId, string> = {
   NBA: 'OPENNBA',
   AFL: 'OPENAFL',
@@ -17,22 +20,32 @@ export function isOpenPoolInviteCode(code: string | undefined | null): boolean {
 
 /** Join the sport-wide overall pool so picks and overall rank work without creating a league. */
 export async function ensureOpenPoolMembership(sport: SportId): Promise<void> {
-  const code = OPEN_POOL_INVITE[sport];
-  if (!code) {
+  if (sport !== 'NBA') {
     return;
   }
+
+  const supabase = getSupabaseClient();
+
+  const { error: rpcError } = await supabase.rpc('join_open_nba_pool');
+  if (!rpcError) {
+    return;
+  }
+
+  const rpcMessage = getErrorMessage(rpcError, 'Could not join overall pool');
+  if (!isMissingRpcError(rpcMessage)) {
+    throw new Error(`${rpcMessage} ${LEAGUE_POOL_FIX_HINT}`);
+  }
+
   try {
-    await joinLeagueByCodeForSport(code, sport);
+    await joinLeagueByCodeForSport(OPEN_POOL_INVITE.NBA, sport);
   } catch (err) {
-    const message = err instanceof Error ? err.message : '';
+    const message = getErrorMessage(err, 'Could not join overall pool');
     if (message.includes('No league found')) {
-      throw new Error(
-        'Overall pool is not set up in Supabase yet. Run supabase/07-open-pool-league.sql in the SQL Editor, then refresh.',
-      );
+      throw new Error(`Overall pool is not set up yet. ${LEAGUE_POOL_FIX_HINT}`);
     }
     if (message.includes('duplicate') || message.includes('23505')) {
       return;
     }
-    throw err;
+    throw new Error(`${message} ${LEAGUE_POOL_FIX_HINT}`);
   }
 }

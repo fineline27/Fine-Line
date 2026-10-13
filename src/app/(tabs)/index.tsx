@@ -146,8 +146,7 @@ export default function StandingsScreen() {
         <View style={styles.centered}>
           <Text style={styles.errorTitle}>Joining overall pool…</Text>
           <Text style={styles.errorBody}>
-            Run supabase/07-open-pool-league.sql and supabase/fix-play-solo-and-leagues.sql in Supabase,
-            then tap Try again.
+            In Supabase SQL Editor, run supabase/RUN-THIS-league-and-pool-fix.sql once, then tap Try again.
           </Text>
           <Pressable style={styles.retryButton} onPress={() => void refreshLeagues()}>
             <Text style={styles.retryText}>Try again</Text>
