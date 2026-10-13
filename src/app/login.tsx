@@ -42,7 +42,7 @@ export default function LoginScreen() {
       <View style={styles.hero}>
         <Text style={styles.brand}>Fine Line</Text>
         <Text style={styles.blurb}>
-          Predict season results and play against your mates. Who knows more sport?
+          Predict results and play against your mates. Who knows more sport??
         </Text>
       </View>
       <View style={styles.card}>
@@ -81,7 +81,30 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', padding: 24 },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  hero: {
+    marginBottom: 28,
+    paddingHorizontal: 4,
+  },
+  brand: {
+    color: colors.textPrimary,
+    fontSize: 44,
+    fontWeight: '900',
+    letterSpacing: -1.2,
+  },
+  blurb: {
+    color: colors.textSecondary,
+    fontSize: 17,
+    lineHeight: 24,
+    marginTop: 12,
+    fontWeight: '500',
+    maxWidth: 340,
+  },
   card: {
     backgroundColor: colors.surface,
     borderRadius: 16,
@@ -89,8 +112,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800' },
-  subtitle: { color: colors.textSecondary, marginTop: 8, marginBottom: 20 },
+  formTitle: {
+    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 16,
+  },
   input: {
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
