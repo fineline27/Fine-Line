@@ -32,7 +32,11 @@ export function useTeams(): TeamsState {
       const data = await fetchTeams();
       setTeams(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load teams';
+      let message = err instanceof Error ? err.message : 'Failed to load teams';
+      if (message.toLowerCase().includes('permission denied')) {
+        message +=
+          ' Enable public read on the teams table (see README SQL for a select policy).';
+      }
       setError(message);
       setTeams([]);
     } finally {
