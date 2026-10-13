@@ -1,5 +1,18 @@
+-- Same as 01-seed-30-nba-teams.sql (copy this file into Supabase SQL Editor)
+
 grant select on public.teams to anon, authenticated;
+
+alter table public.teams enable row level security;
+
+drop policy if exists "Public read teams" on public.teams;
+create policy "Public read teams"
+  on public.teams
+  for select
+  to anon, authenticated
+  using (true);
+
 delete from public.teams;
+
 insert into public.teams (sport, name, abbreviation, primary_color, secondary_color, total_season_games, ou_line, current_wins, current_losses) values
 ('NBA', 'Atlanta Hawks', 'ATL', '#E03A3E', '#C1D32F', 82, 46.5, 0, 0),
 ('NBA', 'Boston Celtics', 'BOS', '#007A33', '#BA9653', 82, 54.5, 0, 0),
@@ -9,7 +22,7 @@ insert into public.teams (sport, name, abbreviation, primary_color, secondary_co
 ('NBA', 'Cleveland Cavaliers', 'CLE', '#860038', '#FDBB30', 82, 48.5, 0, 0),
 ('NBA', 'Detroit Pistons', 'DET', '#C8102E', '#1D42BA', 82, 35.5, 0, 0),
 ('NBA', 'Indiana Pacers', 'IND', '#002D62', '#FDBB30', 82, 44.5, 0, 0),
-('NBA', 'Miami Heat', 'MIA', '#98002E', '#000000', 82, 46.5, 0, 0),
+('NBA', 'Miami Heat', 'MIA', '#98002E', '#F9A01B', 82, 46.5, 0, 0),
 ('NBA', 'Milwaukee Bucks', 'MIL', '#00471B', '#EEE1C6', 82, 49.5, 0, 0),
 ('NBA', 'New York Knicks', 'NYK', '#006BB6', '#F58426', 82, 50.5, 0, 0),
 ('NBA', 'Orlando Magic', 'ORL', '#0077C0', '#000000', 82, 47.5, 0, 0),

@@ -18,46 +18,16 @@ cp .env.example .env
 
 Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`) from your Supabase project (**Settings → API**).
 
-3. Create the `teams` table (example):
+3. Database scripts (in **`supabase/`**):
 
-```sql
-create table public.teams (
-  id uuid primary key default gen_random_uuid(),
-  sport text not null,
-  name text not null,
-  abbreviation text not null,
-  primary_color text not null default '#334155',
-  secondary_color text,
-  total_season_games integer not null,
-  ou_line numeric not null,
-  current_wins integer not null default 0,
-  current_losses integer not null default 0
-);
+| File | When to run |
+|------|-------------|
+| [`00-schema.sql`](supabase/00-schema.sql) | Once — creates all tables (teams, leagues, predictions, etc.) |
+| [`01-seed-30-nba-teams.sql`](supabase/01-seed-30-nba-teams.sql) | When you need all 30 NBA teams + RLS read access |
 
-grant select on public.teams to anon, authenticated;
+**Do not** mix schema + sample 3-team inserts + delete/insert in one paste from chat. Tables already exist → run **`01-seed-30-nba-teams.sql` only** (copy from the repo file in Cursor).
 
-alter table public.teams enable row level security;
-
-drop policy if exists "Public read teams" on public.teams;
-create policy "Public read teams"
-  on public.teams
-  for select
-  to anon, authenticated
-  using (true);
-```
-
-Optional: `league_members` (`user_id uuid`, `rank integer`) for the signed-in user’s header rank.
-
-### Seed all 30 NBA teams
-
-1. In Cursor, open **`supabase/load-30-nba-teams.sql`** (file tree — do not copy from chat).
-2. Select all (Cmd/Ctrl+A) → Copy.
-3. Supabase Dashboard → **SQL Editor** → **New query** → select all in the box → Delete → Paste → **Run**.
-4. Table Editor → `teams` → confirm **30 rows**. App: pull to refresh, or `npm run check:teams`.
-
-Do not paste anything after the last `);` — extra words like “Full script” cause `syntax error at or near "Full"`.
-
-The seed **deletes existing rows** in `teams` and inserts all 30 franchises.
+4. Confirm: **Table Editor** → `teams` → **30 rows**. App: pull to refresh, or `npm run check:teams`.
 
 4. Start the dev server:
 
