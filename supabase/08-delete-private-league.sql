@@ -1,5 +1,17 @@
 -- League owners can delete their private leagues. Run after 02-auth-rls.sql (or re-run RUN-THIS-league-and-pool-fix.sql).
 
+-- Older leagues may have null creator_id; first member becomes owner for delete purposes.
+update public.leagues l
+set creator_id = sub.user_id
+from (
+  select distinct on (league_id) league_id, user_id
+  from public.league_members
+  order by league_id, joined_at asc nulls last, user_id
+) sub
+where l.id = sub.league_id
+  and l.creator_id is null
+  and upper(l.invite_code) not in ('OPENNBA', 'OPENAFL');
+
 grant delete on public.leagues to authenticated;
 
 drop policy if exists "Creators delete own leagues" on public.leagues;

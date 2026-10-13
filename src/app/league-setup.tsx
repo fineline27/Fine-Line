@@ -16,12 +16,8 @@ import { useLeague } from '../contexts/LeagueContext';
 import { SPORT_OPTIONS, useSport } from '../contexts/SportContext';
 import { getErrorMessage } from '../lib/errors';
 import { LEAGUE_POOL_FIX_HINT } from '../lib/leagueFixHint';
-import {
-  canDeleteLeague,
-  createLeague,
-  deleteLeague,
-  joinLeagueByCodeForSport,
-} from '../lib/leagues';
+import { DeleteLeagueSection } from '../components/DeleteLeagueSection';
+import { canDeleteLeague, createLeague, joinLeagueByCodeForSport } from '../lib/leagues';
 import { isOpenPoolInviteCode } from '../lib/openPool';
 import { colors } from '../theme/colors';
 
@@ -32,11 +28,12 @@ export default function LeagueSetupScreen() {
   const [inviteCode, setInviteCode] = useState('');
   const [leagueName, setLeagueName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdCode, setCreatedCode] = useState<string | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const privateLeagues = leagues.filter((l) => !isOpenPoolInviteCode(l.invite_code));
+  const ownsAnyPrivateLeague = privateLeagues.some((l) => canDeleteLeague(l, user?.id));
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -69,25 +66,6 @@ export default function LeagueSetupScreen() {
       setCreatedCode(code);
       await setActiveLeagueId(league.id);
       await refreshLeagues().catch(() => undefined);
-    } catch (err) {
-      setError(formatLeagueError(err));
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function onDeleteLeague(leagueId: string) {
-    setBusy(`delete-${leagueId}`);
-    setError(null);
-    try {
-      await deleteLeague(leagueId);
-      setConfirmDeleteId(null);
-      if (activeLeague?.id === leagueId) {
-        await refreshLeagues();
-        router.replace('/');
-        return;
-      }
-      await refreshLeagues();
     } catch (err) {
       setError(formatLeagueError(err));
     } finally {
@@ -208,13 +186,12 @@ export default function LeagueSetupScreen() {
           <Text style={styles.sectionHint}>Tap a league to use it for picks. Owners can delete a league permanently.</Text>
           {privateLeagues.map((l) => {
             const owner = canDeleteLeague(l, user?.id);
-            const confirming = confirmDeleteId === l.id;
             return (
               <View key={l.id} style={styles.leagueRowWrap}>
                 <Pressable
                   style={styles.leagueRow}
                   onPress={() => void setActiveLeagueId(l.id).then(() => router.replace('/'))}
-                  disabled={!!busy}
+                  disabled={!!busy || deleteBusy}
                 >
                   <View style={styles.leagueRowMain}>
                     <Text style={styles.leagueRowText}>{l.name}</Text>
@@ -223,42 +200,20 @@ export default function LeagueSetupScreen() {
                   <Text style={styles.leagueCode}>{l.invite_code}</Text>
                 </Pressable>
                 {owner ? (
-                  confirming ? (
-                    <View style={styles.deleteConfirmBox}>
-                      <Text style={styles.deleteConfirmText}>
-                        Delete &quot;{l.name}&quot;? All members, picks, and bonus answers for this league
-                        will be removed. This cannot be undone.
-                      </Text>
-                      <View style={styles.deleteConfirmActions}>
-                        <Pressable
-                          style={styles.deleteCancel}
-                          onPress={() => setConfirmDeleteId(null)}
-                          disabled={!!busy}
-                        >
-                          <Text style={styles.deleteCancelText}>Cancel</Text>
-                        </Pressable>
-                        <Pressable
-                          style={styles.deleteConfirm}
-                          onPress={() => void onDeleteLeague(l.id)}
-                          disabled={!!busy}
-                        >
-                          {busy === `delete-${l.id}` ? (
-                            <ActivityIndicator color="#fff" />
-                          ) : (
-                            <Text style={styles.deleteConfirmTextBtn}>Delete league</Text>
-                          )}
-                        </Pressable>
-                      </View>
-                    </View>
-                  ) : (
-                    <Pressable
-                      style={styles.deleteLink}
-                      onPress={() => setConfirmDeleteId(l.id)}
-                      disabled={!!busy}
-                    >
-                      <Text style={styles.deleteLinkText}>Delete league</Text>
-                    </Pressable>
-                  )
+                  <DeleteLeagueSection
+                    league={l}
+                    userId={user?.id}
+                    busy={deleteBusy}
+                    onBusyChange={setDeleteBusy}
+                    onDeleted={async () => {
+                      if (activeLeague?.id === l.id) {
+                        await refreshLeagues();
+                        router.replace('/');
+                        return;
+                      }
+                      await refreshLeagues();
+                    }}
+                  />
                 ) : null}
               </View>
             );
@@ -359,36 +314,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   leagueCode: { color: colors.textMuted, fontFamily: 'monospace' },
-  deleteLink: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 2 },
-  deleteLinkText: { color: colors.statusNeedsWork, fontWeight: '700', fontSize: 13 },
-  deleteConfirmBox: {
-    marginTop: 6,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: colors.statusNeedsWorkBg,
-    borderWidth: 1,
-    borderColor: colors.statusNeedsWork,
-  },
-  deleteConfirmText: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
-  deleteConfirmActions: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  deleteCancel: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
-  },
-  deleteCancelText: { color: colors.textPrimary, fontWeight: '700' },
-  deleteConfirm: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: colors.statusNeedsWork,
-  },
-  deleteConfirmTextBtn: { color: '#fff', fontWeight: '800' },
   errorBox: {
     marginTop: 8,
     padding: 14,

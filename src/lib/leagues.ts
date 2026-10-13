@@ -212,10 +212,18 @@ export async function deleteLeague(leagueId: string): Promise<void> {
     throw new Error('Only the league owner can delete this league.');
   }
 
-  const { error: deleteError } = await supabase.from('leagues').delete().eq('id', leagueId);
+  const { error: deleteError, count } = await supabase
+    .from('leagues')
+    .delete({ count: 'exact' })
+    .eq('id', leagueId);
 
   if (deleteError) {
     throw new Error(getErrorMessage(deleteError, 'Could not delete league'));
+  }
+  if (!count) {
+    throw new Error(
+      'Could not delete league (database blocked it). Run supabase/08-delete-private-league.sql in Supabase SQL Editor, then try again.',
+    );
   }
 }
 

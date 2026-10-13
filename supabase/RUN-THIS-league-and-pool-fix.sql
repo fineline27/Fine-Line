@@ -209,6 +209,17 @@ revoke all on function public.create_private_league(text, text) from public;
 grant execute on function public.create_private_league(text, text) to authenticated;
 
 -- League owners can delete private leagues (not the overall pool)
+update public.leagues l
+set creator_id = sub.user_id
+from (
+  select distinct on (league_id) league_id, user_id
+  from public.league_members
+  order by league_id, joined_at asc nulls last, user_id
+) sub
+where l.id = sub.league_id
+  and l.creator_id is null
+  and upper(l.invite_code) not in ('OPENNBA', 'OPENAFL');
+
 grant delete on public.leagues to authenticated;
 
 drop policy if exists "Creators delete own leagues" on public.leagues;

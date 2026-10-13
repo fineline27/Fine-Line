@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DeleteLeagueSection } from '../../components/DeleteLeagueSection';
 import { LeaderboardPlayerRow } from '../../components/LeaderboardPlayerRow';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLeague } from '../../contexts/LeagueContext';
@@ -23,14 +24,17 @@ import {
   buildPlayerBonusPicks,
   buildPlayerOuPicks,
 } from '../../lib/playerPickDetails';
+import { canDeleteLeague } from '../../lib/leagues';
+import { isOpenPoolInviteCode } from '../../lib/openPool';
 import { colors } from '../../theme/colors';
 
 type Segment = 'leaderboard' | 'picks' | 'bonus';
 
 export default function LeagueBoardScreen() {
-  const { session, isLoading: authLoading } = useAuth();
+  const { session, user, isLoading: authLoading } = useAuth();
   const { sport, isLoading: sportLoading } = useSport();
-  const { activeLeague, isLoading: leagueLoading } = useLeague();
+  const { activeLeague, isLoading: leagueLoading, refreshLeagues } = useLeague();
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const { teams, loading: teamsLoading, refresh: refreshTeams } = useTeams();
   const { picksSubmitted, loading: membershipLoading, refresh: refreshMembership } =
     useLeagueMembership();
@@ -69,7 +73,28 @@ export default function LeagueBoardScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>League board</Text>
         <Text style={styles.subtitle}>{activeLeague?.name ?? 'Your league'}</Text>
+        {activeLeague && isOpenPoolInviteCode(activeLeague.invite_code) ? (
+          <Text style={styles.poolHint}>
+            This is the overall pool. Switch to a friends league under Private leagues to use a
+            smaller board.
+          </Text>
+        ) : null}
       </View>
+
+      {activeLeague && canDeleteLeague(activeLeague, user?.id) ? (
+        <View style={styles.deleteWrap}>
+          <DeleteLeagueSection
+            league={activeLeague}
+            userId={user?.id}
+            busy={deleteBusy}
+            onBusyChange={setDeleteBusy}
+            onDeleted={async () => {
+              await refreshLeagues();
+              router.replace('/');
+            }}
+          />
+        </View>
+      ) : null}
 
       {!picksSubmitted ? (
         <View style={styles.lockedWrap}>
@@ -250,6 +275,16 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 4,
     fontSize: 15,
+  },
+  poolHint: {
+    color: colors.textMuted,
+    marginTop: 8,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  deleteWrap: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
   },
   lockedWrap: {
     margin: 20,
