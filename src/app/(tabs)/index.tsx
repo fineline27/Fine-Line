@@ -21,6 +21,7 @@ import { useLeagueMembership } from '../../hooks/useLeagueMembership';
 import { useLeagueRank } from '../../hooks/useLeagueRank';
 import { useOverallRank } from '../../hooks/useOverallRank';
 import { usePredictions } from '../../hooks/usePredictions';
+import { useSeasonLock } from '../../hooks/useSeasonLock';
 import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
 import type { Team } from '../../types/team';
 import { getSupabaseProjectRef } from '../../lib/supabaseConfig';
@@ -31,13 +32,7 @@ export default function StandingsScreen() {
   const { sport, isLoading: sportLoading } = useSport();
   const { activeLeague, isLoading: leagueLoading, poolError, refreshLeagues } = useLeague();
   const { teams, loading, error, refresh } = useTeams();
-  const {
-    picksSubmitted,
-    submitting,
-    submitPicks,
-    error: membershipError,
-    refresh: refreshMembership,
-  } = useLeagueMembership();
+  const { locked: seasonLocked, countdownLabel, lockAtLabel } = useSeasonLock();
   const {
     picks,
     togglePick,
@@ -45,7 +40,16 @@ export default function StandingsScreen() {
     savingTeamId,
     error: picksError,
     refresh: refreshPicks,
-  } = usePredictions(picksSubmitted);
+  } = usePredictions(seasonLocked);
+  const pickCount = Object.keys(picks).length;
+  const requiredPicks = teams.length;
+  const {
+    picksSubmitted,
+    submitting,
+    submitPicks,
+    error: membershipError,
+    refresh: refreshMembership,
+  } = useLeagueMembership(pickCount, requiredPicks);
   const {
     questions: bonusQuestions,
     answers: bonusAnswers,
@@ -56,15 +60,13 @@ export default function StandingsScreen() {
     allAnswered: bonusAllAnswered,
     refresh: refreshBonus,
     setAnswer: setBonusAnswer,
-  } = useBonusPicks(picksSubmitted);
+  } = useBonusPicks(seasonLocked);
   const overallRank = useOverallRank(teams);
   const leagueRank = useLeagueRank(teams, picksSubmitted);
   const myScore = leagueRank.myScore;
   const clinched = leagueRank.clinched;
-
-  const pickCount = Object.keys(picks).length;
-  const requiredPicks = teams.length;
   const canSubmit =
+    !seasonLocked &&
     !picksSubmitted &&
     requiredPicks > 0 &&
     pickCount >= requiredPicks &&
@@ -92,8 +94,9 @@ export default function StandingsScreen() {
 
   async function onSubmitPicks() {
     try {
-      await submitPicks(requiredPicks, pickCount);
+      await submitPicks();
       await refreshPicks();
+      await refreshMembership();
     } catch {
       // error surfaced via membershipError / submit hook
     }
@@ -200,7 +203,7 @@ export default function StandingsScreen() {
               team={item}
               pick={picks[item.id]}
               saving={savingTeamId === item.id}
-              picksLocked={picksSubmitted}
+              picksLocked={seasonLocked}
               onPickChange={(teamId, side) => void togglePick(teamId, side)}
             />
           )}
@@ -222,50 +225,68 @@ export default function StandingsScreen() {
                   answers={bonusAnswers}
                   teamNames={teams.map((t) => t.name)}
                   loading={bonusLoading}
-                  locked={picksSubmitted}
+                  locked={seasonLocked}
                   savingQuestionId={bonusSavingId}
                   onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
                 />
               ) : null}
-              {!picksSubmitted ? (
-              <View style={styles.submitBanner}>
-                <Text style={styles.submitTitle}>Finish your card</Text>
-                <Text style={styles.submitBody}>
-                  Pick OVER or UNDER on every team ({pickCount}/{requiredPicks})
-                  {bonusSetupRequired
-                    ? ', then submit to open the league board (bonus tiebreakers unlock after Supabase setup above).'
-                    : ', answer the bonus tiebreakers, then submit to open the league board.'}
+              <View style={styles.seasonLockBanner}>
+                <Text style={styles.seasonLockTitle}>
+                  {seasonLocked ? 'Picks locked for the season' : countdownLabel}
                 </Text>
-                <Pressable
-                  style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
-                  disabled={!canSubmit || submitting}
-                  onPress={() => void onSubmitPicks()}
-                >
-                  {submitting ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text
-                      style={[
-                        styles.submitButtonText,
-                        canSubmit && styles.submitButtonTextActive,
-                      ]}
-                    >
-                      {canSubmit
-                        ? 'Submit picks'
-                        : pickCount < requiredPicks
-                          ? `${requiredPicks - pickCount} picks left`
-                          : !bonusAllAnswered
-                            ? 'Answer bonus tiebreakers'
-                            : 'Submit picks'}
-                    </Text>
-                  )}
-                </Pressable>
+                <Text style={styles.seasonLockBody}>
+                  {seasonLocked
+                    ? 'The first NBA games have started. Your O/U and bonus picks can no longer be changed.'
+                    : `One pick card for all your ${sport ?? 'NBA'} leagues. You can change picks until the first game (${lockAtLabel}).`}
+                </Text>
               </View>
-            ) : (
-              <View style={styles.lockedBanner}>
-                <Text style={styles.lockedText}>Picks locked · view the League tab for the board</Text>
-              </View>
-            )}
+              {seasonLocked ? (
+                <View style={styles.lockedBanner}>
+                  <Text style={styles.lockedText}>
+                    Season locked · view the League tab for standings
+                  </Text>
+                </View>
+              ) : !picksSubmitted ? (
+                <View style={styles.submitBanner}>
+                  <Text style={styles.submitTitle}>Finish your card</Text>
+                  <Text style={styles.submitBody}>
+                    Pick OVER or UNDER on every team ({pickCount}/{requiredPicks})
+                    {bonusSetupRequired
+                      ? ', then submit to open the league board (bonus tiebreakers unlock after Supabase setup above).'
+                      : ', answer the bonus tiebreakers, then submit to open the league board.'}
+                  </Text>
+                  <Pressable
+                    style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
+                    disabled={!canSubmit || submitting}
+                    onPress={() => void onSubmitPicks()}
+                  >
+                    {submitting ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.submitButtonText,
+                          canSubmit && styles.submitButtonTextActive,
+                        ]}
+                      >
+                        {canSubmit
+                          ? 'Submit picks'
+                          : pickCount < requiredPicks
+                            ? `${requiredPicks - pickCount} picks left`
+                            : !bonusAllAnswered
+                              ? 'Answer bonus tiebreakers'
+                              : 'Submit picks'}
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              ) : (
+                <View style={styles.lockedBanner}>
+                  <Text style={styles.lockedText}>
+                    Submitted · you can still edit until the first game ({countdownLabel})
+                  </Text>
+                </View>
+              )}
             </>
           }
           ListFooterComponent={
@@ -312,6 +333,25 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 12,
     lineHeight: 17,
+  },
+  seasonLockBanner: {
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    padding: 14,
+    marginBottom: 12,
+  },
+  seasonLockTitle: {
+    color: colors.textPrimary,
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  seasonLockBody: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    marginTop: 6,
+    lineHeight: 18,
   },
   submitBanner: {
     backgroundColor: colors.surfaceElevated,

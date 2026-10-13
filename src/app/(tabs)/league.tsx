@@ -37,7 +37,7 @@ export default function LeagueBoardScreen() {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const { teams, loading: teamsLoading, refresh: refreshTeams } = useTeams();
   const { picksSubmitted, loading: membershipLoading, refresh: refreshMembership } =
-    useLeagueMembership();
+    useLeagueMembership(0, teams.length);
   const {
     leaderboard,
     predictions,

@@ -180,10 +180,23 @@ export default function LeagueSetupScreen() {
         </Pressable>
       </View>
 
+      {privateLeagues.length > 0 && !ownsAnyPrivateLeague ? (
+        <View style={styles.setupHintBox}>
+          <Text style={styles.setupHintTitle}>Enable delete for leagues you created</Text>
+          <Text style={styles.setupHintBody}>
+            In Supabase SQL Editor, run the file supabase/08-delete-private-league.sql once. That
+            marks you as owner and turns on delete for creators.
+          </Text>
+        </View>
+      ) : null}
+
       {privateLeagues.length > 0 ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Your private leagues</Text>
-          <Text style={styles.sectionHint}>Tap a league to use it for picks. Owners can delete a league permanently.</Text>
+          <Text style={styles.sectionHint}>
+            Tap a league to use it for picks. If you created it, you&apos;ll see Owner and can delete
+            it below.
+          </Text>
           {privateLeagues.map((l) => {
             const owner = canDeleteLeague(l, user?.id);
             return (
@@ -253,6 +266,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { color: colors.textPrimary, fontWeight: '700', marginBottom: 10 },
   sectionHint: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginBottom: 12 },
+  setupHintBox: {
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  setupHintTitle: { color: colors.textPrimary, fontWeight: '800', marginBottom: 6 },
+  setupHintBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
   input: {
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,

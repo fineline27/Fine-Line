@@ -1,8 +1,10 @@
+import type { SportId } from '../contexts/SportContext';
 import {
   NBA_BONUS_QUESTION_TEMPLATES,
   type BonusAnswerRow,
   type BonusQuestion,
 } from '../types/bonus';
+import { fetchMyLeagueIdsForSport } from './sportPicks';
 import { getSupabaseClient } from './supabase';
 
 export async function seedBonusQuestionsForLeague(leagueId: string): Promise<void> {
@@ -95,6 +97,60 @@ export async function fetchBonusAnswersForLeague(
     throw error;
   }
   return (data ?? []) as BonusAnswerRow[];
+}
+
+export async function upsertBonusAnswerForSport(
+  sport: SportId,
+  questionKey: string,
+  answer: string,
+): Promise<void> {
+  const leagueIds = await fetchMyLeagueIdsForSport(sport);
+  if (leagueIds.length === 0) {
+    throw new Error('Join a league before saving bonus picks.');
+  }
+
+  const supabase = getSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Sign in to save bonus picks.');
+  }
+
+  const { data: questions, error: qError } = await supabase
+    .from('bonus_questions')
+    .select('id')
+    .in('league_id', leagueIds)
+    .eq('question_key', questionKey);
+
+  if (qError) {
+    throw qError;
+  }
+
+  const questionIds = (questions ?? []).map((q) => q.id);
+  if (questionIds.length === 0) {
+    throw new Error('Bonus questions are not set up for your leagues yet.');
+  }
+
+  const trimmed = answer.trim();
+  if (!trimmed) {
+    await supabase.from('bonus_answers').delete().eq('user_id', user.id).in('question_id', questionIds);
+    return;
+  }
+
+  const rows = questionIds.map((questionId) => ({
+    question_id: questionId,
+    user_id: user.id,
+    user_answer: trimmed,
+  }));
+
+  const { error } = await supabase.from('bonus_answers').upsert(rows, {
+    onConflict: 'question_id,user_id',
+  });
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function upsertBonusAnswer(questionId: string, answer: string): Promise<void> {

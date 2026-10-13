@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLeague } from '../contexts/LeagueContext';
-import { fetchMyLeagueMembership, submitLeaguePicks } from '../lib/leagueMembers';
+import { useSport } from '../contexts/SportContext';
+import {
+  alignSubmitStateForSport,
+  fetchMyLeagueMembership,
+  submitPicksForSport,
+} from '../lib/leagueMembers';
 import type { LeagueMember } from '../types/leagueMember';
 
-export function useLeagueMembership() {
+export function useLeagueMembership(pickCount: number, requiredPickCount: number) {
   const { activeLeague } = useLeague();
+  const { sport } = useSport();
   const [membership, setMembership] = useState<LeagueMember | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -15,7 +21,7 @@ export function useLeagueMembership() {
   const picksSubmitted = Boolean(membership?.picks_submitted_at);
 
   const refresh = useCallback(async () => {
-    if (!leagueId) {
+    if (!leagueId || !sport) {
       setMembership(null);
       setLoading(false);
       return;
@@ -24,6 +30,7 @@ export function useLeagueMembership() {
     setLoading(true);
     setError(null);
     try {
+      await alignSubmitStateForSport(sport, requiredPickCount, pickCount);
       const row = await fetchMyLeagueMembership(leagueId);
       setMembership(row);
     } catch (err) {
@@ -32,31 +39,28 @@ export function useLeagueMembership() {
     } finally {
       setLoading(false);
     }
-  }, [leagueId]);
+  }, [leagueId, sport, requiredPickCount, pickCount]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
-  const submitPicks = useCallback(
-    async (requiredPickCount: number, currentPickCount: number) => {
-      if (!leagueId) {
-        return;
-      }
-      setSubmitting(true);
-      setError(null);
-      try {
-        await submitLeaguePicks(leagueId, requiredPickCount, currentPickCount);
-        await refresh();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to submit picks');
-        throw err;
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [leagueId, refresh],
-  );
+  const submitPicks = useCallback(async () => {
+    if (!sport) {
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await submitPicksForSport(sport, requiredPickCount, pickCount);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit picks');
+      throw err;
+    } finally {
+      setSubmitting(false);
+    }
+  }, [sport, requiredPickCount, pickCount, refresh]);
 
   return {
     membership,

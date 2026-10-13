@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useLeague } from '../contexts/LeagueContext';
+import { useSport } from '../contexts/SportContext';
+import type { SportId } from '../contexts/SportContext';
 import {
   ensureBonusQuestionsForLeague,
   fetchBonusQuestionsForLeague,
   fetchMyBonusAnswers,
-  upsertBonusAnswer,
+  upsertBonusAnswerForSport,
 } from '../lib/bonusQuestions';
 import { BONUS_SETUP_SQL_HINT, isBonusSetupError } from '../lib/bonusSchema';
 import type { BonusQuestion } from '../types/bonus';
 
 export function useBonusPicks(picksLocked: boolean) {
   const { activeLeague } = useLeague();
+  const { sport } = useSport();
+  const sportId = (sport ?? 'NBA') as SportId;
   const leagueId = activeLeague?.id;
 
   const [questions, setQuestions] = useState<BonusQuestion[]>([]);
@@ -69,10 +73,16 @@ export function useBonusPicks(picksLocked: boolean) {
       if (picksLocked) {
         return;
       }
+      const question = questions.find((q) => q.id === questionId);
+      const questionKey = question?.question_key;
+      if (!questionKey) {
+        setError('Could not save bonus pick for this question.');
+        return;
+      }
       setSavingQuestionId(questionId);
       setError(null);
       try {
-        await upsertBonusAnswer(questionId, value);
+        await upsertBonusAnswerForSport(sportId, questionKey, value);
         setAnswers((prev) => {
           const next = { ...prev };
           const trimmed = value.trim();
@@ -89,7 +99,7 @@ export function useBonusPicks(picksLocked: boolean) {
         setSavingQuestionId(null);
       }
     },
-    [picksLocked],
+    [picksLocked, questions, sportId],
   );
 
   const allAnswered =
