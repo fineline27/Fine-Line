@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
 import { SPORT_OPTIONS, useSport } from '../contexts/SportContext';
+import { getErrorMessage } from '../lib/errors';
 import { createLeague, createSoloLeague, joinLeagueByCodeForSport } from '../lib/leagues';
 import { colors } from '../theme/colors';
 
@@ -49,7 +50,7 @@ export default function LeagueSetupScreen() {
   }
 
   function formatLeagueError(err: unknown): string {
-    const message = err instanceof Error ? err.message : 'Something went wrong';
+    const message = getErrorMessage(err, 'Something went wrong');
     const lower = message.toLowerCase();
     if (lower.includes('permission denied') || lower.includes('row-level security')) {
       return `${message} — In Supabase SQL Editor, run supabase/fix-play-solo-and-leagues.sql, then try again.`;

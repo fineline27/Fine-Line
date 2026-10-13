@@ -39,6 +39,15 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
       ({ data, error } = await supabase.from('leagues').insert(payload).select('*').single());
     }
 
+    if (error?.message?.includes('sport') && error.message.includes('does not exist')) {
+      const { sport: _s, ...withoutSport } = payload;
+      ({ data, error } = await supabase
+        .from('leagues')
+        .insert(withoutSport)
+        .select('*')
+        .single());
+    }
+
     if (!error && data) {
       const { error: memberError } = await supabase.from('league_members').insert({
         league_id: data.id,
@@ -59,7 +68,11 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
       inviteCode = randomInviteCode();
       continue;
     }
-    throw error ?? new Error('Failed to create league');
+    const msg =
+      error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+        ? error.message
+        : 'Failed to create league';
+    throw new Error(msg);
   }
   throw new Error('Could not generate a unique invite code.');
 }
