@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useAuth } from './AuthContext';
+import { useSport } from './SportContext';
 import { fetchMyLeagues } from '../lib/leagues';
 import type { League } from '../types/league';
 
@@ -19,6 +20,7 @@ const LeagueContext = createContext<LeagueContextValue | null>(null);
 
 export function LeagueProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const { sport } = useSport();
   const [leagues, setLeagues] = useState<League[]>([]);
   const [activeLeagueId, setActiveLeagueIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,11 +36,12 @@ export function LeagueProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const list = await fetchMyLeagues();
-      setLeagues(list);
+      const forSport = sport ? list.filter((l) => l.sport === sport) : list;
+      setLeagues(forSport);
 
       const stored = await AsyncStorage.getItem(ACTIVE_LEAGUE_KEY);
-      const storedValid = stored && list.some((l) => l.id === stored);
-      const nextId = storedValid ? stored : list[0]?.id ?? null;
+      const storedValid = stored && forSport.some((l) => l.id === stored);
+      const nextId = storedValid ? stored : forSport[0]?.id ?? null;
       setActiveLeagueIdState(nextId);
       if (nextId && nextId !== stored) {
         await AsyncStorage.setItem(ACTIVE_LEAGUE_KEY, nextId);
@@ -46,7 +49,7 @@ export function LeagueProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, sport]);
 
   useEffect(() => {
     void refreshLeagues();

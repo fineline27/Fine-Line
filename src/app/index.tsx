@@ -14,6 +14,7 @@ import { LeagueHeader } from '../components/LeagueHeader';
 import { TeamCard } from '../components/TeamCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
+import { useSport } from '../contexts/SportContext';
 import { useLeagueRank } from '../hooks/useLeagueRank';
 import { usePredictions } from '../hooks/usePredictions';
 import { TEAMS_RLS_SQL, useTeams } from '../hooks/useTeams';
@@ -23,6 +24,7 @@ import { colors } from '../theme/colors';
 
 export default function StandingsScreen() {
   const { session, isLoading: authLoading } = useAuth();
+  const { sport, isLoading: sportLoading } = useSport();
   const { activeLeague, isLoading: leagueLoading } = useLeague();
   const { teams, loading, error, refresh } = useTeams();
   const {
@@ -43,6 +45,10 @@ export default function StandingsScreen() {
     return <Redirect href="/login" />;
   }
 
+  if (!authLoading && !sportLoading && session && !sport) {
+    return <Redirect href="/select-sport" />;
+  }
+
   if (!authLoading && !leagueLoading && session && !activeLeague) {
     return <Redirect href="/league-setup" />;
   }
@@ -55,6 +61,7 @@ export default function StandingsScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <LeagueHeader
         leagueName={activeLeague?.name ?? null}
+        sport={sport}
         rank={rank}
         rankLoading={rankLoading}
         totalPlayers={totalPlayers}

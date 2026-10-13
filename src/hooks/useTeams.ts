@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { useSport } from '../contexts/SportContext';
 import { getErrorMessage } from '../lib/errors';
-import { fetchTeams, isSupabaseConfigured, resetSupabaseClient } from '../lib/supabase';
+import { fetchTeams, isSupabaseConfigured } from '../lib/supabase';
 import type { Team } from '../types/team';
 
 /** Run in Supabase SQL Editor when the app cannot read teams. */
@@ -26,6 +27,7 @@ type TeamsState = {
 };
 
 export function useTeams(): TeamsState {
+  const { sport } = useSport();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,10 +44,8 @@ export function useTeams(): TeamsState {
 
     setLoading(true);
     setError(null);
-    resetSupabaseClient();
-
     try {
-      const data = await fetchTeams();
+      const data = await fetchTeams(sport ?? 'NBA');
       setTeams(data);
     } catch (err) {
       let message = getErrorMessage(err, 'Failed to load teams');
@@ -61,7 +61,7 @@ export function useTeams(): TeamsState {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sport]);
 
   useEffect(() => {
     void refresh();

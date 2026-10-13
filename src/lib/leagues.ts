@@ -49,12 +49,12 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
   throw new Error('Could not generate a unique invite code.');
 }
 
-export async function createSoloLeague(): Promise<League> {
+export async function createSoloLeague(sport = 'NBA'): Promise<League> {
   const {
     data: { user },
   } = await getSupabaseClient().auth.getUser();
   const label = user?.email?.split('@')[0] ?? 'Player';
-  return createLeague(`${label}'s Solo Season`, 'NBA');
+  return createLeague(`${label}'s Solo Season`, sport);
 }
 
 export async function joinLeagueByCode(code: string): Promise<League> {
@@ -90,6 +90,17 @@ export async function joinLeagueByCode(code: string): Promise<League> {
   }
 
   return league as League;
+}
+
+export async function joinLeagueByCodeForSport(
+  code: string,
+  expectedSport: string,
+): Promise<League> {
+  const league = await joinLeagueByCode(code);
+  if (league.sport !== expectedSport) {
+    throw new Error(`That league is for ${league.sport}. Switch sport to join it.`);
+  }
+  return league;
 }
 
 export async function fetchMyLeagues(): Promise<League[]> {

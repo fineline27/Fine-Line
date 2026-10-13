@@ -12,11 +12,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
-import { createLeague, createSoloLeague, joinLeagueByCode } from '../lib/leagues';
+import { SPORT_OPTIONS, useSport } from '../contexts/SportContext';
+import { createLeague, createSoloLeague, joinLeagueByCodeForSport } from '../lib/leagues';
 import { colors } from '../theme/colors';
 
 export default function LeagueSetupScreen() {
   const { session, isLoading: authLoading, signOut } = useAuth();
+  const { sport, isLoading: sportLoading, setSport, clearSport } = useSport();
   const { activeLeague, leagues, refreshLeagues, setActiveLeagueId, isLoading } = useLeague();
   const [inviteCode, setInviteCode] = useState('');
   const [leagueName, setLeagueName] = useState('');
@@ -26,6 +28,10 @@ export default function LeagueSetupScreen() {
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
+  }
+
+  if (!authLoading && !sportLoading && session && !sport) {
+    return <Redirect href="/select-sport" />;
   }
 
   if (!isLoading && activeLeague && !createdCode) {
@@ -48,7 +54,7 @@ export default function LeagueSetupScreen() {
 
   async function onSolo() {
     await run(async () => {
-      const league = await createSoloLeague();
+      const league = await createSoloLeague(sport ?? 'NBA');
       await setActiveLeagueId(league.id);
     }, 'solo');
   }
@@ -58,7 +64,7 @@ export default function LeagueSetupScreen() {
     setBusy('create');
     setError(null);
     try {
-      const league = await createLeague(name);
+      const league = await createLeague(name, sport ?? 'NBA');
       setCreatedCode(league.invite_code);
       await setActiveLeagueId(league.id);
       await refreshLeagues();
@@ -71,7 +77,7 @@ export default function LeagueSetupScreen() {
 
   async function onJoin() {
     await run(async () => {
-      const league = await joinLeagueByCode(inviteCode);
+      const league = await joinLeagueByCodeForSport(inviteCode, sport ?? 'NBA');
       await setActiveLeagueId(league.id);
     }, 'join');
   }
@@ -79,7 +85,38 @@ export default function LeagueSetupScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <Text style={styles.title}>Choose how to play</Text>
-      <Text style={styles.subtitle}>Solo keeps stats just for you. Leagues share a leaderboard.</Text>
+      <Text style={styles.subtitle}>
+        {sport} · Solo keeps stats just for you. Leagues share a leaderboard.
+      </Text>
+
+      <View style={styles.sportRow}>
+        {SPORT_OPTIONS.map((option) => (
+          <Pressable
+            key={option.id}
+            disabled={!option.available}
+            onPress={() => void setSport(option.id)}
+            style={[
+              styles.sportChip,
+              sport === option.id && styles.sportChipActive,
+              !option.available && styles.sportChipLocked,
+            ]}
+          >
+            <Text
+              style={[
+                styles.sportChipText,
+                sport === option.id && styles.sportChipTextActive,
+                !option.available && styles.sportChipTextLocked,
+              ]}
+            >
+              {option.label}
+              {!option.available ? ' 🔒' : ''}
+            </Text>
+          </Pressable>
+        ))}
+        <Pressable onPress={() => void clearSport().then(() => router.replace('/select-sport'))}>
+          <Text style={styles.changeSport}>Change</Text>
+        </Pressable>
+      </View>
 
       <Pressable style={styles.primary} onPress={() => void onSolo()} disabled={!!busy}>
         {busy === 'solo' ? (
@@ -202,4 +239,42 @@ const styles = StyleSheet.create({
   leagueCode: { color: colors.textMuted, fontFamily: 'monospace' },
   error: { color: colors.statusNeedsWork, marginTop: 8 },
   signOut: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
+  sportRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  sportChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  sportChipActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accent,
+  },
+  sportChipLocked: {
+    opacity: 0.5,
+  },
+  sportChipText: {
+    color: colors.textSecondary,
+    fontWeight: '700',
+  },
+  sportChipTextActive: {
+    color: '#fff',
+  },
+  sportChipTextLocked: {
+    color: colors.textMuted,
+  },
+  changeSport: {
+    color: colors.accent,
+    fontWeight: '600',
+    fontSize: 13,
+    marginLeft: 4,
+  },
 });

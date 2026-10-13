@@ -5,6 +5,7 @@ import { colors } from '../theme/colors';
 
 type Props = {
   leagueName: string | null;
+  sport: string | null;
   rank: number | null;
   rankLoading: boolean;
   totalPlayers: number;
@@ -17,6 +18,7 @@ type Props = {
 
 export function LeagueHeader({
   leagueName,
+  sport,
   rank,
   rankLoading,
   totalPlayers,
@@ -38,7 +40,9 @@ export function LeagueHeader({
       <View style={styles.titleRow}>
         <View>
           <Text style={styles.title}>Fine Line</Text>
-          <Text style={styles.tagline}>Season O/U standings</Text>
+          <Text style={styles.tagline}>
+            {sport ? `${sport} season O/U` : 'Season O/U standings'}
+          </Text>
         </View>
         <Link href="/league-setup" asChild>
           <Pressable>
@@ -90,6 +94,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: -0.5,
+  },
+  tagline: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '500',
+    marginTop: 2,
   },
   link: {
     color: colors.accent,

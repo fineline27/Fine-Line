@@ -45,7 +45,7 @@ export function isSupabaseConfigured(): boolean {
 const TEAM_COLUMNS =
   'id, sport, name, abbreviation, primary_color, secondary_color, total_season_games, ou_line, current_wins, current_losses';
 
-export async function fetchTeams(): Promise<Team[]> {
+export async function fetchTeams(sport = 'NBA'): Promise<Team[]> {
   const supabase = getSupabaseClient();
   const projectRef = getSupabaseProjectRef() ?? 'unknown';
   const pageSize = 100;
@@ -59,6 +59,7 @@ export async function fetchTeams(): Promise<Team[]> {
     const { data, error, count } = await supabase
       .from('teams')
       .select(TEAM_COLUMNS, { count: page === 0 ? 'exact' : undefined })
+      .eq('sport', sport)
       .order('name')
       .range(from, to);
 

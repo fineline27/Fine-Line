@@ -29,7 +29,7 @@ export default function LoginScreen() {
     setError(null);
     try {
       await signIn(email.trim(), password);
-      router.replace('/');
+      router.replace('/select-sport');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
