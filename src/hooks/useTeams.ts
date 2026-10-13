@@ -19,7 +19,7 @@ export function useTeams(): TeamsState {
     if (!isSupabaseConfigured()) {
       setTeams([]);
       setError(
-        'Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to your environment.',
+        'Supabase is not configured. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to your environment.',
       );
       setLoading(false);
       return;

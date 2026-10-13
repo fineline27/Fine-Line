@@ -15,7 +15,7 @@ function getSupabaseConfig(): { url: string; anonKey: string } {
 
   if (!url || !anonKey) {
     throw new Error(
-      'Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_ANON_KEY (or EXPO_PUBLIC_* equivalents) in your environment.',
+      'Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (or legacy SUPABASE_ANON_KEY / EXPO_PUBLIC_* equivalents).',
     );
   }
 

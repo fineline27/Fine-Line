@@ -16,7 +16,7 @@ npm install
 cp .env.example .env
 ```
 
-Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` from your Supabase project (**Settings → API**).
+Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`) from your Supabase project (**Settings → API**).
 
 3. Create the `teams` table (example):
 

@@ -1,5 +1,15 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
+function envFirst(...keys: string[]): string {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+  return '';
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'OU League',
@@ -30,8 +40,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
   },
   extra: {
-    supabaseUrl: process.env.SUPABASE_URL ?? process.env.EXPO_PUBLIC_SUPABASE_URL ?? '',
-    supabaseAnonKey:
-      process.env.SUPABASE_ANON_KEY ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
+    supabaseUrl: envFirst('SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_URL'),
+    supabaseAnonKey: envFirst(
+      'SUPABASE_PUBLISHABLE_KEY',
+      'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+      'SUPABASE_ANON_KEY',
+      'EXPO_PUBLIC_SUPABASE_ANON_KEY',
+    ),
   },
 });
