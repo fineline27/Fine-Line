@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { getErrorMessage } from '../lib/errors';
-import { fetchTeams, isSupabaseConfigured } from '../lib/supabase';
+import { fetchTeams, isSupabaseConfigured, resetSupabaseClient } from '../lib/supabase';
 import type { Team } from '../types/team';
 
 /** Run in Supabase SQL Editor when the app cannot read teams. */
@@ -42,6 +42,7 @@ export function useTeams(): TeamsState {
 
     setLoading(true);
     setError(null);
+    resetSupabaseClient();
 
     try {
       const data = await fetchTeams();

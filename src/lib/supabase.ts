@@ -5,10 +5,22 @@ import type { Team } from '../types/team';
 
 let client: SupabaseClient | null = null;
 
+export function resetSupabaseClient(): void {
+  client = null;
+}
+
 export function getSupabaseClient(): SupabaseClient {
   if (!client) {
     const { url, apiKey } = assertSupabaseConfig();
-    client = createClient(url, apiKey);
+    client = createClient(url, apiKey, {
+      global: {
+        fetch: (input, init) =>
+          fetch(input, {
+            ...init,
+            cache: 'no-store',
+          }),
+      },
+    });
   }
   return client;
 }

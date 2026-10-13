@@ -27,6 +27,7 @@
   "scripts": {
     "start": "expo start",
     "dev:web": "expo start --web",
+    "web:clean": "expo start --web --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

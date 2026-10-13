@@ -15,6 +15,7 @@ import { useTeamPicks } from '../hooks/useTeamPicks';
 import { TEAMS_RLS_SQL, useTeams } from '../hooks/useTeams';
 import { useUserRank } from '../hooks/useUserRank';
 import type { Team } from '../types/team';
+import { getSupabaseProjectRef } from '../lib/supabaseConfig';
 import { colors } from '../theme/colors';
 
 export default function StandingsScreen() {
@@ -24,6 +25,7 @@ export default function StandingsScreen() {
 
   const pickCount = Object.keys(picks).length;
   const showListLoader = loading || !hydrated;
+  const supabaseProjectRef = getSupabaseProjectRef();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -32,6 +34,7 @@ export default function StandingsScreen() {
         rankLoading={rankLoading}
         pickCount={pickCount}
         teamCount={teams.length}
+        supabaseProjectRef={supabaseProjectRef}
       />
 
       {showListLoader ? (
@@ -65,9 +68,11 @@ export default function StandingsScreen() {
         </View>
       ) : (
         <FlatList<Team>
+          style={styles.list}
           data={teams}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          initialNumToRender={30}
           refreshControl={
             <RefreshControl
               refreshing={loading}
@@ -92,6 +97,9 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  list: {
+    flex: 1,
   },
   listContent: {
     paddingHorizontal: 16,

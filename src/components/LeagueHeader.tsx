@@ -7,9 +7,16 @@ type Props = {
   rankLoading: boolean;
   pickCount: number;
   teamCount: number;
+  supabaseProjectRef: string | null;
 };
 
-export function LeagueHeader({ rank, rankLoading, pickCount, teamCount }: Props) {
+export function LeagueHeader({
+  rank,
+  rankLoading,
+  pickCount,
+  teamCount,
+  supabaseProjectRef,
+}: Props) {
   const rankLabel = rankLoading
     ? null
     : rank != null
@@ -20,7 +27,10 @@ export function LeagueHeader({ rank, rankLoading, pickCount, teamCount }: Props)
     <View style={styles.container}>
       <Text style={styles.title}>League Standings</Text>
       {teamCount > 0 ? (
-        <Text style={styles.teamCount}>{teamCount} teams</Text>
+        <Text style={styles.teamCount}>{teamCount} teams loaded</Text>
+      ) : null}
+      {supabaseProjectRef ? (
+        <Text style={styles.projectRef}>Supabase: {supabaseProjectRef}</Text>
       ) : null}
       <View style={styles.rankRow}>
         <Text style={styles.rankLabel}>Your rank</Text>
@@ -59,6 +69,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginTop: 4,
+  },
+  projectRef: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+    fontFamily: 'monospace',
   },
   rankRow: {
     flexDirection: 'row',

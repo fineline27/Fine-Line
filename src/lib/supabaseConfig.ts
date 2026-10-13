@@ -5,27 +5,41 @@ type SupabaseExtra = {
   supabaseAnonKey?: string;
 };
 
-/** Resolve Supabase URL + key from app config extra and EXPO_PUBLIC_* (inlined on web). */
+function firstNonEmpty(...values: (string | undefined)[]): string {
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (trimmed) {
+      return trimmed;
+    }
+  }
+  return '';
+}
+
+/** Resolve Supabase URL + key (.env first so restarts pick up changes). */
 export function resolveSupabaseConfig(): { url: string; apiKey: string } {
   const extra = Constants.expoConfig?.extra as SupabaseExtra | undefined;
 
-  const url = (
-    extra?.supabaseUrl ??
-    process.env.EXPO_PUBLIC_SUPABASE_URL ??
-    process.env.SUPABASE_URL ??
-    ''
-  ).trim();
+  const url = firstNonEmpty(
+    process.env.EXPO_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_URL,
+    extra?.supabaseUrl,
+  );
 
-  const apiKey = (
-    extra?.supabaseAnonKey ??
-    process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SUPABASE_ANON_KEY ??
-    ''
-  ).trim();
+  const apiKey = firstNonEmpty(
+    process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.SUPABASE_PUBLISHABLE_KEY,
+    process.env.SUPABASE_ANON_KEY,
+    extra?.supabaseAnonKey,
+  );
 
   return { url, apiKey };
+}
+
+export function getSupabaseProjectRef(): string | null {
+  const { url } = resolveSupabaseConfig();
+  const match = url.match(/https:\/\/([^.]+)\.supabase\.co/);
+  return match?.[1] ?? null;
 }
 
 export function assertSupabaseConfig(): { url: string; apiKey: string } {
