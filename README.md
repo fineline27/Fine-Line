@@ -32,8 +32,16 @@ create table public.teams (
   current_losses integer not null default 0
 );
 
+grant select on public.teams to anon, authenticated;
+
 alter table public.teams enable row level security;
-create policy "Public read teams" on public.teams for select using (true);
+
+drop policy if exists "Public read teams" on public.teams;
+create policy "Public read teams"
+  on public.teams
+  for select
+  to anon, authenticated
+  using (true);
 ```
 
 Optional: `league_members` (`user_id uuid`, `rank integer`) for the signed-in user’s header rank.

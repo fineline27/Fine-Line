@@ -2,14 +2,21 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { getErrorMessage } from '../lib/errors';
 import { fetchTeams, isSupabaseConfigured } from '../lib/supabase';
+import type { Team } from '../types/team';
 
-export const TEAMS_RLS_SQL = `alter table public.teams enable row level security;
+/** Run in Supabase SQL Editor when the app cannot read teams. */
+export const TEAMS_RLS_SQL = `-- 1) Allow the API (anon) role to read the table
+grant select on public.teams to anon, authenticated;
 
+-- 2) RLS policy (skip if "Public read teams" already exists)
+alter table public.teams enable row level security;
+
+drop policy if exists "Public read teams" on public.teams;
 create policy "Public read teams"
   on public.teams
   for select
+  to anon, authenticated
   using (true);`;
-import type { Team } from '../types/team';
 
 type TeamsState = {
   teams: Team[];
