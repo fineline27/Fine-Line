@@ -20,17 +20,25 @@ type Props = {
 export function TeamCard({ team, pick, saving, picksLocked, onPickChange }: Props) {
   const status = getTeamStatus(team);
   const pickEval = pick ? evaluatePick(team, pick) : null;
+  const isPreseason = team.current_wins + team.current_losses === 0;
+  const record = formatRecord(team.current_wins, team.current_losses);
 
   return (
     <View style={styles.card}>
-      <View style={styles.topRow}>
+      <View style={styles.headerRow}>
         <TeamColorBadge abbreviation={team.abbreviation} primaryColor={team.primary_color} />
-        <View style={styles.meta}>
+        <View style={styles.nameBlock}>
           <Text style={styles.name}>{team.name}</Text>
-          <Text style={styles.subline}>
-            O/U {team.ou_line.toFixed(1)} · Record {formatRecord(team.current_wins, team.current_losses)}
+          <Text style={[styles.record, isPreseason && styles.recordPreseason]}>
+            {record}
+            {!isPreseason ? (
+              <Text style={styles.recordMeta}> · Win pace {formatWinPace(team)}</Text>
+            ) : null}
           </Text>
-          <Text style={styles.pace}>Win pace: {formatWinPace(team)}</Text>
+        </View>
+        <View style={styles.ouBlock}>
+          <Text style={styles.ouValue}>{team.ou_line.toFixed(1)}</Text>
+          <Text style={styles.ouLabel}>O/U</Text>
         </View>
       </View>
 
@@ -57,30 +65,57 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: 12,
   },
-  topRow: {
+  headerRow: {
     flexDirection: 'row',
-    gap: 14,
+    alignItems: 'center',
+    gap: 12,
     marginBottom: 12,
   },
-  meta: {
+  nameBlock: {
     flex: 1,
     justifyContent: 'center',
+    minWidth: 0,
   },
   name: {
     color: colors.textPrimary,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    marginBottom: 4,
   },
-  subline: {
+  record: {
     color: colors.textSecondary,
     fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  recordPreseason: {
+    color: colors.statusAround,
+  },
+  recordMeta: {
+    color: colors.textMuted,
     fontWeight: '500',
   },
-  pace: {
+  ouBlock: {
+    minWidth: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  ouValue: {
+    color: colors.textPrimary,
+    fontSize: 32,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5,
+    lineHeight: 36,
+  },
+  ouLabel: {
     color: colors.textMuted,
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    marginTop: 2,
+    textTransform: 'uppercase',
   },
   saving: {
     color: colors.textMuted,

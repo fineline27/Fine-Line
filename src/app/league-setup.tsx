@@ -214,6 +214,7 @@ export default function LeagueSetupScreen() {
                 </Pressable>
                 {owner ? (
                   <DeleteLeagueSection
+                    compact
                     league={l}
                     userId={user?.id}
                     busy={deleteBusy}

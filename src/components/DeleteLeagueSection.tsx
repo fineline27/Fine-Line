@@ -13,9 +13,17 @@ type Props = {
   busy: boolean;
   onBusyChange: (busy: boolean) => void;
   onDeleted: () => void | Promise<void>;
+  compact?: boolean;
 };
 
-export function DeleteLeagueSection({ league, userId, busy, onBusyChange, onDeleted }: Props) {
+export function DeleteLeagueSection({
+  league,
+  userId,
+  busy,
+  onBusyChange,
+  onDeleted,
+  compact = false,
+}: Props) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -48,42 +56,63 @@ export function DeleteLeagueSection({ league, userId, busy, onBusyChange, onDele
     }
   }
 
+  if (compact) {
+    return (
+      <View style={styles.compactWrap}>
+        {success ? <Text style={styles.successSmall}>{success}</Text> : null}
+        {error ? <Text style={styles.errorSmall}>{error}</Text> : null}
+        {confirming ? (
+          <View style={styles.compactConfirm}>
+            <Text style={styles.compactConfirmText}>Delete this league permanently?</Text>
+            <View style={styles.compactActions}>
+              <Pressable onPress={() => setConfirming(false)} disabled={busy}>
+                <Text style={styles.compactCancel}>Cancel</Text>
+              </Pressable>
+              <Pressable onPress={() => void onConfirmDelete()} disabled={busy}>
+                {busy ? (
+                  <ActivityIndicator color={colors.textMuted} size="small" />
+                ) : (
+                  <Text style={styles.compactDelete}>Delete</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        ) : (
+          <Pressable onPress={() => setConfirming(true)} disabled={busy}>
+            <Text style={styles.compactLink}>Delete league</Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.section}>
-      <Text style={styles.title}>Delete this league</Text>
-      <Text style={styles.hint}>
-        Only the owner can delete a private league. All members, picks, and bonus answers are removed
-        permanently.
-      </Text>
-      {success ? <Text style={styles.success}>{success}</Text> : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
       {confirming ? (
         <View style={styles.confirmBox}>
           <Text style={styles.confirmText}>
-            Delete &quot;{league.name}&quot; ({league.invite_code})? This cannot be undone.
+            Delete &quot;{league.name}&quot;? All picks and members are removed. This cannot be undone.
           </Text>
           <View style={styles.actions}>
-            <Pressable
-              style={styles.cancel}
-              onPress={() => setConfirming(false)}
-              disabled={busy}
-            >
+            <Pressable style={styles.cancel} onPress={() => setConfirming(false)} disabled={busy}>
               <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
             <Pressable style={styles.deleteBtn} onPress={() => void onConfirmDelete()} disabled={busy}>
               {busy ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.textSecondary} size="small" />
               ) : (
-                <Text style={styles.deleteBtnText}>Delete permanently</Text>
+                <Text style={styles.deleteBtnText}>Delete</Text>
               )}
             </Pressable>
           </View>
         </View>
       ) : (
-        <Pressable style={styles.deleteLink} onPress={() => setConfirming(true)} disabled={busy}>
-          <Text style={styles.deleteLinkText}>Delete league…</Text>
+        <Pressable onPress={() => setConfirming(true)} disabled={busy}>
+          <Text style={styles.deleteLink}>Delete league…</Text>
         </Pressable>
       )}
+      {success ? <Text style={styles.success}>{success}</Text> : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
@@ -100,38 +129,43 @@ function isMissingDeleteSetup(message: string): boolean {
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: 16,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.statusNeedsWork,
-    backgroundColor: colors.statusNeedsWorkBg,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  title: { color: colors.statusNeedsWork, fontWeight: '800', fontSize: 16 },
-  hint: { color: colors.textSecondary, marginTop: 8, fontSize: 13, lineHeight: 19 },
-  deleteLink: { marginTop: 12, alignSelf: 'flex-start' },
-  deleteLinkText: { color: colors.statusNeedsWork, fontWeight: '800', fontSize: 15 },
-  confirmBox: { marginTop: 12 },
-  confirmText: { color: colors.textPrimary, fontSize: 14, lineHeight: 20, fontWeight: '600' },
-  actions: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  cancel: {
-    flex: 1,
+  deleteLink: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  confirmBox: {
     padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
+    borderRadius: 10,
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  cancelText: { color: colors.textPrimary, fontWeight: '700' },
-  deleteBtn: {
-    flex: 1,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: colors.statusNeedsWork,
+  confirmText: { color: colors.textSecondary, fontSize: 13, lineHeight: 18 },
+  actions: { flexDirection: 'row', gap: 16, marginTop: 10, alignItems: 'center' },
+  cancel: { paddingVertical: 4 },
+  cancelText: { color: colors.textPrimary, fontWeight: '600', fontSize: 13 },
+  deleteBtn: { paddingVertical: 4 },
+  deleteBtnText: { color: colors.textSecondary, fontWeight: '700', fontSize: 13 },
+  error: { color: colors.statusNeedsWork, marginTop: 8, fontSize: 12, lineHeight: 17 },
+  success: { color: colors.statusOnTrack, marginTop: 8, fontSize: 12 },
+  compactWrap: { marginTop: 4 },
+  compactLink: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
-  deleteBtnText: { color: '#fff', fontWeight: '800' },
-  error: { color: colors.statusNeedsWork, marginTop: 10, fontSize: 13, lineHeight: 18 },
-  success: { color: colors.statusOnTrack, marginTop: 10, fontWeight: '700' },
+  compactConfirm: { marginTop: 4 },
+  compactConfirmText: { color: colors.textMuted, fontSize: 12 },
+  compactActions: { flexDirection: 'row', gap: 12, marginTop: 6, alignItems: 'center' },
+  compactCancel: { color: colors.textSecondary, fontSize: 12, fontWeight: '600' },
+  compactDelete: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
+  errorSmall: { color: colors.statusNeedsWork, fontSize: 11, marginTop: 4 },
+  successSmall: { color: colors.statusOnTrack, fontSize: 11, marginTop: 4 },
 });

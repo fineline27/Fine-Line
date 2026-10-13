@@ -84,6 +84,7 @@ export default function LeagueBoardScreen() {
       {activeLeague && canDeleteLeague(activeLeague, user?.id) ? (
         <View style={styles.deleteWrap}>
           <DeleteLeagueSection
+            compact
             league={activeLeague}
             userId={user?.id}
             busy={deleteBusy}
