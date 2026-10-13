@@ -80,10 +80,21 @@ Press `w` for web, `i` for iOS simulator, or scan the QR code in Expo Go.
 - **AROUND MARK** (yellow): between the red and green thresholds
 - **NEEDS WORK** (red): win pace ≤ `ou_line - 1.5`
 
+## Go live (production web)
+
+See **[DEPLOY.md](DEPLOY.md)** for Vercel/static hosting, Supabase auth URLs, and env vars. Quick build:
+
+```bash
+npm run build:web
+```
+
+Output is in **`dist/`** (deploy that folder or connect git to Vercel using the included `vercel.json`).
+
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm start` | Expo dev server |
 | `npm run web` | Web dev server |
+| `npm run build:web` | Static production web export → `dist/` |
 | `npx tsc --noEmit` | Typecheck |
