@@ -2,7 +2,10 @@ import { Link, Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -10,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AuthLandingHero } from '../components/AuthLandingHero';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 
@@ -38,44 +42,64 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.hero}>
-        <Text style={styles.brand}>Fine Line</Text>
-        <Text style={styles.blurb}>
-          Predict results and play against your mates. Who knows more sport??
-        </Text>
-      </View>
-      <View style={styles.card}>
-        <Text style={styles.formTitle}>Sign in</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable style={styles.button} onPress={() => void onSubmit()} disabled={submitting}>
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Sign in</Text>
-          )}
-        </Pressable>
-        <Link href="/sign-up" style={styles.link}>
-          Create an account
-        </Link>
-      </View>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <AuthLandingHero />
+
+          <View style={styles.formBlock}>
+            <Text style={styles.formTitle}>Sign in</Text>
+            <Text style={styles.formHint}>Free to play · NBA season O/U · mates optional</Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              onPress={() => void onSubmit()}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Sign in & pick sides</Text>
+              )}
+            </Pressable>
+
+            <Link href="/sign-up" asChild>
+              <Pressable style={styles.secondaryLink}>
+                <Text style={styles.secondaryLinkText}>
+                  New here? <Text style={styles.secondaryLinkAccent}>Create an account</Text>
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -84,57 +108,81 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
-    justifyContent: 'center',
-    padding: 24,
   },
-  hero: {
-    marginBottom: 28,
-    paddingHorizontal: 4,
+  flex: {
+    flex: 1,
   },
-  brand: {
-    color: colors.textPrimary,
-    fontSize: 44,
-    fontWeight: '900',
-    letterSpacing: -1.2,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 32,
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'center',
   },
-  blurb: {
-    color: colors.textSecondary,
-    fontSize: 17,
-    lineHeight: 24,
-    marginTop: 12,
-    fontWeight: '500',
-    maxWidth: 340,
-  },
-  card: {
+  formBlock: {
+    marginTop: 8,
     backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 18,
+    padding: 18,
     borderWidth: 1,
     borderColor: colors.border,
   },
   formTitle: {
     color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  formHint: {
+    color: colors.textMuted,
+    fontSize: 13,
+    marginTop: 4,
     marginBottom: 16,
+    fontWeight: '500',
   },
   input: {
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     color: colors.textPrimary,
-    marginBottom: 12,
+    fontSize: 16,
+    marginBottom: 10,
   },
   button: {
     backgroundColor: colors.accent,
-    borderRadius: 10,
-    padding: 14,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 6,
   },
-  buttonText: { color: '#fff', fontWeight: '700' },
-  error: { color: colors.statusNeedsWork, marginBottom: 8 },
-  link: { color: colors.accent, marginTop: 16, textAlign: 'center', fontWeight: '600' },
+  buttonPressed: {
+    opacity: 0.9,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 17,
+  },
+  error: {
+    color: colors.statusNeedsWork,
+    marginBottom: 8,
+    fontSize: 13,
+  },
+  secondaryLink: {
+    marginTop: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  secondaryLinkText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  secondaryLinkAccent: {
+    color: colors.accent,
+    fontWeight: '800',
+  },
 });
