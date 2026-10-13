@@ -36,15 +36,17 @@ export function TeamCard({ team, pick, saving, picksLocked, onPickChange }: Prop
             ) : null}
           </Text>
         </View>
-        <View style={styles.ouBlock}>
-          <Text style={styles.ouValue}>{team.ou_line.toFixed(1)}</Text>
-          <Text style={styles.ouLabel}>O/U</Text>
-        </View>
       </View>
 
-      <StatusBadge status={status} />
+      <View style={styles.ouCenter}>
+        <Text style={styles.ouValue}>{team.ou_line.toFixed(1)}</Text>
+        <Text style={styles.ouLabel}>Season O/U</Text>
+      </View>
 
-      {pickEval ? <PickStatusBadge evaluation={pickEval} /> : null}
+      <View style={styles.badgeRow}>
+        <StatusBadge status={status} />
+        {pickEval ? <PickStatusBadge evaluation={pickEval} /> : null}
+      </View>
 
       <PickToggle
         selected={pick}
@@ -69,7 +71,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 12,
   },
   nameBlock: {
     flex: 1,
@@ -94,32 +95,40 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontWeight: '500',
   },
-  ouBlock: {
-    minWidth: 72,
+  ouCenter: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: 14,
+    marginTop: 8,
+    marginBottom: 4,
   },
   ouValue: {
     color: colors.textPrimary,
-    fontSize: 32,
+    fontSize: 40,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
-    letterSpacing: -0.5,
-    lineHeight: 36,
+    letterSpacing: -1,
+    lineHeight: 44,
   },
   ouLabel: {
     color: colors.textMuted,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    marginTop: 4,
     textTransform: 'uppercase',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+    justifyContent: 'center',
   },
   saving: {
     color: colors.textMuted,
     fontSize: 11,
     marginTop: 8,
+    textAlign: 'center',
   },
 });
