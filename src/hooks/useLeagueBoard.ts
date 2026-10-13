@@ -9,7 +9,7 @@ import {
 import { fetchLeagueMembers } from '../lib/leagueMembers';
 import { fetchAllPredictionsInLeague } from '../lib/predictions';
 import { computeLeaderboard, type LeaderboardEntry } from '../lib/rankings';
-import type { BonusQuestion } from '../types/bonus';
+import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { LeagueMember } from '../types/leagueMember';
 import type { PickSide, Team } from '../types/team';
 
@@ -21,9 +21,10 @@ export type TeamGroupPick = {
 type BoardState = {
   members: LeagueMember[];
   leaderboard: LeaderboardEntry[];
+  predictions: Array<{ user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }>;
   teamPicks: TeamGroupPick[];
   bonusQuestions: BonusQuestion[];
-  bonusAnswers: Array<{ question_id: string; user_id: string; user_answer: string }>;
+  bonusAnswers: BonusAnswerRow[];
   loading: boolean;
   error: string | null;
 };
@@ -34,6 +35,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
   const [state, setState] = useState<BoardState>({
     members: [],
     leaderboard: [],
+    predictions: [],
     teamPicks: [],
     bonusQuestions: [],
     bonusAnswers: [],
@@ -46,6 +48,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
       setState({
         members: [],
         leaderboard: [],
+        predictions: [],
         teamPicks: [],
         bonusQuestions: [],
         bonusAnswers: [],
@@ -117,6 +120,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
       setState({
         members,
         leaderboard,
+        predictions,
         teamPicks,
         bonusQuestions,
         bonusAnswers,
@@ -127,6 +131,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
       setState({
         members: [],
         leaderboard: [],
+        predictions: [],
         teamPicks: [],
         bonusQuestions: [],
         bonusAnswers: [],

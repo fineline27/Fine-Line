@@ -21,6 +21,7 @@ type Props = {
   picksSubmitted: boolean;
   bonusEnabled?: boolean;
   bonusScore?: number;
+  overallBonusScore?: number;
   supabaseProjectRef: string | null;
 };
 
@@ -46,6 +47,7 @@ export function LeagueHeader({
   picksSubmitted,
   bonusEnabled,
   bonusScore = 0,
+  overallBonusScore = 0,
   supabaseProjectRef,
 }: Props) {
   return (
@@ -66,15 +68,17 @@ export function LeagueHeader({
       {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
 
       <View style={styles.rankCards}>
-        <View style={styles.rankCard}>
-          <Text style={styles.rankCardTitle}>Overall</Text>
-          <Text style={styles.rankCardHint}>All {sport ?? ''} players</Text>
-          {overall.loading ? (
-            <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
-          ) : (
-            <Text style={styles.rankCardValue}>{formatRank(overall)}</Text>
-          )}
-        </View>
+        <Link href="/overall-leaderboard" asChild>
+          <Pressable style={styles.rankCard}>
+            <Text style={styles.rankCardTitle}>Overall</Text>
+            <Text style={styles.rankCardHint}>All {sport ?? ''} players · tap list</Text>
+            {overall.loading ? (
+              <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
+            ) : (
+              <Text style={styles.rankCardValue}>{formatRank(overall)}</Text>
+            )}
+          </Pressable>
+        </Link>
         <View style={styles.rankCard}>
           <Text style={styles.rankCardTitle}>Your league</Text>
           <Text style={styles.rankCardHint} numberOfLines={1}>
@@ -97,14 +101,19 @@ export function LeagueHeader({
         <Text style={styles.projectRef}>Supabase: {supabaseProjectRef}</Text>
       ) : null}
       <Text style={styles.scoreLine}>
-        Score: {myScore} pts
+        League: {myScore} pts
         {bonusEnabled ? ` · ${bonusScore} bonus` : ''} · {clinched} clinched · {pickCount}/
         {teamCount || 30} picks
         {picksSubmitted ? ' · locked in' : ''}
       </Text>
+      {!overall.loading && overallBonusScore > 0 ? (
+        <Text style={styles.overallScoreLine}>
+          Overall bonus tiebreak: {overallBonusScore} pt{overallBonusScore === 1 ? '' : 's'}
+        </Text>
+      ) : null}
       <Text style={styles.picksHint}>
         {picksSubmitted
-          ? 'League board and standings update as NBA results change — pull to refresh.'
+          ? 'Overall and league ties break on bonus picks when results are set. Pull to refresh.'
           : 'Submit all picks to unlock the league board and see everyone’s selections.'}
       </Text>
     </View>
@@ -198,6 +207,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 13,
     marginTop: 6,
+    fontWeight: '500',
+  },
+  overallScoreLine: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 4,
     fontWeight: '500',
   },
   picksHint: {

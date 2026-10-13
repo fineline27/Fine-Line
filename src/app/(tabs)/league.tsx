@@ -12,12 +12,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LeaderboardPlayerRow } from '../../components/LeaderboardPlayerRow';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLeague } from '../../contexts/LeagueContext';
 import { useSport } from '../../contexts/SportContext';
 import { useLeagueBoard } from '../../hooks/useLeagueBoard';
 import { useLeagueMembership } from '../../hooks/useLeagueMembership';
 import { useTeams } from '../../hooks/useTeams';
+import {
+  buildPlayerBonusPicks,
+  buildPlayerOuPicks,
+} from '../../lib/playerPickDetails';
 import { colors } from '../../theme/colors';
 
 type Segment = 'leaderboard' | 'picks' | 'bonus';
@@ -31,6 +36,7 @@ export default function LeagueBoardScreen() {
     useLeagueMembership();
   const {
     leaderboard,
+    predictions,
     teamPicks,
     bonusQuestions,
     bonusAnswers,
@@ -40,6 +46,7 @@ export default function LeagueBoardScreen() {
     refresh,
   } = useLeagueBoard(teams, picksSubmitted);
   const [segment, setSegment] = useState<Segment>('leaderboard');
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const showBonus = Boolean(activeLeague?.bonus_questions_enabled && bonusQuestions.length > 0);
 
   if (!authLoading && !session) {
@@ -130,28 +137,17 @@ export default function LeagueBoardScreen() {
               }
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
-                <View style={[styles.row, item.isMe && styles.rowMe]}>
-                  <View style={styles.rankCol}>
-                    <Text style={styles.rankText}>
-                      {item.picksSubmitted ? `#${item.rank}` : '—'}
-                    </Text>
-                  </View>
-                  <View style={styles.nameCol}>
-                    <Text style={styles.nameText}>
-                      {item.displayName}
-                      {item.isMe ? ' (you)' : ''}
-                    </Text>
-                    {!item.picksSubmitted ? (
-                      <Text style={styles.pendingText}>Hasn’t submitted yet</Text>
-                    ) : (
-                      <Text style={styles.metaText}>
-                        {item.clinched} clinched
-                        {showBonus ? ` · ${item.bonusScore} bonus` : ''}
-                      </Text>
-                    )}
-                  </View>
-                  <Text style={styles.scoreText}>{item.picksSubmitted ? item.score : '—'}</Text>
-                </View>
+                <LeaderboardPlayerRow
+                  entry={item}
+                  expanded={expandedUserId === item.userId}
+                  onToggle={() =>
+                    setExpandedUserId((id) => (id === item.userId ? null : item.userId))
+                  }
+                  ouPicks={buildPlayerOuPicks(item.userId, teams, predictions)}
+                  bonusPicks={buildPlayerBonusPicks(item.userId, bonusQuestions, bonusAnswers)}
+                  showBonus={showBonus}
+                  canExpand={item.picksSubmitted}
+                />
               )}
               ListHeaderComponent={
                 <Text style={styles.listHint}>

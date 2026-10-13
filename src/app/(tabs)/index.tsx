@@ -123,6 +123,7 @@ export default function StandingsScreen() {
         picksSubmitted={picksSubmitted}
         bonusEnabled={bonusEnabled}
         bonusScore={leagueRank.bonusScore}
+        overallBonusScore={overallRank.bonusScore}
         supabaseProjectRef={supabaseProjectRef}
       />
 
