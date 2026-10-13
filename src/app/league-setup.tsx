@@ -19,7 +19,7 @@ import { colors } from '../theme/colors';
 export default function LeagueSetupScreen() {
   const { session, isLoading: authLoading, signOut } = useAuth();
   const { sport, isLoading: sportLoading, setSport, clearSport } = useSport();
-  const { activeLeague, leagues, refreshLeagues, setActiveLeagueId, isLoading } = useLeague();
+  const { leagues, refreshLeagues, setActiveLeagueId } = useLeague();
   const [inviteCode, setInviteCode] = useState('');
   const [leagueName, setLeagueName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -32,10 +32,6 @@ export default function LeagueSetupScreen() {
 
   if (!authLoading && !sportLoading && session && !sport) {
     return <Redirect href="/select-sport" />;
-  }
-
-  if (!isLoading && activeLeague && !createdCode) {
-    return <Redirect href="/" />;
   }
 
   async function run(action: () => Promise<void>, label: string) {
@@ -63,13 +59,25 @@ export default function LeagueSetupScreen() {
     const name = leagueName.trim() || 'Friends O/U League';
     setBusy('create');
     setError(null);
+    setCreatedCode(null);
     try {
       const league = await createLeague(name, sport ?? 'NBA');
-      setCreatedCode(league.invite_code);
+      const code = league.invite_code?.trim();
+      if (!code) {
+        throw new Error('League was created but no invite code came back. Check Supabase leagues table.');
+      }
+      setCreatedCode(code);
       await setActiveLeagueId(league.id);
       await refreshLeagues();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      const message = err instanceof Error ? err.message : 'Something went wrong';
+      if (message.toLowerCase().includes('permission denied') || message.includes('row-level security')) {
+        setError(
+          `${message} — In Supabase SQL Editor, run supabase/02-auth-rls.sql (leagues + league_members), then try again.`,
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setBusy(null);
     }
@@ -140,15 +148,23 @@ export default function LeagueSetupScreen() {
           pt each when results are set).
         </Text>
         <Pressable style={styles.secondary} onPress={() => void onCreate()} disabled={!!busy}>
-          <Text style={styles.secondaryText}>Create & get invite code</Text>
+          {busy === 'create' ? (
+            <ActivityIndicator color={colors.accent} />
+          ) : (
+            <Text style={styles.secondaryText}>Create & get invite code</Text>
+          )}
         </Pressable>
         {createdCode ? (
-          <>
-            <Text style={styles.code}>Invite code: {createdCode}</Text>
+          <View style={styles.codeBox}>
+            <Text style={styles.codeLabel}>Share this invite code</Text>
+            <Text style={styles.code} selectable>
+              {createdCode}
+            </Text>
+            <Text style={styles.codeHint}>Friends enter this on Join with code (6 characters).</Text>
             <Pressable style={styles.secondary} onPress={() => router.replace('/')}>
               <Text style={styles.secondaryText}>Continue to standings</Text>
             </Pressable>
-          </>
+          </View>
         ) : null}
       </View>
 
@@ -231,7 +247,36 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   secondaryText: { color: colors.textPrimary, fontWeight: '700' },
-  code: { color: colors.statusOnTrack, marginTop: 12, fontWeight: '700', fontSize: 16 },
+  codeBox: {
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: colors.statusOnTrackBg,
+    borderWidth: 1,
+    borderColor: colors.statusOnTrack,
+  },
+  codeLabel: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  code: {
+    color: colors.statusOnTrack,
+    marginTop: 8,
+    fontWeight: '800',
+    fontSize: 28,
+    letterSpacing: 4,
+    fontFamily: 'monospace',
+  },
+  codeHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 8,
+    marginBottom: 12,
+    lineHeight: 17,
+  },
   leagueRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

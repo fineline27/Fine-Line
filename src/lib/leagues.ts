@@ -40,11 +40,14 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
     }
 
     if (!error && data) {
-      await supabase.from('league_members').insert({
+      const { error: memberError } = await supabase.from('league_members').insert({
         league_id: data.id,
         user_id: user.id,
         display_name: defaultDisplayName(user.email),
       });
+      if (memberError) {
+        throw memberError;
+      }
       try {
         await ensureBonusQuestionsForLeague(data.id);
       } catch {
