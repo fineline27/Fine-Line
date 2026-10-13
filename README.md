@@ -48,12 +48,14 @@ Optional: `league_members` (`user_id uuid`, `rank integer`) for the signed-in us
 
 ### Seed all 30 NBA teams
 
-1. Open [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql) for your project.
-2. Paste the **entire** [`supabase/seed-nba-teams.sql`](supabase/seed-nba-teams.sql) file and click **Run**.
-3. Confirm the result shows **`team_count = 30`** (not 3).
-4. In the app, pull to refresh. Locally: `npm run check:teams` should print `Teams visible to the app: 30`.
+1. In Cursor, open **`supabase/load-30-nba-teams.sql`** (file tree — do not copy from chat).
+2. Select all (Cmd/Ctrl+A) → Copy.
+3. Supabase Dashboard → **SQL Editor** → **New query** → select all in the box → Delete → Paste → **Run**.
+4. Table Editor → `teams` → confirm **30 rows**. App: pull to refresh, or `npm run check:teams`.
 
-The seed **deletes existing rows** in `teams` and inserts all 30 franchises (82-game season, sample O/U lines). Edit the SQL file first if you want custom lines or records.
+Do not paste anything after the last `);` — extra words like “Full script” cause `syntax error at or near "Full"`.
+
+The seed **deletes existing rows** in `teams` and inserts all 30 franchises.
 
 4. Start the dev server:
 
