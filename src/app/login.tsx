@@ -41,7 +41,7 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.card}>
         <Text style={styles.title}>Sign in</Text>
-        <Text style={styles.subtitle}>Track O/U picks solo or with a league.</Text>
+        <Text style={styles.subtitle}>Fine Line — O/U picks solo or with a league.</Text>
         <TextInput
           style={styles.input}
           placeholder="Email"

@@ -1,4 +1,4 @@
-# OU League (Expo)
+# Fine Line (Expo)
 
 React Native app for an Over/Under sports league. Loads team lines and records from Supabase, highlights win-pace status, and lets you pick OVER or UNDER on each team.
 

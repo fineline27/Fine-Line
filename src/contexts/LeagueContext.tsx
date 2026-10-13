@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import { fetchMyLeagues } from '../lib/leagues';
 import type { League } from '../types/league';
 
-const ACTIVE_LEAGUE_KEY = '@ou_league/active_league_id';
+const ACTIVE_LEAGUE_KEY = '@fine_line/active_league_id';
 
 type LeagueContextValue = {
   leagues: League[];

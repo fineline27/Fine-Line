@@ -36,7 +36,10 @@ export function LeagueHeader({
   return (
     <View style={styles.container}>
       <View style={styles.titleRow}>
-        <Text style={styles.title}>League Standings</Text>
+        <View>
+          <Text style={styles.title}>Fine Line</Text>
+          <Text style={styles.tagline}>Season O/U standings</Text>
+        </View>
         <Link href="/league-setup" asChild>
           <Pressable>
             <Text style={styles.link}>League</Text>

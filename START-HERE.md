@@ -1,4 +1,4 @@
-# Start the OU League app (local machine)
+# Start the Fine Line app (local machine)
 
 ## 1. Prerequisites
 
@@ -8,7 +8,7 @@
 ## 2. One-time setup
 
 ```bash
-cd path/to/ou-league
+cd path/to/fine-line
 npm install
 ```
 

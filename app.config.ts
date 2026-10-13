@@ -14,13 +14,13 @@ function envFirst(...keys: string[]): string {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'OU League',
-  slug: 'ou-league',
+  name: 'Fine Line',
+  slug: 'fine-line',
   version: '1.0.0',
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'dark',
-  scheme: 'ou-league',
+  scheme: 'fine-line',
   ios: {
     supportsTablet: true,
   },
