@@ -53,7 +53,7 @@ export function useTeams(): TeamsState {
           'Supabase API key missing in the app bundle. Ensure EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY is in .env and restart Expo (npx expo start).';
       } else if (message.toLowerCase().includes('permission denied')) {
         message =
-          'Supabase blocked reads on the teams table (Row Level Security). Run the SQL policy shown below in the Supabase SQL Editor, then tap Try again.';
+          'Supabase denied read access on teams. You need both GRANT SELECT for anon and an RLS policy — run the SQL below (safe if the policy already exists), then tap Try again.';
       }
       setError(message);
       setTeams([]);

@@ -24,18 +24,27 @@ export function isSupabaseConfigured(): boolean {
 
 export async function fetchTeams(): Promise<Team[]> {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('teams')
     .select(
       'id, sport, name, abbreviation, primary_color, secondary_color, total_season_games, ou_line, current_wins, current_losses',
+      { count: 'exact' },
     )
-    .order('name');
+    .order('name')
+    .range(0, 999);
 
   if (error) {
     throw error;
   }
 
-  return (data ?? []) as Team[];
+  const teams = (data ?? []) as Team[];
+  if (count != null && count > teams.length) {
+    throw new Error(
+      `Supabase returned ${teams.length} of ${count} teams. In Dashboard go to Project Settings → Data API → increase "Max rows" (e.g. 1000), then refresh the app.`,
+    );
+  }
+
+  return teams;
 }
 
 export async function fetchUserRank(): Promise<number | null> {

@@ -27,7 +27,12 @@ export default function StandingsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <LeagueHeader rank={rank} rankLoading={rankLoading} pickCount={pickCount} />
+      <LeagueHeader
+        rank={rank}
+        rankLoading={rankLoading}
+        pickCount={pickCount}
+        teamCount={teams.length}
+      />
 
       {showListLoader ? (
         <View style={styles.centered}>

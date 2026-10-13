@@ -53,7 +53,16 @@ Then press **`w`** for web, or scan the QR code with **Expo Go** on your phone.
 
 Copy the **full red error text** from the terminal if it still fails—that pinpoints the fix.
 
-## 5. Refresh team list
+## 5. Only 3 teams showing (but SQL count is 30)
+
+1. Run `npm run check:teams` — if it says API is capping rows:
+   - Supabase **Dashboard → Project Settings → Data API → Max rows** → set to **1000** → Save.
+2. Confirm `.env` `SUPABASE_URL` matches the project where you ran `select count(*)`.
+3. Hard refresh the browser (**Cmd/Ctrl + Shift + R**) or press **`r`** in the Expo terminal.
+
+The header should say **“30 teams”** when loaded correctly.
+
+## 6. Refresh team list
 
 - **Web:** browser reload (Cmd/Ctrl + R)
 - **Phone:** pull down on the standings list

@@ -6,9 +6,10 @@ type Props = {
   rank: number | null;
   rankLoading: boolean;
   pickCount: number;
+  teamCount: number;
 };
 
-export function LeagueHeader({ rank, rankLoading, pickCount }: Props) {
+export function LeagueHeader({ rank, rankLoading, pickCount, teamCount }: Props) {
   const rankLabel = rankLoading
     ? null
     : rank != null
@@ -18,6 +19,9 @@ export function LeagueHeader({ rank, rankLoading, pickCount }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>League Standings</Text>
+      {teamCount > 0 ? (
+        <Text style={styles.teamCount}>{teamCount} teams</Text>
+      ) : null}
       <View style={styles.rankRow}>
         <Text style={styles.rankLabel}>Your rank</Text>
         {rankLoading ? (
@@ -49,6 +53,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: -0.5,
+  },
+  teamCount: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
   },
   rankRow: {
     flexDirection: 'row',
