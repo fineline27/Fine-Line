@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
 function envFirst(...keys: string[]): string {

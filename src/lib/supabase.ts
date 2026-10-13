@@ -1,40 +1,21 @@
-import Constants from 'expo-constants';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+import { assertSupabaseConfig } from './supabaseConfig';
 import type { Team } from '../types/team';
-
-type SupabaseExtra = {
-  supabaseUrl?: string;
-  supabaseAnonKey?: string;
-};
-
-function getSupabaseConfig(): { url: string; anonKey: string } {
-  const extra = Constants.expoConfig?.extra as SupabaseExtra | undefined;
-  const url = extra?.supabaseUrl?.trim() ?? '';
-  const anonKey = extra?.supabaseAnonKey?.trim() ?? '';
-
-  if (!url || !anonKey) {
-    throw new Error(
-      'Missing Supabase credentials. Set SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY (or legacy SUPABASE_ANON_KEY / EXPO_PUBLIC_* equivalents).',
-    );
-  }
-
-  return { url, anonKey };
-}
 
 let client: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient {
   if (!client) {
-    const { url, anonKey } = getSupabaseConfig();
-    client = createClient(url, anonKey);
+    const { url, apiKey } = assertSupabaseConfig();
+    client = createClient(url, apiKey);
   }
   return client;
 }
 
 export function isSupabaseConfigured(): boolean {
   try {
-    getSupabaseConfig();
+    assertSupabaseConfig();
     return true;
   } catch {
     return false;

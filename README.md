@@ -46,6 +46,17 @@ npx expo start
 
 Press `w` for web, `i` for iOS simulator, or scan the QR code in Expo Go.
 
+`app.config.ts` loads `.env` automatically — you do **not** need `source .env` before `npx expo start`.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| “Supabase is not configured” | Add `.env` with `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or `EXPO_PUBLIC_*` copies), then **restart** Expo. |
+| “permission denied for table teams” | Add the RLS `select` policy from the SQL section above (or copy from the in-app error screen). |
+| Expo Go cannot connect (QR) | Use **tunnel** mode on your machine: `npx expo start --tunnel`, or run Expo on the same Wi‑Fi as your phone. |
+| Web preview works but phone does not | The dev server must run on **your** computer; copy the project and `.env` locally. |
+
 ## Win pace status
 
 - **Win pace** = `(current_wins / games_played) × total_season_games` (0 if no games yet)

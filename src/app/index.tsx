@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LeagueHeader } from '../components/LeagueHeader';
 import { TeamCard } from '../components/TeamCard';
 import { useTeamPicks } from '../hooks/useTeamPicks';
-import { useTeams } from '../hooks/useTeams';
+import { TEAMS_RLS_SQL, useTeams } from '../hooks/useTeams';
 import { useUserRank } from '../hooks/useUserRank';
 import type { Team } from '../types/team';
 import { colors } from '../theme/colors';
@@ -38,6 +38,15 @@ export default function StandingsScreen() {
         <View style={styles.centered}>
           <Text style={styles.errorTitle}>Could not load standings</Text>
           <Text style={styles.errorBody}>{error}</Text>
+          {error.toLowerCase().includes('row level security') ||
+          error.toLowerCase().includes('permission denied') ? (
+            <View style={styles.sqlBox}>
+              <Text style={styles.sqlLabel}>Supabase SQL Editor</Text>
+              <Text style={styles.sqlText} selectable>
+                {TEAMS_RLS_SQL}
+              </Text>
+            </View>
+          ) : null}
           <Pressable style={styles.retryButton} onPress={() => void refresh()}>
             <Text style={styles.retryText}>Try again</Text>
           </Pressable>
@@ -107,6 +116,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  sqlBox: {
+    marginTop: 16,
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+  },
+  sqlLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  sqlText: {
+    color: colors.textPrimary,
+    fontSize: 12,
+    fontFamily: 'monospace',
+    lineHeight: 18,
   },
   retryButton: {
     marginTop: 16,

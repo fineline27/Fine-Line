@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { getErrorMessage } from '../lib/errors';
 import { fetchTeams, isSupabaseConfigured } from '../lib/supabase';
+
+export const TEAMS_RLS_SQL = `alter table public.teams enable row level security;
+
+create policy "Public read teams"
+  on public.teams
+  for select
+  using (true);`;
 import type { Team } from '../types/team';
 
 type TeamsState = {
@@ -19,7 +27,7 @@ export function useTeams(): TeamsState {
     if (!isSupabaseConfigured()) {
       setTeams([]);
       setError(
-        'Supabase is not configured. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to your environment.',
+        'Supabase is not configured. Add SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY to .env in the project root, then restart with: npx expo start',
       );
       setLoading(false);
       return;
@@ -32,10 +40,13 @@ export function useTeams(): TeamsState {
       const data = await fetchTeams();
       setTeams(data);
     } catch (err) {
-      let message = err instanceof Error ? err.message : 'Failed to load teams';
-      if (message.toLowerCase().includes('permission denied')) {
-        message +=
-          ' Enable public read on the teams table (see README SQL for a select policy).';
+      let message = getErrorMessage(err, 'Failed to load teams');
+      if (message.toLowerCase().includes('no api key')) {
+        message =
+          'Supabase API key missing in the app bundle. Ensure EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY is in .env and restart Expo (npx expo start).';
+      } else if (message.toLowerCase().includes('permission denied')) {
+        message =
+          'Supabase blocked reads on the teams table (Row Level Security). Run the SQL policy shown below in the Supabase SQL Editor, then tap Try again.';
       }
       setError(message);
       setTeams([]);
