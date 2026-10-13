@@ -1,77 +1,253 @@
-# Go live (web)
+# Go live — detailed guide (Fine Line web)
 
-Fine Line is an **Expo web** app: production is a **static export** (`dist/`) plus your **Supabase** backend. You do not need a Node server in production.
+Fine Line is an **Expo web** app. Production = **static files** in `dist/` (hosted on Vercel or similar) + **Supabase** (auth, database). You do **not** run Node 24/7 on your own server.
 
-## 1. Create the repo (if you have not)
+---
 
-In Cursor, use **Create repo** on this project, or push to GitHub/GitLab. Vercel deploys from git.
+## Overview
 
-## 2. Supabase production settings
+| Piece | What it does | Who hosts it |
+|-------|----------------|--------------|
+| Website (HTML/JS) | UI, picks, routing | Vercel CDN (free tier is fine to start) |
+| Supabase | Login, leagues, saved picks, team W/L | Supabase cloud (your existing project) |
 
-In [Supabase Dashboard](https://supabase.com/dashboard) → your project:
+Every **production deploy** runs `npm run build:web`, which bakes Supabase URL + keys from **environment variables** into the JavaScript bundle. If env vars are missing on Vercel, the live site will say Supabase is not configured.
 
-1. **Run all SQL** from `README.md` if you have not (schema, RLS, teams seed, bonus migrations).
-2. **Authentication → Providers → Email** — enable email; turn **Confirm email** on for public users.
-3. **Authentication → URL configuration**
-   - **Site URL**: `https://your-production-domain.com` (update after first deploy if needed).
-   - **Redirect URLs**: add  
-     `https://your-production-domain.com/**`  
-     and your Vercel preview URL pattern, e.g.  
-     `https://*.vercel.app/**`
-4. Set **`EXPO_PUBLIC_LEGAL_CONTACT_EMAIL`** for privacy/account requests (see README).
+---
 
-Keep using the **publishable (anon) key** in the web app — never put the service role key in the frontend.
+## Part A — One-time: Supabase database
 
-## 3. Deploy to Vercel (recommended)
+Project: **Supabase Dashboard** → select your project (e.g. `zayzjewfbcoovhtpdtgo`).
 
-### Option A — Cursor **Publish**
+### A1. Run SQL scripts (order matters)
 
-If Cursor shows **Publish**, connect Vercel, set environment variables (step 4 below), and deploy.
+Open **SQL Editor** → **New query**. Run each file from the repo **once**, in this order (copy/paste full file contents):
 
-### Option B — Vercel dashboard
+| Order | File | Purpose |
+|-------|------|---------|
+| 1 | `supabase/00-schema.sql` | Tables (teams, leagues, picks, …) |
+| 2 | `supabase/02-auth-rls.sql` | Auth, leagues, predictions, RLS |
+| 3 | `supabase/03-sport-leaderboard-rls.sql` | Overall leaderboard reads |
+| 4 | `supabase/04-league-submit-and-roster.sql` | Submit picks, gated board |
+| 5 | `supabase/01-seed-30-nba-teams.sql` | 30 NBA teams (skip if already 30 rows) |
+| 6 | `supabase/update-ou-lines-2026-27.sql` | 2026–27 O/U lines |
+| 7 | `supabase/05-bonus-questions.sql` | Bonus tables |
+| 8 | `supabase/06-mandatory-bonus-questions.sql` | Bonus on all leagues |
 
-1. [vercel.com](https://vercel.com) → **Add New Project** → import your git repo.
-2. Framework preset: **Other** (or let Vercel read `vercel.json`).
-3. Build command: `npm run build:web` (already in `vercel.json`).
-4. Output directory: `dist`.
-5. Add **Environment Variables** (Production + Preview):
+**Check:** **Table Editor** → `teams` → **30 rows**. Spot-check `ou_line`, `current_wins`, `current_losses`.
 
-| Variable | Value |
-|----------|--------|
-| `EXPO_PUBLIC_SUPABASE_URL` | `https://xxxx.supabase.co` |
-| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | your `sb_publishable_...` key |
-| `EXPO_PUBLIC_LEGAL_CONTACT_EMAIL` | your support/privacy email |
+If the app ever shows “permission denied for table teams”, re-run the grant/RLS section from `src/hooks/useTeams.ts` (`TEAMS_RLS_SQL`) or from `01-seed-30-nba-teams.sql`.
 
-Also set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` to the same values if you use them locally — `app.config.ts` reads either name.
+### A2. Get API credentials
 
-6. **Deploy**. Open the `*.vercel.app` URL and test sign-up, picks, and `/privacy`.
+**Project Settings** → **API**:
 
-7. **Domains** → add your custom domain (optional). Then update Supabase **Site URL** and **Redirect URLs** to that domain.
+- **Project URL** → use as `EXPO_PUBLIC_SUPABASE_URL` (e.g. `https://xxxxx.supabase.co`)
+- **Publishable key** (`sb_publishable_...`) → use as `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-## 4. Verify after deploy
+Do **not** put the **service role** or **secret** key in the web app or Vercel “public” env — that bypasses RLS.
 
-- Sign up / sign in (email confirmation if enabled).
-- My picks loads **30 teams**.
-- Create or join a league; submit picks; League tab.
-- Privacy policy loads at `/privacy`.
+### A3. Email auth (public users)
 
-If auth redirects fail, Supabase redirect URLs almost always need one more edit to match the exact host you use.
+**Authentication** → **Providers** → **Email**:
 
-## 5. Other hosts
+- Email provider **enabled**
+- For a public launch: enable **Confirm email** (users must click link before sign-in works)
+- For quick private testing only: you can leave confirm off temporarily
 
-Any static host works if you upload **`dist/`** after `npm run build:web` and configure **SPA fallback** to `index.html` (same idea as `vercel.json` rewrites):
+**Authentication** → **Email templates** — optional: customize “Confirm signup” text/branding.
 
-- Cloudflare Pages, Netlify, S3 + CloudFront, GitHub Pages (with SPA redirect rules).
+### A4. Auth URLs (critical for production login)
 
-## 6. Mobile app stores (later)
+**Authentication** → **URL configuration**:
 
-Web go-live does not require the App Store. For iOS/Android later, use [EAS Build](https://docs.expo.dev/build/introduction/) and the same Supabase env vars in `eas.json` / EAS secrets.
+1. **Site URL** — your main public URL, e.g.  
+   `https://fine-line.vercel.app`  
+   (Use your real Vercel URL after first deploy; update again if you add a custom domain.)
 
-## Local production smoke test
+2. **Redirect URLs** — add **each** of these (one per line in the allow list):
+
+   ```
+   https://YOUR-PRODUCTION-DOMAIN.vercel.app/**
+   https://*.vercel.app/**
+   http://localhost:8081/**
+   ```
+
+   Replace `YOUR-PRODUCTION-DOMAIN` with your actual Vercel project hostname. The wildcard line helps **preview deployments**.
+
+If login works on localhost but **not** on Vercel, 99% of the time this list is wrong or missing the exact hostname.
+
+### A5. Updating win/loss during the season
+
+The app does **not** auto-sync NBA scores. After games:
+
+- **Table Editor** → `teams` → edit `current_wins` / `current_losses`, **or**
+- SQL: `update public.teams set current_wins = 10, current_losses = 5 where abbreviation = 'BOS';`
+
+Users **pull to refresh** on My picks (or reload the browser) to see new colors and standings.
+
+---
+
+## Part B — Code on GitHub (or GitLab)
+
+Vercel deploys from git.
+
+1. Create a repo on GitHub (empty or import).
+2. On your machine (or ensure Cursor has pushed):
+
+   ```bash
+   git remote add origin https://github.com/YOU/fine-line.git   # if needed
+   git push -u origin main
+   ```
+
+3. Confirm the repo contains: `package.json`, `vercel.json`, `app.config.ts`, `src/`, `supabase/`.
+
+---
+
+## Part C — Deploy to Vercel (step by step)
+
+### C1. Create Vercel project
+
+1. Go to [vercel.com](https://vercel.com) and sign in (GitHub login is easiest).
+2. **Add New…** → **Project**.
+3. **Import** your `fine-line` repository.
+4. **Configure Project** screen:
+   - **Framework Preset:** Other (or Vercel auto-detects from `vercel.json`)
+   - **Root Directory:** `./` (default)
+   - **Build Command:** `npm run build:web` (from `vercel.json`)
+   - **Output Directory:** `dist` (from `vercel.json`)
+   - **Install Command:** `npm install` (default)
+
+Do **not** deploy yet — add env vars first.
+
+### C2. Environment variables (required)
+
+In the same screen (or **Settings** → **Environment Variables**), add for **Production** and **Preview**:
+
+| Name | Example / notes |
+|------|------------------|
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://zayzjewfbcoovhtpdtgo.supabase.co` |
+| `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` from Supabase API settings |
+| `EXPO_PUBLIC_LEGAL_CONTACT_EMAIL` | `you@yourdomain.com` (shown on Privacy/Terms; privacy requests) |
+
+Optional duplicates (same values; `app.config.ts` reads these too):
+
+- `SUPABASE_URL`
+- `SUPABASE_PUBLISHABLE_KEY`
+
+**Important:** Names must match exactly. Values are injected at **build time** for Expo. After changing env vars, ** redeploy** (Deployments → … → Redeploy).
+
+### C3. Deploy
+
+Click **Deploy**. First build often takes 2–4 minutes.
+
+When done, Vercel shows **Visit** → URL like `https://fine-line-xxxxx.vercel.app`.
+
+### C4. Fix Supabase URLs to match Vercel
+
+Copy that **exact** hostname (no trailing slash) into Supabase:
+
+- **Site URL:** `https://fine-line-xxxxx.vercel.app`
+- **Redirect URLs:** ensure that host is allowed (see Part A4)
+
+### C5. Production test checklist
+
+Open the live URL in an **incognito** window:
+
+| Step | Expected |
+|------|----------|
+| `/login` | Fine Line landing + sign in |
+| `/privacy` | Privacy policy |
+| Sign up | Checkbox for Terms/Privacy; email confirm if enabled |
+| Sign in | Redirect to sport/league flow |
+| My picks | 30 teams, O/U lines, green/yellow/red badges |
+| Pull to refresh | No error |
+| Create/join league | Works |
+| Submit full card + bonus | League tab unlocks |
+| `/terms` | Terms load |
+
+### C6. Custom domain (optional)
+
+1. Vercel project → **Settings** → **Domains** → add `fineline.yourdomain.com` (or apex).
+2. Follow DNS instructions (CNAME/A records at your registrar).
+3. Update Supabase **Site URL** and **Redirect URLs** to `https://fineline.yourdomain.com/**`.
+4. Redeploy not required for DNS only; auth URLs **must** match the domain users use in the browser.
+
+---
+
+## Part D — Cursor **Publish** (alternative)
+
+If your Cursor project shows a **Publish** button:
+
+1. Connect Vercel when prompted.
+2. Set the **same three** `EXPO_PUBLIC_*` env vars in the Publish/Vercel flow.
+3. Publish → use the URL Cursor/Vercel gives you.
+4. Complete **Part A4** and **C4** with that URL.
+
+---
+
+## Part E — Redeploying after code changes
+
+Any push to `main` (if Vercel git integration is on) triggers a new deploy automatically.
+
+Manual redeploy: Vercel → **Deployments** → latest → **Redeploy**.
+
+After changing **only** Supabase data (W/L), you do **not** redeploy Vercel — users refresh the app.
+
+After changing **env vars** or **app code**, redeploy or push again.
+
+---
+
+## Part F — Local production smoke test (before Vercel)
+
+On your computer, with `.env` filled like production:
 
 ```bash
+npm install
 npm run build:web
 npx serve dist
 ```
 
-Open the URL `serve` prints and click through routes before pushing to Vercel.
+Open the URL printed (often `http://localhost:3000`). Click `/login`, `/privacy`. If this works but Vercel fails, compare env vars on Vercel to local `.env`.
+
+---
+
+## Part G — Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|----------------|-----|
+| “Supabase is not configured” on live site | Missing env at **build** | Add `EXPO_PUBLIC_*` on Vercel → Redeploy |
+| Sign-in spins or “invalid redirect” | Redirect URLs | Supabase Auth URLs include exact Vercel host + `/**` |
+| Email sign-up never completes | Confirm email on | User must click email link; check spam; or disable confirm for testing |
+| “permission denied for table teams” | RLS/grant | Run teams RLS SQL from README / `01-seed` |
+| 404 on `/login` or refresh on deep link | SPA routing | `vercel.json` rewrites should be in repo; redeploy |
+| Blank page after deploy | Build failed | Vercel → Deployment → **Build logs** |
+| Old UI after push | Cache | Hard refresh; check latest deployment is **Production** |
+| Bonus / submit broken | Migrations | Run `05` and `06` SQL |
+
+---
+
+## Part H — Other hosts (not Vercel)
+
+1. Run `npm run build:web` locally or in CI.
+2. Upload contents of **`dist/`** to Netlify, Cloudflare Pages, S3+CloudFront, etc.
+3. Configure **single-page app** fallback: all routes → `index.html` (same logic as `vercel.json` rewrites).
+4. Set the same env vars in that platform’s build settings before `npm run build:web`.
+
+---
+
+## Part I — App Store / Play Store (later)
+
+Web go-live does **not** require mobile stores. For native apps later, use [EAS Build](https://docs.expo.dev/build/introduction/) and store the same Supabase vars as EAS secrets.
+
+---
+
+## Quick reference — env vars
+
+```env
+EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+EXPO_PUBLIC_LEGAL_CONTACT_EMAIL=you@example.com
+```
+
+Local `.env` uses the same names; restart Expo after changes. Vercel uses them at deploy/build time only.
