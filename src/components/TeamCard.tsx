@@ -13,10 +13,11 @@ type Props = {
   team: Team;
   pick?: PickSide;
   saving?: boolean;
+  picksLocked?: boolean;
   onPickChange: (teamId: string, side: PickSide) => void;
 };
 
-export function TeamCard({ team, pick, saving, onPickChange }: Props) {
+export function TeamCard({ team, pick, saving, picksLocked, onPickChange }: Props) {
   const status = getTeamStatus(team);
   const pickEval = pick ? evaluatePick(team, pick) : null;
 
@@ -39,6 +40,7 @@ export function TeamCard({ team, pick, saving, onPickChange }: Props) {
 
       <PickToggle
         selected={pick}
+        disabled={picksLocked}
         onSelect={(side) => onPickChange(team.id, side)}
       />
       {saving ? <Text style={styles.saving}>Saving…</Text> : null}

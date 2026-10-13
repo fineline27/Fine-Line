@@ -6,6 +6,7 @@ import { colors } from '../theme/colors';
 type Props = {
   selected: PickSide | undefined;
   onSelect: (side: PickSide) => void;
+  disabled?: boolean;
 };
 
 function ToggleButton({
@@ -13,21 +14,25 @@ function ToggleButton({
   side,
   selected,
   onSelect,
+  disabled,
 }: {
   label: string;
   side: PickSide;
   selected: boolean;
   onSelect: (side: PickSide) => void;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled: !!disabled }}
+      disabled={disabled}
       onPress={() => onSelect(side)}
       style={({ pressed }) => [
         styles.button,
         selected ? styles.buttonActive : styles.buttonInactive,
-        pressed && styles.buttonPressed,
+        disabled && styles.buttonDisabled,
+        pressed && !disabled && styles.buttonPressed,
       ]}
     >
       <Text style={[styles.buttonText, selected && styles.buttonTextActive]}>{label}</Text>
@@ -35,7 +40,7 @@ function ToggleButton({
   );
 }
 
-export function PickToggle({ selected, onSelect }: Props) {
+export function PickToggle({ selected, onSelect, disabled }: Props) {
   return (
     <View style={styles.row}>
       <ToggleButton
@@ -43,12 +48,14 @@ export function PickToggle({ selected, onSelect }: Props) {
         side="over"
         selected={selected === 'over'}
         onSelect={onSelect}
+        disabled={disabled}
       />
       <ToggleButton
         label="UNDER"
         side="under"
         selected={selected === 'under'}
         onSelect={onSelect}
+        disabled={disabled}
       />
     </View>
   );
@@ -77,6 +84,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.85,
+  },
+  buttonDisabled: {
+    opacity: 0.45,
   },
   buttonText: {
     color: colors.textSecondary,

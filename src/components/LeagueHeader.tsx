@@ -18,6 +18,7 @@ type Props = {
   clinched: number;
   pickCount: number;
   teamCount: number;
+  picksSubmitted: boolean;
   supabaseProjectRef: string | null;
 };
 
@@ -40,6 +41,7 @@ export function LeagueHeader({
   clinched,
   pickCount,
   teamCount,
+  picksSubmitted,
   supabaseProjectRef,
 }: Props) {
   return (
@@ -77,7 +79,9 @@ export function LeagueHeader({
           {league.loading ? (
             <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
           ) : (
-            <Text style={styles.rankCardValue}>{formatRank(league)}</Text>
+            <Text style={styles.rankCardValue}>
+              {!picksSubmitted ? 'Locked' : formatRank(league)}
+            </Text>
           )}
         </View>
       </View>
@@ -89,10 +93,13 @@ export function LeagueHeader({
         <Text style={styles.projectRef}>Supabase: {supabaseProjectRef}</Text>
       ) : null}
       <Text style={styles.scoreLine}>
-        Score: {myScore} pts · {clinched} clinched · {pickCount} picks submitted
+        Score: {myScore} pts · {clinched} clinched · {pickCount}/{teamCount || 30} picks
+        {picksSubmitted ? ' · locked in' : ''}
       </Text>
       <Text style={styles.picksHint}>
-        Overall rank uses your best unique picks across Fine Line. League rank is this group only.
+        {picksSubmitted
+          ? 'League board and standings update as NBA results change — pull to refresh.'
+          : 'Submit all picks to unlock the league board and see everyone’s selections.'}
       </Text>
     </View>
   );

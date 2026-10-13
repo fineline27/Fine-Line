@@ -9,7 +9,15 @@ import { LeagueProvider } from '../contexts/LeagueContext';
 import { SportProvider } from '../contexts/SportContext';
 import { colors } from '../theme/colors';
 
+const APP_TITLE = Constants.expoConfig?.name?.trim() || 'Fine Line';
+
 export default function RootLayout() {
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.title = APP_TITLE;
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <SportProvider>

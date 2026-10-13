@@ -1,4 +1,5 @@
 import type { League } from '../types/league';
+import { defaultDisplayName } from './leagueMembers';
 import { getSupabaseClient } from './supabase';
 
 function randomInviteCode(): string {
@@ -37,6 +38,7 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
       await supabase.from('league_members').insert({
         league_id: data.id,
         user_id: user.id,
+        display_name: defaultDisplayName(user.email),
       });
       return data as League;
     }
@@ -81,7 +83,11 @@ export async function joinLeagueByCode(code: string): Promise<League> {
   }
 
   const { error: memberError } = await supabase.from('league_members').upsert(
-    { league_id: league.id, user_id: user.id },
+    {
+      league_id: league.id,
+      user_id: user.id,
+      display_name: defaultDisplayName(user.email),
+    },
     { onConflict: 'league_id,user_id', ignoreDuplicates: true },
   );
 

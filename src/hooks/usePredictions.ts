@@ -4,7 +4,7 @@ import { useLeague } from '../contexts/LeagueContext';
 import { deletePrediction, fetchPredictionsForLeague, upsertPrediction } from '../lib/predictions';
 import type { PickSide } from '../types/team';
 
-export function usePredictions() {
+export function usePredictions(picksLocked: boolean) {
   const { activeLeague } = useLeague();
   const [picks, setPicks] = useState<Record<string, PickSide>>({});
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export function usePredictions() {
 
   const togglePick = useCallback(
     async (teamId: string, side: PickSide) => {
-      if (!leagueId) {
+      if (!leagueId || picksLocked) {
         return;
       }
 
@@ -65,7 +65,7 @@ export function usePredictions() {
         setSavingTeamId(null);
       }
     },
-    [leagueId, picks],
+    [leagueId, picks, picksLocked],
   );
 
   return {

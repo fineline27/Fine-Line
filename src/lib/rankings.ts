@@ -14,6 +14,16 @@ export type StandingsResult = {
   clinched: number;
 };
 
+export type LeaderboardEntry = {
+  userId: string;
+  displayName: string;
+  score: number;
+  clinched: number;
+  rank: number;
+  picksSubmitted: boolean;
+  isMe: boolean;
+};
+
 /** One pick per team per user (latest row wins if duplicates exist). */
 export function computeStandings(
   userId: string,
@@ -63,4 +73,84 @@ export function computeStandings(
     myScore,
     clinched: myClinched,
   };
+}
+
+export function computeLeaderboard(
+  currentUserId: string,
+  predictions: PredictionRow[],
+  teams: Team[],
+  members: Array<{ user_id: string; display_name: string | null; picks_submitted_at: string | null }>,
+): LeaderboardEntry[] {
+  const submittedMemberIds = new Set(
+    members.filter((m) => m.picks_submitted_at).map((m) => m.user_id),
+  );
+  const filteredPredictions = predictions.filter((p) => submittedMemberIds.has(p.user_id));
+  const teamById = new Map(teams.map((t) => [t.id, t]));
+  const picksByUser = new Map<string, Map<string, 'over' | 'under'>>();
+
+  for (const row of filteredPredictions) {
+    if (!picksByUser.has(row.user_id)) {
+      picksByUser.set(row.user_id, new Map());
+    }
+    picksByUser.get(row.user_id)!.set(row.team_id, row.pick === 'OVER' ? 'over' : 'under');
+  }
+
+  const scored = members.map((member) => {
+    const teamPicks = picksByUser.get(member.user_id);
+    let score = 0;
+    let clinched = 0;
+    if (teamPicks) {
+      for (const [teamId, side] of teamPicks) {
+        const team = teamById.get(teamId);
+        if (!team) {
+          continue;
+        }
+        const pts = scorePick(team, side);
+        score += pts;
+        if (pts === 1) {
+          clinched += 1;
+        }
+      }
+    }
+    const picksSubmitted = Boolean(member.picks_submitted_at);
+    return {
+      userId: member.user_id,
+      displayName: member.display_name?.trim() || 'Player',
+      score: picksSubmitted ? score : 0,
+      clinched: picksSubmitted ? clinched : 0,
+      rank: 0,
+      picksSubmitted,
+      isMe: member.user_id === currentUserId,
+    };
+  });
+
+  const ranked = [...scored]
+    .filter((e) => e.picksSubmitted)
+    .sort((a, b) => b.score - a.score || b.clinched - a.clinched || a.displayName.localeCompare(b.displayName));
+
+  let lastScore: number | null = null;
+  let lastRank = 0;
+  ranked.forEach((entry, index) => {
+    if (lastScore !== entry.score) {
+      lastRank = index + 1;
+      lastScore = entry.score;
+    }
+    entry.rank = lastRank;
+  });
+
+  const rankByUser = new Map(ranked.map((e) => [e.userId, e.rank]));
+  return scored
+    .map((entry) => ({
+      ...entry,
+      rank: entry.picksSubmitted ? (rankByUser.get(entry.userId) ?? ranked.length) : 0,
+    }))
+    .sort((a, b) => {
+      if (a.picksSubmitted !== b.picksSubmitted) {
+        return a.picksSubmitted ? -1 : 1;
+      }
+      if (a.picksSubmitted && b.picksSubmitted) {
+        return a.rank - b.rank || b.score - a.score || a.displayName.localeCompare(b.displayName);
+      }
+      return a.displayName.localeCompare(b.displayName);
+    });
 }

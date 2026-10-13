@@ -10,18 +10,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { LeagueHeader } from '../components/LeagueHeader';
-import { TeamCard } from '../components/TeamCard';
-import { useAuth } from '../contexts/AuthContext';
-import { useLeague } from '../contexts/LeagueContext';
-import { useSport } from '../contexts/SportContext';
-import { useLeagueRank } from '../hooks/useLeagueRank';
-import { useOverallRank } from '../hooks/useOverallRank';
-import { usePredictions } from '../hooks/usePredictions';
-import { TEAMS_RLS_SQL, useTeams } from '../hooks/useTeams';
-import type { Team } from '../types/team';
-import { getSupabaseProjectRef } from '../lib/supabaseConfig';
-import { colors } from '../theme/colors';
+import { LeagueHeader } from '../../components/LeagueHeader';
+import { TeamCard } from '../../components/TeamCard';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLeague } from '../../contexts/LeagueContext';
+import { useSport } from '../../contexts/SportContext';
+import { useLeagueMembership } from '../../hooks/useLeagueMembership';
+import { useLeagueRank } from '../../hooks/useLeagueRank';
+import { useOverallRank } from '../../hooks/useOverallRank';
+import { usePredictions } from '../../hooks/usePredictions';
+import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
+import type { Team } from '../../types/team';
+import { getSupabaseProjectRef } from '../../lib/supabaseConfig';
+import { colors } from '../../theme/colors';
 
 export default function StandingsScreen() {
   const { session, isLoading: authLoading } = useAuth();
@@ -29,19 +30,28 @@ export default function StandingsScreen() {
   const { activeLeague, isLoading: leagueLoading } = useLeague();
   const { teams, loading, error, refresh } = useTeams();
   const {
+    picksSubmitted,
+    submitting,
+    submitPicks,
+    error: membershipError,
+    refresh: refreshMembership,
+  } = useLeagueMembership();
+  const {
     picks,
     togglePick,
     loading: picksLoading,
     savingTeamId,
     error: picksError,
     refresh: refreshPicks,
-  } = usePredictions();
+  } = usePredictions(picksSubmitted);
   const overallRank = useOverallRank(teams);
-  const leagueRank = useLeagueRank(teams);
+  const leagueRank = useLeagueRank(teams, picksSubmitted);
   const myScore = leagueRank.myScore;
   const clinched = leagueRank.clinched;
 
   const pickCount = Object.keys(picks).length;
+  const requiredPicks = teams.length;
+  const canSubmit = !picksSubmitted && requiredPicks > 0 && pickCount >= requiredPicks;
   const showListLoader = loading || picksLoading || leagueLoading;
   const supabaseProjectRef = getSupabaseProjectRef();
 
@@ -58,8 +68,21 @@ export default function StandingsScreen() {
   }
 
   async function onRefresh() {
-    await Promise.all([refresh(), refreshPicks()]);
+    await Promise.all([refresh(), refreshPicks(), refreshMembership()]);
   }
+
+  async function onSubmitPicks() {
+    try {
+      await submitPicks(requiredPicks, pickCount);
+      await refreshPicks();
+    } catch {
+      // error surfaced via membershipError / submit hook
+    }
+  }
+
+  const leagueRankDisplay = picksSubmitted
+    ? leagueRank
+    : { ...leagueRank, rank: null as number | null };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -72,7 +95,7 @@ export default function StandingsScreen() {
           loading: overallRank.loading,
         }}
         league={{
-          rank: leagueRank.rank,
+          rank: leagueRankDisplay.rank,
           totalPlayers: leagueRank.totalPlayers,
           loading: leagueRank.loading,
         }}
@@ -80,10 +103,12 @@ export default function StandingsScreen() {
         clinched={clinched}
         pickCount={pickCount}
         teamCount={teams.length}
+        picksSubmitted={picksSubmitted}
         supabaseProjectRef={supabaseProjectRef}
       />
 
       {picksError ? <Text style={styles.pickError}>{picksError}</Text> : null}
+      {membershipError ? <Text style={styles.pickError}>{membershipError}</Text> : null}
 
       {showListLoader ? (
         <View style={styles.centered}>
@@ -133,9 +158,43 @@ export default function StandingsScreen() {
               team={item}
               pick={picks[item.id]}
               saving={savingTeamId === item.id}
+              picksLocked={picksSubmitted}
               onPickChange={(teamId, side) => void togglePick(teamId, side)}
             />
           )}
+          ListHeaderComponent={
+            !picksSubmitted ? (
+              <View style={styles.submitBanner}>
+                <Text style={styles.submitTitle}>Finish your card</Text>
+                <Text style={styles.submitBody}>
+                  Pick OVER or UNDER on every team ({pickCount}/{requiredPicks}), then submit to
+                  open the league board.
+                </Text>
+                <Pressable
+                  style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
+                  disabled={!canSubmit || submitting}
+                  onPress={() => void onSubmitPicks()}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.submitButtonText,
+                        canSubmit && styles.submitButtonTextActive,
+                      ]}
+                    >
+                      {canSubmit ? 'Submit picks' : `${requiredPicks - pickCount} picks left`}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.lockedBanner}>
+                <Text style={styles.lockedText}>Picks locked · view the League tab for the board</Text>
+              </View>
+            )
+          }
           ListFooterComponent={
             teams.length > 0 ? (
               <Text style={styles.footerHint}>
@@ -165,8 +224,57 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 32,
+  },
+  submitBanner: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  submitTitle: {
+    color: colors.textPrimary,
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  submitBody: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  submitButton: {
+    marginTop: 12,
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  submitButtonText: {
+    color: colors.textPrimary,
+    fontWeight: '800',
+    fontSize: 15,
+  },
+  lockedBanner: {
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  lockedText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    textAlign: 'center',
   },
   centered: {
     flex: 1,
