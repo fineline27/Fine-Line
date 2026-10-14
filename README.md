@@ -34,7 +34,7 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`09-season-pick-lock.sql`](supabase/09-season-pick-lock.sql) | Edit picks until first NBA game; same picks across all leagues |
 | [`10-signup-username-display-name.sql`](supabase/10-signup-username-display-name.sql) | Leaderboard name from sign-up username (in RUN-THIS) |
 | [`11-profile-delete-account.sql`](supabase/11-profile-delete-account.sql) | In-app **Delete account** on Profile screen |
-| [`12-confidence-picks.sql`](supabase/12-confidence-picks.sql) | **Confidence overall** rank — 1–3 pts per team (win/lose stake) |
+| [`12-confidence-picks.sql`](supabase/12-confidence-picks.sql) | **Stakes** overall format — 1–3 pt stake per team (win/lose stake) |
 | [`fix-play-solo-and-leagues.sql`](supabase/fix-play-solo-and-leagues.sql) | Same fixes (included in RUN-THIS file) |
 
 After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points. Use exact team or player names as stored in picks. Refresh the player list with `npm run refresh:nba-players` (ESPN rosters → `src/data/nba-players.json`).

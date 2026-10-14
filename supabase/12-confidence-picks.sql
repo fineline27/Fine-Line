@@ -1,4 +1,4 @@
--- Confidence points (1–3) per O/U pick for the second overall leaderboard.
+-- Stake points (1–3) per O/U pick for the Stakes overall format (Classic is unchanged).
 -- Safe to re-run.
 
 alter table public.team_predictions

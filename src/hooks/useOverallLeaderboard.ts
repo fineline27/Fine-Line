@@ -12,11 +12,11 @@ import {
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { Team } from '../types/team';
 
-export type OverallLeaderboardMode = 'standard' | 'confidence';
+export type OverallLeaderboardMode = 'classic' | 'stakes';
 
 type State = {
-  standardLeaderboard: LeaderboardEntry[];
-  confidenceLeaderboard: LeaderboardEntry[];
+  classicLeaderboard: LeaderboardEntry[];
+  stakesLeaderboard: LeaderboardEntry[];
   predictions: SportPredictionRow[];
   bonusQuestions: BonusQuestion[];
   bonusAnswers: BonusAnswerRow[];
@@ -28,8 +28,8 @@ export function useOverallLeaderboard(teams: Team[]) {
   const { user } = useAuth();
   const { sport } = useSport();
   const [state, setState] = useState<State>({
-    standardLeaderboard: [],
-    confidenceLeaderboard: [],
+    classicLeaderboard: [],
+    stakesLeaderboard: [],
     predictions: [],
     bonusQuestions: [],
     bonusAnswers: [],
@@ -40,8 +40,8 @@ export function useOverallLeaderboard(teams: Team[]) {
   const refresh = useCallback(async () => {
     if (!user || !sport || teams.length === 0) {
       setState({
-        standardLeaderboard: [],
-        confidenceLeaderboard: [],
+        classicLeaderboard: [],
+        stakesLeaderboard: [],
         predictions: [],
         bonusQuestions: [],
         bonusAnswers: [],
@@ -75,8 +75,8 @@ export function useOverallLeaderboard(teams: Team[]) {
           ? { questions: bonusBundle.questions, answers: bonusBundle.answers }
           : undefined;
 
-      const standardLeaderboard = computeLeaderboard(user.id, predictions, teams, members, bonus);
-      const confidenceLeaderboard = computeConfidenceLeaderboard(
+      const classicLeaderboard = computeLeaderboard(user.id, predictions, teams, members, bonus);
+      const stakesLeaderboard = computeConfidenceLeaderboard(
         user.id,
         predictions,
         teams,
@@ -84,8 +84,8 @@ export function useOverallLeaderboard(teams: Team[]) {
       );
 
       setState({
-        standardLeaderboard,
-        confidenceLeaderboard,
+        classicLeaderboard,
+        stakesLeaderboard,
         predictions,
         bonusQuestions: bonusBundle.questions,
         bonusAnswers: bonusBundle.answers,
@@ -94,8 +94,8 @@ export function useOverallLeaderboard(teams: Team[]) {
       });
     } catch (err) {
       setState({
-        standardLeaderboard: [],
-        confidenceLeaderboard: [],
+        classicLeaderboard: [],
+        stakesLeaderboard: [],
         predictions: [],
         bonusQuestions: [],
         bonusAnswers: [],

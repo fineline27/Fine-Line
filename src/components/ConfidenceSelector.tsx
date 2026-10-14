@@ -15,7 +15,7 @@ export function ConfidenceSelector({ value, disabled, onChange }: Props) {
   return (
     <View style={styles.wrap}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>Confidence</Text>
+        <Text style={styles.label}>Stake</Text>
         <Text style={styles.hint}>Win +{value} · lose −{value}</Text>
       </View>
       <View style={styles.row}>

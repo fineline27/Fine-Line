@@ -120,12 +120,12 @@ export default function StandingsScreen() {
           totalPlayers: overallRank.totalPlayers,
           loading: overallRank.loading,
         }}
-        overallConfidence={{
+        overallStakes={{
           rank: overallConfidenceRank.rank,
           totalPlayers: overallConfidenceRank.totalPlayers,
           loading: overallConfidenceRank.loading,
         }}
-        overallConfidenceScore={overallConfidenceRank.myScore}
+        overallStakesScore={overallConfidenceRank.myScore}
         league={{
           rank: leagueRankDisplay.rank,
           totalPlayers: leagueRank.totalPlayers,
@@ -249,7 +249,7 @@ export default function StandingsScreen() {
                 <Text style={styles.seasonLockBody}>
                   {seasonLocked
                     ? 'The first NBA games have started. Your O/U and bonus picks can no longer be changed.'
-                    : `One pick card for all your ${sport ?? 'NBA'} leagues. Set confidence 1–3 for the second overall rank. You can change until the first game (${lockAtLabel}).`}
+                    : `One pick card for all your ${sport ?? 'NBA'} leagues. Classic and Stakes are separate overall formats — set a 1–3 stake per team for Stakes. You can change until the first game (${lockAtLabel}).`}
                 </Text>
               </View>
               {seasonLocked ? (

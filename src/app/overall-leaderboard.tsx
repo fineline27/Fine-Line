@@ -27,7 +27,10 @@ import { colors } from '../theme/colors';
 
 function parseMode(raw: string | string[] | undefined): OverallLeaderboardMode {
   const value = Array.isArray(raw) ? raw[0] : raw;
-  return value === 'confidence' ? 'confidence' : 'standard';
+  if (value === 'stakes' || value === 'confidence') {
+    return 'stakes';
+  }
+  return 'classic';
 }
 
 export default function OverallLeaderboardScreen() {
@@ -41,8 +44,8 @@ export default function OverallLeaderboardScreen() {
     setMode(initialMode);
   }, [initialMode]);
   const {
-    standardLeaderboard,
-    confidenceLeaderboard,
+    classicLeaderboard,
+    stakesLeaderboard,
     predictions,
     bonusQuestions,
     bonusAnswers,
@@ -53,8 +56,8 @@ export default function OverallLeaderboardScreen() {
   } = useOverallLeaderboard(teams);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
-  const leaderboard = mode === 'confidence' ? confidenceLeaderboard : standardLeaderboard;
-  const isConfidence = mode === 'confidence';
+  const leaderboard = mode === 'stakes' ? stakesLeaderboard : classicLeaderboard;
+  const isStakes = mode === 'stakes';
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -76,25 +79,25 @@ export default function OverallLeaderboardScreen() {
         </Link>
         <Text style={styles.title}>Overall {sport ?? ''}</Text>
         <Text style={styles.subtitle}>
-          {isConfidence
-            ? 'Confidence board · win +stake, lose −stake (1–3 per team)'
-            : 'Standard board · 1 pt per correct O/U'}
+          {isStakes
+            ? 'Stakes format · win +stake, lose −stake (1–3 per team)'
+            : 'Classic format · 1 pt per correct O/U'}
         </Text>
         <View style={styles.modeRow}>
           <Pressable
-            style={[styles.modeChip, !isConfidence && styles.modeChipActive]}
-            onPress={() => setMode('standard')}
+            style={[styles.modeChip, !isStakes && styles.modeChipActive]}
+            onPress={() => setMode('classic')}
           >
-            <Text style={[styles.modeChipText, !isConfidence && styles.modeChipTextActive]}>
-              Standard
+            <Text style={[styles.modeChipText, !isStakes && styles.modeChipTextActive]}>
+              Classic
             </Text>
           </Pressable>
           <Pressable
-            style={[styles.modeChip, isConfidence && styles.modeChipActive]}
-            onPress={() => setMode('confidence')}
+            style={[styles.modeChip, isStakes && styles.modeChipActive]}
+            onPress={() => setMode('stakes')}
           >
-            <Text style={[styles.modeChipText, isConfidence && styles.modeChipTextActive]}>
-              Confidence
+            <Text style={[styles.modeChipText, isStakes && styles.modeChipTextActive]}>
+              Stakes
             </Text>
           </Pressable>
         </View>
@@ -120,9 +123,9 @@ export default function OverallLeaderboardScreen() {
           }
           ListHeaderComponent={
             <Text style={styles.listHint}>
-              {isConfidence
-                ? 'Same 30 O/U picks with 1–3 confidence each. Tap a player to see picks and stakes.'
-                : 'Ties on O/U points break on bonus picks (MVP, champion, ROY) where leagues use them. Tap a player to see their selections.'}
+              {isStakes
+                ? 'Same 30 O/U picks with a 1–3 stake on each. Tap a player to see picks and stakes.'
+                : 'Classic ties break on bonus picks (MVP, champion, ROY) where leagues use them. Tap a player to see their selections.'}
             </Text>
           }
           renderItem={({ item }) => (
@@ -132,9 +135,9 @@ export default function OverallLeaderboardScreen() {
               onToggle={() =>
                 setExpandedUserId((id) => (id === item.userId ? null : item.userId))
               }
-              ouPicks={buildPlayerOuPicks(item.userId, teams, predictions, isConfidence)}
+              ouPicks={buildPlayerOuPicks(item.userId, teams, predictions, isStakes)}
               bonusPicks={buildPlayerBonusPicks(item.userId, bonusQuestions, bonusAnswers)}
-              showBonus={showBonus && !isConfidence}
+              showBonus={showBonus && !isStakes}
               canExpand={item.picksSubmitted}
             />
           )}
