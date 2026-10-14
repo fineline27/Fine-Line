@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTopMenu } from '../../components/AppTopMenu';
 import { DeleteLeagueSection } from '../../components/DeleteLeagueSection';
 import { LeagueBonusBoard } from '../../components/LeagueBonusBoard';
 import { LeaderboardPlayerRow } from '../../components/LeaderboardPlayerRow';
@@ -80,6 +81,9 @@ export default function LeagueBoardScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={styles.topMenuWrap}>
+        <AppTopMenu />
+      </View>
       <View style={styles.header}>
         <Text style={styles.title}>League board</Text>
         <Text style={styles.subtitle}>{activeLeague?.name ?? 'Your league'}</Text>
@@ -248,6 +252,13 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  topMenuWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    backgroundColor: colors.headerGradientStart,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   header: {
     paddingHorizontal: 20,
