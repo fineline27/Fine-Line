@@ -1,5 +1,8 @@
-import { normalizeUsername, validateUsername } from './displayName';
+import type { User } from '@supabase/supabase-js';
+
+import { normalizeUsername, resolveDisplayName, validateUsername } from './displayName';
 import { getErrorMessage } from './errors';
+import { syncDisplayNameAcrossLeagues } from './leagueMembers';
 import { getSupabaseClient } from './supabase';
 
 export const USERNAME_TAKEN_MESSAGE = 'Username is already taken';
@@ -47,4 +50,31 @@ export async function claimMyUsername(rawUsername: string): Promise<void> {
   if (error) {
     throw new Error(getErrorMessage(error, 'Could not update username'));
   }
+}
+
+/** Reserves the sign-up username after auth succeeds (never runs on auth.users insert). */
+export async function ensureUsernameClaimedFromMetadata(user: User | null | undefined): Promise<void> {
+  if (!user) {
+    return;
+  }
+
+  const raw = resolveDisplayName(user);
+  if (validateUsername(raw)) {
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase.rpc('claim_my_username', {
+    p_username: normalizeUsername(raw),
+  });
+
+  if (error) {
+    const message = getErrorMessage(error, '');
+    if (message.toLowerCase().includes('could not find the function')) {
+      return;
+    }
+    return;
+  }
+
+  await syncDisplayNameAcrossLeagues().catch(() => undefined);
 }

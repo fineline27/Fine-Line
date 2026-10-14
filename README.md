@@ -37,6 +37,7 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`12-confidence-picks.sql`](supabase/12-confidence-picks.sql) | **Stakes** overall format — 1–3 pt stake per team (win/lose stake) |
 | [`13-unique-usernames.sql`](supabase/13-unique-usernames.sql) | Globally unique usernames (case-insensitive) at sign-up and profile |
 | [`14-fix-signup-database-error.sql`](supabase/14-fix-signup-database-error.sql) | **Run if sign-up shows “Database error saving new user”** |
+| [`15-unblock-signup-drop-username-trigger.sql`](supabase/15-unblock-signup-drop-username-trigger.sql) | **Fastest fix** — only removes the blocking auth trigger (2 lines) |
 | [`fix-play-solo-and-leagues.sql`](supabase/fix-play-solo-and-leagues.sql) | Same fixes (included in RUN-THIS file) |
 
 After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points. Use exact team or player names as stored in picks. Refresh the player list with `npm run refresh:nba-players` (ESPN rosters → `src/data/nba-players.json`).

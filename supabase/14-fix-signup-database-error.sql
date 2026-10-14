@@ -1,7 +1,9 @@
 -- Fix "Database error saving new user" on sign-up (broken unique-username trigger / RLS).
 -- Run this in Supabase SQL Editor if new accounts fail immediately. Safe to re-run.
 --
--- Same content as 13-unique-usernames.sql — paste/run that file, or run this copy.
+-- Step 1 (unblocks sign-up immediately): remove the auth.users trigger.
+drop trigger if exists on_auth_user_created_username on auth.users;
+drop function if exists public.handle_new_user_username();
 
 create table if not exists public.usernames (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -118,52 +120,8 @@ $$;
 revoke all on function public.claim_my_username(text) from public;
 grant execute on function public.claim_my_username(text) to authenticated;
 
-create or replace function public.handle_new_user_username()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  uname text;
-begin
-  uname := nullif(trim(new.raw_user_meta_data->>'username'), '');
-  if uname is null then
-    uname := nullif(trim(new.raw_user_meta_data->>'display_name'), '');
-  end if;
-
-  if uname is null or length(uname) < 3 or length(uname) > 24 then
-    return new;
-  end if;
-
-  if uname !~ '^[a-zA-Z0-9][a-zA-Z0-9_-]{2,23}$' then
-    return new;
-  end if;
-
-  if exists (
-    select 1
-    from public.usernames u
-    where lower(trim(u.username)) = lower(trim(uname))
-  ) then
-    raise exception 'Username is already taken';
-  end if;
-
-  insert into public.usernames (user_id, username)
-  values (new.id, uname);
-
-  return new;
-exception
-  when unique_violation then
-    raise exception 'Username is already taken';
-end;
-$$;
-
-alter function public.handle_new_user_username() owner to postgres;
 alter function public.is_username_available(text) owner to postgres;
 alter function public.claim_my_username(text) owner to postgres;
 
 drop trigger if exists on_auth_user_created_username on auth.users;
-create trigger on_auth_user_created_username
-  after insert on auth.users
-  for each row
-  execute function public.handle_new_user_username();
+drop function if exists public.handle_new_user_username();
