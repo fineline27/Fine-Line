@@ -81,12 +81,17 @@ export default function LeagueBoardScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <Text style={styles.title}>League board</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.title}>Leagues</Text>
+          <Pressable onPress={() => router.push('/league-setup')}>
+            <Text style={styles.manageLink}>Manage</Text>
+          </Pressable>
+        </View>
         <Text style={styles.subtitle}>{activeLeague?.name ?? 'Your league'}</Text>
         {activeLeague && isOpenPoolInviteCode(activeLeague.invite_code) ? (
           <Text style={styles.poolHint}>
-            This is the overall pool. Switch to a friends league under Private leagues to use a
-            smaller board.
+            This is the overall pool. Tap Manage to create or join a friends league for a smaller
+            board.
           </Text>
         ) : null}
       </View>
@@ -255,6 +260,17 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  manageLink: {
+    color: colors.accent,
+    fontWeight: '700',
+    fontSize: 15,
   },
   title: {
     color: colors.textPrimary,

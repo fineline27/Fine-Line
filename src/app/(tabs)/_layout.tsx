@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 
+import { formatColors } from '../../content/overallFormats';
 import { colors } from '../../theme/colors';
 
 export default function TabsLayout() {
@@ -16,7 +17,21 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'My picks' }} />
-      <Tabs.Screen name="league" options={{ title: 'League' }} />
+      <Tabs.Screen
+        name="classic-leaderboard"
+        options={{
+          title: 'Classic',
+          tabBarActiveTintColor: formatColors.classic,
+        }}
+      />
+      <Tabs.Screen
+        name="stakes-leaderboard"
+        options={{
+          title: 'Stakes',
+          tabBarActiveTintColor: formatColors.stakes,
+        }}
+      />
+      <Tabs.Screen name="leagues" options={{ title: 'Leagues' }} />
     </Tabs>
   );
 }

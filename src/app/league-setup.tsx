@@ -94,8 +94,8 @@ export default function LeagueSetupScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-      <Pressable onPress={() => router.replace('/')} style={styles.backRow}>
-        <Text style={styles.backText}>← Back to picks</Text>
+      <Pressable onPress={() => router.replace('/leagues')} style={styles.backRow}>
+        <Text style={styles.backText}>← Back to leagues</Text>
       </Pressable>
 
       <Text style={styles.title}>Private leagues</Text>
@@ -203,7 +203,7 @@ export default function LeagueSetupScreen() {
               <View key={l.id} style={styles.leagueRowWrap}>
                 <Pressable
                   style={styles.leagueRow}
-                  onPress={() => void setActiveLeagueId(l.id).then(() => router.replace('/'))}
+                  onPress={() => void setActiveLeagueId(l.id).then(() => router.replace('/leagues'))}
                   disabled={!!busy || deleteBusy}
                 >
                   <View style={styles.leagueRowMain}>

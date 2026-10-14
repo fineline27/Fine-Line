@@ -68,7 +68,7 @@ export function LeagueHeader({
           <View style={styles.statsStrip}>
             <Pressable
               style={styles.statCellClassic}
-              onPress={() => router.push('/overall-leaderboard?mode=classic')}
+              onPress={() => router.push('/classic-leaderboard')}
             >
               <Text style={styles.statLabelClassic}>Classic</Text>
               {overall.loading ? (
@@ -81,7 +81,7 @@ export function LeagueHeader({
 
             <Pressable
               style={styles.statCellStakes}
-              onPress={() => router.push('/overall-leaderboard?mode=stakes')}
+              onPress={() => router.push('/stakes-leaderboard')}
             >
               <Text style={styles.statLabelStakes}>Stakes</Text>
               {overallStakes.loading ? (
@@ -92,7 +92,7 @@ export function LeagueHeader({
               <Text style={styles.statMetaStakes}>{overallStakesScore} pts overall</Text>
             </Pressable>
 
-            <View style={styles.statCellLeague}>
+            <Pressable style={styles.statCellLeague} onPress={() => router.push('/leagues')}>
               <Text style={styles.statLabelLeague}>Your league</Text>
               {league.loading ? (
                 <ActivityIndicator color={colors.accent} size="small" />
@@ -105,7 +105,7 @@ export function LeagueHeader({
                 {pickCount}/{teamCount || 30}
                 {picksSubmitted ? ' ✓' : ''}
               </Text>
-            </View>
+            </Pressable>
           </View>
         </View>
 
@@ -113,8 +113,8 @@ export function LeagueHeader({
           <Pressable onPress={() => router.push(PROFILE_HREF)}>
             <Text style={styles.link}>Profile</Text>
           </Pressable>
-          <Pressable onPress={() => router.push('/league-setup')}>
-            <Text style={styles.link}>Private leagues</Text>
+          <Pressable onPress={() => router.push('/leagues')}>
+            <Text style={styles.link}>Leagues</Text>
           </Pressable>
         </View>
       </View>
