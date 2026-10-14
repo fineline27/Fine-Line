@@ -1,36 +1,23 @@
 import type { User } from '@supabase/supabase-js';
 
-import {
-  normalizeUsername,
-  resolveDisplayName,
-  validateUsername,
-} from './displayName';
+import { resolveDisplayName } from './displayName';
 import { getErrorMessage } from './errors';
 import { syncDisplayNameAcrossLeagues } from './leagueMembers';
 import { getLegalContactEmail } from './legalContact';
 import { getSupabaseClient } from './supabase';
+import { claimMyUsername } from './usernames';
 
 export function profileUsername(user: User | null | undefined): string {
   return resolveDisplayName(user);
 }
 
 export async function updateProfileUsername(rawUsername: string): Promise<void> {
-  const validationError = validateUsername(rawUsername);
-  if (validationError) {
-    throw new Error(validationError);
-  }
-  const username = normalizeUsername(rawUsername);
+  await claimMyUsername(rawUsername);
 
   const supabase = getSupabaseClient();
-  const { error } = await supabase.auth.updateUser({
-    data: {
-      username,
-      display_name: username,
-    },
-  });
-
-  if (error) {
-    throw new Error(getErrorMessage(error, 'Could not update username'));
+  const { error: refreshError } = await supabase.auth.refreshSession();
+  if (refreshError) {
+    throw new Error(getErrorMessage(refreshError, 'Could not refresh profile'));
   }
 
   await syncDisplayNameAcrossLeagues();
