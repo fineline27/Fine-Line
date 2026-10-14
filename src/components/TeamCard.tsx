@@ -106,45 +106,43 @@ export function TeamCard({
       </View>
 
       <View style={[styles.ouCenter, pick && lineMoved && styles.ouCenterLocked]}>
-        {pick ? (
-          <>
-            {lineMoved ? (
-              <View style={styles.lockBadgeRow}>
-                <Text style={styles.lockBadgeText}>LOCK</Text>
-              </View>
-            ) : null}
-            <View style={styles.dualLineRow}>
-              <View style={styles.lineCol}>
-                <Text style={styles.lineColLabel}>Your lock</Text>
-                <Text style={styles.lineColValue}>{gradedLine.toFixed(1)}</Text>
-                <Text style={styles.lineColHint}>Used for scoring</Text>
-              </View>
-              <View style={styles.lineColDivider} />
-              <View style={styles.lineCol}>
-                <Text style={styles.lineColLabel}>Current board</Text>
-                <Text
-                  style={[styles.lineColValue, lineMoved && styles.lineColValueBoardMoved]}
-                >
-                  {boardLine.toFixed(1)}
-                </Text>
-                <Text style={styles.lineColHint}>Today&apos;s O/U</Text>
-              </View>
-            </View>
-            {lineMoved ? (
-              <Text style={styles.ouMoved}>
-                Switch sides only after choosing to keep your lock or accept the board line
-              </Text>
+        {lineMoved ? (
+          <View style={styles.lockBadgeRow}>
+            <Text style={styles.lockBadgeText}>LOCK</Text>
+          </View>
+        ) : null}
+        <View style={styles.dualLineRow}>
+          <View style={styles.lineCol}>
+            <Text style={styles.lineColLabel}>Your lock</Text>
+            {pick ? (
+              <Text style={styles.lineColValue}>{gradedLine.toFixed(1)}</Text>
             ) : (
-              <Text style={styles.ouLockedHint}>Your lock matches the current board line</Text>
+              <Text style={styles.lineColEmpty}>—</Text>
             )}
-          </>
-        ) : (
-          <>
-            <Text style={styles.ouValue}>{boardLine.toFixed(1)}</Text>
-            <Text style={styles.ouLabel}>Season O/U</Text>
-            <Text style={styles.ouLockedHint}>Pick OVER or UNDER to lock this line</Text>
-          </>
-        )}
+            <Text style={styles.lineColHint}>
+              {pick ? 'Used for scoring' : 'Pick OVER or UNDER to lock'}
+            </Text>
+          </View>
+          <View style={styles.lineColDivider} />
+          <View style={styles.lineCol}>
+            <Text style={styles.lineColLabel}>Current board</Text>
+            <Text
+              style={[styles.lineColValue, pick && lineMoved && styles.lineColValueBoardMoved]}
+            >
+              {boardLine.toFixed(1)}
+            </Text>
+            <Text style={styles.lineColHint}>Today&apos;s O/U</Text>
+          </View>
+        </View>
+        {pick ? (
+          lineMoved ? (
+            <Text style={styles.ouMoved}>
+              Switch sides only after choosing to keep your lock or accept the board line
+            </Text>
+          ) : (
+            <Text style={styles.ouLockedHint}>Your lock matches the current board line</Text>
+          )
+        ) : null}
       </View>
 
       {lineMoved ? (
@@ -274,6 +272,13 @@ const styles = StyleSheet.create({
   },
   lineColValueBoardMoved: {
     color: colors.statusAround,
+  },
+  lineColEmpty: {
+    color: colors.textMuted,
+    fontSize: 44,
+    fontWeight: '300',
+    lineHeight: 48,
+    marginTop: 6,
   },
   lineColHint: {
     color: colors.textMuted,
