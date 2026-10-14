@@ -235,8 +235,11 @@ export default function LeagueBoardScreen() {
                               <LockedLineIndicator
                                 lockedLine={gradedLine}
                                 marketLine={team.ou_line}
+                                compact
                               />
-                            ) : null}
+                            ) : (
+                              <Text style={styles.pickLineMuted}>Line {gradedLine.toFixed(1)}</Text>
+                            )}
                           </View>
                           <Text
                             style={[
@@ -464,6 +467,10 @@ const styles = StyleSheet.create({
   pickName: {
     color: colors.textSecondary,
     fontSize: 14,
+  },
+  pickLineMuted: {
+    color: colors.textMuted,
+    fontSize: 11,
   },
   pickSide: {
     fontWeight: '800',
