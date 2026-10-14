@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0b0f14"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="85%" cy="20%" r="55%">
+      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <text x="96" y="118" fill="#9aa8b8" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="28" letter-spacing="3">SEASON-LONG SPORTS PICKS</text>
+  <text x="96" y="250" fill="#f4f7fb" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="132" font-weight="700">Fine</text>
+  <text x="96" y="390" fill="#3b82f6" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="132" font-weight="700">Line</text>
+  <circle cx="980" cy="300" r="108" fill="none" stroke="#eab308" stroke-width="8"/>
+  <text x="980" y="318" text-anchor="middle" fill="#eab308" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="44" font-weight="700">O/U</text>
+  <text x="96" y="470" fill="#9aa8b8" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="34">Predict every NBA win total. Play leagues with your mates.</text>
+</svg>

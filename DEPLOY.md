@@ -132,6 +132,7 @@ In the same screen (or **Settings** → **Environment Variables**), add for **Pr
 | `EXPO_PUBLIC_SUPABASE_URL` | `https://zayzjewfbcoovhtpdtgo.supabase.co` |
 | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` from Supabase API settings |
 | `EXPO_PUBLIC_LEGAL_CONTACT_EMAIL` | `you@yourdomain.com` (shown on Privacy/Terms; privacy requests) |
+| `EXPO_PUBLIC_SITE_URL` | `https://YOUR-PRODUCTION-DOMAIN.vercel.app` (no trailing slash) — **required for clean link previews** (Fine Line share image, not Vercel’s default) |
 
 Optional duplicates (same values; `app.config.ts` reads these too):
 
@@ -169,7 +170,15 @@ Open the live URL in an **incognito** window:
 | Submit full card + bonus | League tab unlocks |
 | `/terms` | Terms load |
 
-### C6. Custom domain (optional)
+### C6. Link previews (iMessage, WhatsApp, Slack, X)
+
+When you share the site, apps read **Open Graph** tags from `index.html` and load **`/og-image.png`** (1200×630 Fine Line card in `public/`).
+
+1. Set **`EXPO_PUBLIC_SITE_URL`** to the exact URL people share (production domain, no trailing slash). Redeploy so the build can inject a full `og:image` URL.
+2. In **Vercel** → Project → **Settings** → **General** → **Social / Open Graph** (if shown): remove any default Vercel preview image so crawlers use your `og:image` meta tags.
+3. After deploy, paste your URL into [opengraph.xyz](https://www.opengraph.xyz/) or refresh cache on [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) if an old blurry preview is cached.
+
+### C7. Custom domain (optional)
 
 1. Vercel project → **Settings** → **Domains** → add `fineline.yourdomain.com` (or apex).
 2. Follow DNS instructions (CNAME/A records at your registrar).
