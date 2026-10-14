@@ -13,6 +13,8 @@ export const colors = {
   statusAroundBg: 'rgba(234, 179, 8, 0.15)',
   statusNeedsWork: '#ef4444',
   statusNeedsWorkBg: 'rgba(239, 68, 68, 0.15)',
+  statusNotStarted: '#94a3b8',
+  statusNotStartedBg: 'rgba(148, 163, 184, 0.12)',
   pickActive: '#2563eb',
   pickInactive: '#2a3441',
   headerGradientStart: '#111827',

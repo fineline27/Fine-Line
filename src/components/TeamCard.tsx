@@ -20,8 +20,8 @@ type Props = {
 export function TeamCard({ team, pick, saving, picksLocked, onPickChange }: Props) {
   const status = getTeamStatus(team);
   const pickEval = pick ? evaluatePick(team, pick) : null;
-  const isPreseason = team.current_wins + team.current_losses === 0;
   const record = formatRecord(team.current_wins, team.current_losses);
+  const gamesPlayed = team.current_wins + team.current_losses;
 
   return (
     <View style={styles.card}>
@@ -29,11 +29,13 @@ export function TeamCard({ team, pick, saving, picksLocked, onPickChange }: Prop
         <TeamColorBadge abbreviation={team.abbreviation} primaryColor={team.primary_color} />
         <View style={styles.nameBlock}>
           <Text style={styles.name}>{team.name}</Text>
-          <Text style={[styles.record, isPreseason && styles.recordPreseason]}>
+          <Text style={styles.record}>
             {record}
-            {!isPreseason ? (
+            {gamesPlayed > 0 ? (
               <Text style={styles.recordMeta}> · Win pace {formatWinPace(team)}</Text>
-            ) : null}
+            ) : (
+              <Text style={styles.recordMeta}> · Season not started</Text>
+            )}
           </Text>
         </View>
       </View>
@@ -87,9 +89,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginTop: 4,
-  },
-  recordPreseason: {
-    color: colors.statusAround,
   },
   recordMeta: {
     color: colors.textMuted,

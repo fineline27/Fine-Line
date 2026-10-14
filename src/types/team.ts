@@ -11,7 +11,7 @@ export type Team = {
   current_losses: number;
 };
 
-export type TeamStatus = 'ON TRACK' | 'AROUND MARK' | 'NEEDS WORK';
+export type TeamStatus = 'NOT STARTED' | 'ON TRACK' | 'AROUND MARK' | 'NEEDS WORK';
 
 export type PickSide = 'over' | 'under';
 
