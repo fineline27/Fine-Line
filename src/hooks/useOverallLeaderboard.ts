@@ -3,14 +3,21 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSport } from '../contexts/SportContext';
 import { fetchBonusBundleForSport, fetchSportPlayerMeta } from '../lib/sportLeaderboard';
-import { fetchAllPredictionsForSport } from '../lib/predictions';
-import { computeLeaderboard, type LeaderboardEntry } from '../lib/rankings';
+import { fetchAllPredictionsForSport, type SportPredictionRow } from '../lib/predictions';
+import {
+  computeConfidenceLeaderboard,
+  computeLeaderboard,
+  type LeaderboardEntry,
+} from '../lib/rankings';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { Team } from '../types/team';
 
+export type OverallLeaderboardMode = 'standard' | 'confidence';
+
 type State = {
-  leaderboard: LeaderboardEntry[];
-  predictions: Array<{ user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }>;
+  standardLeaderboard: LeaderboardEntry[];
+  confidenceLeaderboard: LeaderboardEntry[];
+  predictions: SportPredictionRow[];
   bonusQuestions: BonusQuestion[];
   bonusAnswers: BonusAnswerRow[];
   loading: boolean;
@@ -21,7 +28,8 @@ export function useOverallLeaderboard(teams: Team[]) {
   const { user } = useAuth();
   const { sport } = useSport();
   const [state, setState] = useState<State>({
-    leaderboard: [],
+    standardLeaderboard: [],
+    confidenceLeaderboard: [],
     predictions: [],
     bonusQuestions: [],
     bonusAnswers: [],
@@ -32,7 +40,8 @@ export function useOverallLeaderboard(teams: Team[]) {
   const refresh = useCallback(async () => {
     if (!user || !sport || teams.length === 0) {
       setState({
-        leaderboard: [],
+        standardLeaderboard: [],
+        confidenceLeaderboard: [],
         predictions: [],
         bonusQuestions: [],
         bonusAnswers: [],
@@ -66,10 +75,17 @@ export function useOverallLeaderboard(teams: Team[]) {
           ? { questions: bonusBundle.questions, answers: bonusBundle.answers }
           : undefined;
 
-      const leaderboard = computeLeaderboard(user.id, predictions, teams, members, bonus);
+      const standardLeaderboard = computeLeaderboard(user.id, predictions, teams, members, bonus);
+      const confidenceLeaderboard = computeConfidenceLeaderboard(
+        user.id,
+        predictions,
+        teams,
+        members,
+      );
 
       setState({
-        leaderboard,
+        standardLeaderboard,
+        confidenceLeaderboard,
         predictions,
         bonusQuestions: bonusBundle.questions,
         bonusAnswers: bonusBundle.answers,
@@ -78,7 +94,8 @@ export function useOverallLeaderboard(teams: Team[]) {
       });
     } catch (err) {
       setState({
-        leaderboard: [],
+        standardLeaderboard: [],
+        confidenceLeaderboard: [],
         predictions: [],
         bonusQuestions: [],
         bonusAnswers: [],
@@ -92,5 +109,9 @@ export function useOverallLeaderboard(teams: Team[]) {
     void refresh();
   }, [refresh]);
 
-  return { ...state, refresh, showBonus: state.bonusQuestions.length > 0 };
+  return {
+    ...state,
+    refresh,
+    showBonus: state.bonusQuestions.length > 0,
+  };
 }

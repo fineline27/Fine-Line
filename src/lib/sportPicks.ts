@@ -1,4 +1,6 @@
 import type { SportId } from '../contexts/SportContext';
+import type { ConfidencePoints } from '../types/confidence';
+import { clampConfidence } from '../types/confidence';
 import type { PickSide } from '../types/team';
 import { toDbPick } from '../types/league';
 import { OPEN_POOL_INVITE } from './openPool';
@@ -54,12 +56,15 @@ function preferredLeagueIdForSport(
   return leagueIds[0] ?? null;
 }
 
-export async function fetchPredictionsForSport(
-  sport: SportId,
-): Promise<Record<string, PickSide>> {
+export type SportPicksBundle = {
+  picks: Record<string, PickSide>;
+  confidence: Record<string, ConfidencePoints>;
+};
+
+export async function fetchPredictionsForSport(sport: SportId): Promise<SportPicksBundle> {
   const leagueIds = await fetchMyLeagueIdsForSport(sport);
   if (leagueIds.length === 0) {
-    return {};
+    return { picks: {}, confidence: {} };
   }
 
   const supabase = getSupabaseClient();
@@ -67,7 +72,7 @@ export async function fetchPredictionsForSport(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return {};
+    return { picks: {}, confidence: {} };
   }
 
   const { data: leagues } = await supabase
@@ -81,40 +86,70 @@ export async function fetchPredictionsForSport(
     (leagues ?? []) as Array<{ id: string; invite_code: string }>,
   );
 
-  const { data, error } = await supabase
+  type Row = {
+    league_id: string;
+    team_id: string;
+    pick: string;
+    confidence_points?: number;
+  };
+
+  const full = await supabase
     .from('team_predictions')
-    .select('league_id, team_id, pick')
+    .select('league_id, team_id, pick, confidence_points')
     .eq('user_id', user.id)
     .in('league_id', leagueIds);
+
+  let rows: Row[] = full.data ?? [];
+  let error = full.error;
+
+  if (error?.message?.includes('confidence_points')) {
+    const fallback = await supabase
+      .from('team_predictions')
+      .select('league_id, team_id, pick')
+      .eq('user_id', user.id)
+      .in('league_id', leagueIds);
+    rows = fallback.data ?? [];
+    error = fallback.error;
+  }
 
   if (error) {
     throw error;
   }
 
-  const byTeam = new Map<string, PickSide>();
-  const rows = data ?? [];
+  const byTeam = new Map<string, { side: PickSide; confidence: ConfidencePoints }>();
+
+  function applyRow(row: Row) {
+    const side: PickSide = row.pick === 'OVER' ? 'over' : 'under';
+    const confidence = clampConfidence(
+      typeof row.confidence_points === 'number' ? row.confidence_points : 1,
+    );
+    byTeam.set(row.team_id, { side, confidence });
+  }
 
   for (const row of rows) {
     if (row.league_id === preferredId) {
-      byTeam.set(row.team_id, row.pick === 'OVER' ? 'over' : 'under');
+      applyRow(row);
     }
   }
   for (const row of rows) {
     if (!byTeam.has(row.team_id)) {
-      byTeam.set(row.team_id, row.pick === 'OVER' ? 'over' : 'under');
+      applyRow(row);
     }
   }
 
-  const map: Record<string, PickSide> = {};
-  for (const [teamId, side] of byTeam) {
-    map[teamId] = side;
+  const picks: Record<string, PickSide> = {};
+  const confidence: Record<string, ConfidencePoints> = {};
+  for (const [teamId, { side, confidence: pts }] of byTeam) {
+    picks[teamId] = side;
+    confidence[teamId] = pts;
   }
-  return map;
+  return { picks, confidence };
 }
 
 export async function syncPredictionsToAllSportLeagues(
   sport: SportId,
   picks: Record<string, PickSide>,
+  confidence: Record<string, ConfidencePoints>,
 ): Promise<void> {
   const leagueIds = await fetchMyLeagueIdsForSport(sport);
   if (leagueIds.length === 0) {
@@ -135,6 +170,7 @@ export async function syncPredictionsToAllSportLeagues(
       user_id: user.id,
       team_id: teamId,
       pick: toDbPick(side),
+      confidence_points: clampConfidence(confidence[teamId] ?? 1),
     })),
   );
 
@@ -142,9 +178,16 @@ export async function syncPredictionsToAllSportLeagues(
     return;
   }
 
-  const { error } = await supabase.from('team_predictions').upsert(rows, {
+  let { error } = await supabase.from('team_predictions').upsert(rows, {
     onConflict: 'league_id,user_id,team_id',
   });
+
+  if (error?.message?.includes('confidence_points')) {
+    const fallbackRows = rows.map(({ confidence_points: _c, ...rest }) => rest);
+    ({ error } = await supabase.from('team_predictions').upsert(fallbackRows, {
+      onConflict: 'league_id,user_id,team_id',
+    }));
+  }
 
   if (error) {
     throw error;
@@ -155,6 +198,7 @@ export async function upsertPredictionForSport(
   sport: SportId,
   teamId: string,
   side: PickSide,
+  confidencePoints: ConfidencePoints = 1,
 ): Promise<void> {
   const leagueIds = await fetchMyLeagueIdsForSport(sport);
   if (leagueIds.length === 0) {
@@ -169,20 +213,38 @@ export async function upsertPredictionForSport(
     throw new Error('Sign in to save picks.');
   }
 
+  const pts = clampConfidence(confidencePoints);
   const rows = leagueIds.map((leagueId) => ({
     league_id: leagueId,
     user_id: user.id,
     team_id: teamId,
     pick: toDbPick(side),
+    confidence_points: pts,
   }));
 
-  const { error } = await supabase.from('team_predictions').upsert(rows, {
+  let { error } = await supabase.from('team_predictions').upsert(rows, {
     onConflict: 'league_id,user_id,team_id',
   });
+
+  if (error?.message?.includes('confidence_points')) {
+    const fallbackRows = rows.map(({ confidence_points: _c, ...rest }) => rest);
+    ({ error } = await supabase.from('team_predictions').upsert(fallbackRows, {
+      onConflict: 'league_id,user_id,team_id',
+    }));
+  }
 
   if (error) {
     throw error;
   }
+}
+
+export async function updateConfidenceForSport(
+  sport: SportId,
+  teamId: string,
+  side: PickSide,
+  confidencePoints: ConfidencePoints,
+): Promise<void> {
+  await upsertPredictionForSport(sport, teamId, side, confidencePoints);
 }
 
 export async function deletePredictionForSport(sport: SportId, teamId: string): Promise<void> {

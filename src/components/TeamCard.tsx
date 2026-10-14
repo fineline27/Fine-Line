@@ -4,6 +4,8 @@ import { evaluatePick } from '../lib/pickScoring';
 import { formatRecord, formatWinPace, getTeamStatus } from '../lib/teamStatus';
 import type { PickSide, Team } from '../types/team';
 import { colors } from '../theme/colors';
+import type { ConfidencePoints } from '../types/confidence';
+import { ConfidenceSelector } from './ConfidenceSelector';
 import { PickStatusBadge } from './PickStatusBadge';
 import { PickToggle } from './PickToggle';
 import { StatusBadge } from './StatusBadge';
@@ -12,12 +14,22 @@ import { TeamColorBadge } from './TeamColorBadge';
 type Props = {
   team: Team;
   pick?: PickSide;
+  confidence?: ConfidencePoints;
   saving?: boolean;
   picksLocked?: boolean;
   onPickChange: (teamId: string, side: PickSide) => void;
+  onConfidenceChange?: (teamId: string, points: ConfidencePoints) => void;
 };
 
-export function TeamCard({ team, pick, saving, picksLocked, onPickChange }: Props) {
+export function TeamCard({
+  team,
+  pick,
+  confidence = 1,
+  saving,
+  picksLocked,
+  onPickChange,
+  onConfidenceChange,
+}: Props) {
   const status = getTeamStatus(team);
   const pickEval = pick ? evaluatePick(team, pick) : null;
   const record = formatRecord(team.current_wins, team.current_losses);
@@ -55,6 +67,13 @@ export function TeamCard({ team, pick, saving, picksLocked, onPickChange }: Prop
         disabled={picksLocked}
         onSelect={(side) => onPickChange(team.id, side)}
       />
+      {pick && onConfidenceChange ? (
+        <ConfidenceSelector
+          value={confidence}
+          disabled={picksLocked || saving}
+          onChange={(pts) => onConfidenceChange(team.id, pts)}
+        />
+      ) : null}
       {saving ? <Text style={styles.saving}>Saving…</Text> : null}
     </View>
   );

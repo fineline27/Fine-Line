@@ -44,9 +44,14 @@ export async function fetchAllPredictionsInLeague(
   return data ?? [];
 }
 
-export async function fetchAllPredictionsForSport(
-  sport: string,
-): Promise<Array<{ user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }>> {
+export type SportPredictionRow = {
+  user_id: string;
+  team_id: string;
+  pick: 'OVER' | 'UNDER';
+  confidence_points: number;
+};
+
+export async function fetchAllPredictionsForSport(sport: string): Promise<SportPredictionRow[]> {
   const supabase = getSupabaseClient();
   const { data: leagues, error: leagueError } = await supabase
     .from('leagues')
@@ -62,15 +67,39 @@ export async function fetchAllPredictionsForSport(
     return [];
   }
 
-  const { data, error } = await supabase
+  const full = await supabase
     .from('team_predictions')
-    .select('user_id, team_id, pick')
+    .select('user_id, team_id, pick, confidence_points')
     .in('league_id', leagueIds);
+
+  let rows: Array<{
+    user_id: string;
+    team_id: string;
+    pick: string;
+    confidence_points?: number;
+  }> = full.data ?? [];
+  let error = full.error;
+
+  if (error?.message?.includes('confidence_points')) {
+    const fallback = await supabase
+      .from('team_predictions')
+      .select('user_id, team_id, pick')
+      .in('league_id', leagueIds);
+    rows = fallback.data ?? [];
+    error = fallback.error;
+  }
 
   if (error) {
     throw error;
   }
-  return data ?? [];
+
+  return rows.map((row) => ({
+    user_id: row.user_id,
+    team_id: row.team_id,
+    pick: row.pick as 'OVER' | 'UNDER',
+    confidence_points:
+      typeof row.confidence_points === 'number' ? row.confidence_points : 1,
+  }));
 }
 
 export async function upsertPrediction(

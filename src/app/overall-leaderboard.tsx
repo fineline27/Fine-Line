@@ -1,5 +1,5 @@
-import { Link, Redirect } from 'expo-router';
-import { useState } from 'react';
+import { Link, Redirect, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -14,7 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LeaderboardPlayerRow } from '../components/LeaderboardPlayerRow';
 import { useAuth } from '../contexts/AuthContext';
 import { useSport } from '../contexts/SportContext';
-import { useOverallLeaderboard } from '../hooks/useOverallLeaderboard';
+import {
+  useOverallLeaderboard,
+  type OverallLeaderboardMode,
+} from '../hooks/useOverallLeaderboard';
 import { useTeams } from '../hooks/useTeams';
 import {
   buildPlayerBonusPicks,
@@ -22,12 +25,24 @@ import {
 } from '../lib/playerPickDetails';
 import { colors } from '../theme/colors';
 
+function parseMode(raw: string | string[] | undefined): OverallLeaderboardMode {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return value === 'confidence' ? 'confidence' : 'standard';
+}
+
 export default function OverallLeaderboardScreen() {
   const { session, isLoading: authLoading } = useAuth();
   const { sport, isLoading: sportLoading } = useSport();
   const { teams, loading: teamsLoading, refresh: refreshTeams } = useTeams();
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const initialMode = useMemo(() => parseMode(params.mode), [params.mode]);
+  const [mode, setMode] = useState<OverallLeaderboardMode>(initialMode);
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
   const {
-    leaderboard,
+    standardLeaderboard,
+    confidenceLeaderboard,
     predictions,
     bonusQuestions,
     bonusAnswers,
@@ -37,6 +52,9 @@ export default function OverallLeaderboardScreen() {
     refresh,
   } = useOverallLeaderboard(teams);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+
+  const leaderboard = mode === 'confidence' ? confidenceLeaderboard : standardLeaderboard;
+  const isConfidence = mode === 'confidence';
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -57,7 +75,29 @@ export default function OverallLeaderboardScreen() {
           </Pressable>
         </Link>
         <Text style={styles.title}>Overall {sport ?? ''}</Text>
-        <Text style={styles.subtitle}>All Fine Line players · best unique O/U picks</Text>
+        <Text style={styles.subtitle}>
+          {isConfidence
+            ? 'Confidence board · win +stake, lose −stake (1–3 per team)'
+            : 'Standard board · 1 pt per correct O/U'}
+        </Text>
+        <View style={styles.modeRow}>
+          <Pressable
+            style={[styles.modeChip, !isConfidence && styles.modeChipActive]}
+            onPress={() => setMode('standard')}
+          >
+            <Text style={[styles.modeChipText, !isConfidence && styles.modeChipTextActive]}>
+              Standard
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.modeChip, isConfidence && styles.modeChipActive]}
+            onPress={() => setMode('confidence')}
+          >
+            <Text style={[styles.modeChipText, isConfidence && styles.modeChipTextActive]}>
+              Confidence
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -80,8 +120,9 @@ export default function OverallLeaderboardScreen() {
           }
           ListHeaderComponent={
             <Text style={styles.listHint}>
-              Ties on O/U points break on bonus picks (MVP, champion, ROY) where leagues use
-              them. Tap a player to see their selections.
+              {isConfidence
+                ? 'Same 30 O/U picks with 1–3 confidence each. Tap a player to see picks and stakes.'
+                : 'Ties on O/U points break on bonus picks (MVP, champion, ROY) where leagues use them. Tap a player to see their selections.'}
             </Text>
           }
           renderItem={({ item }) => (
@@ -91,9 +132,9 @@ export default function OverallLeaderboardScreen() {
               onToggle={() =>
                 setExpandedUserId((id) => (id === item.userId ? null : item.userId))
               }
-              ouPicks={buildPlayerOuPicks(item.userId, teams, predictions)}
+              ouPicks={buildPlayerOuPicks(item.userId, teams, predictions, isConfidence)}
               bonusPicks={buildPlayerBonusPicks(item.userId, bonusQuestions, bonusAnswers)}
-              showBonus={showBonus}
+              showBonus={showBonus && !isConfidence}
               canExpand={item.picksSubmitted}
             />
           )}
@@ -115,6 +156,32 @@ const styles = StyleSheet.create({
   back: { color: colors.accent, fontWeight: '700', marginBottom: 8 },
   title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800' },
   subtitle: { color: colors.textSecondary, marginTop: 4, fontSize: 14 },
+  modeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  modeChip: {
+    flex: 1,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+  },
+  modeChipActive: {
+    borderColor: colors.accent,
+    backgroundColor: colors.surfaceElevated,
+  },
+  modeChipText: {
+    color: colors.textSecondary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  modeChipTextActive: {
+    color: colors.accent,
+  },
   error: { color: colors.statusNeedsWork, padding: 16, fontSize: 13 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { padding: 16, paddingBottom: 32 },

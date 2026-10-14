@@ -15,6 +15,8 @@ type Props = {
   leagueName: string | null;
   sport: string | null;
   overall: RankBlock;
+  overallConfidence: RankBlock;
+  overallConfidenceScore?: number;
   league: RankBlock;
   myScore: number;
   clinched: number;
@@ -40,6 +42,8 @@ export function LeagueHeader({
   leagueName,
   sport,
   overall,
+  overallConfidence,
+  overallConfidenceScore = 0,
   league,
   myScore,
   clinched,
@@ -75,10 +79,10 @@ export function LeagueHeader({
       {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
 
       <View style={styles.rankCards}>
-        <Link href="/overall-leaderboard" asChild>
+        <Link href="/overall-leaderboard?mode=standard" asChild>
           <Pressable style={styles.rankCard}>
             <Text style={styles.rankCardTitle}>Overall</Text>
-            <Text style={styles.rankCardHint}>All {sport ?? ''} players · tap list</Text>
+            <Text style={styles.rankCardHint}>Standard · 1 pt per win</Text>
             {overall.loading ? (
               <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
             ) : (
@@ -86,7 +90,20 @@ export function LeagueHeader({
             )}
           </Pressable>
         </Link>
-        <View style={styles.rankCard}>
+        <Link href="/overall-leaderboard?mode=confidence" asChild>
+          <Pressable style={styles.rankCard}>
+            <Text style={styles.rankCardTitle}>Confidence</Text>
+            <Text style={styles.rankCardHint}>1–3 pts · win/lose all</Text>
+            {overallConfidence.loading ? (
+              <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
+            ) : (
+              <Text style={styles.rankCardValue}>{formatRank(overallConfidence)}</Text>
+            )}
+          </Pressable>
+        </Link>
+      </View>
+      <View style={styles.rankCardsSecond}>
+        <View style={styles.rankCardFull}>
           <Text style={styles.rankCardTitle}>Your league</Text>
           <Text style={styles.rankCardHint} numberOfLines={1}>
             {leagueName ?? 'Current league'}
@@ -117,10 +134,15 @@ export function LeagueHeader({
           Overall bonus tiebreak: {overallBonusScore} pt{overallBonusScore === 1 ? '' : 's'}
         </Text>
       ) : null}
+      {!overallConfidence.loading ? (
+        <Text style={styles.overallScoreLine}>
+          Confidence score: {overallConfidenceScore} pts (separate overall ranking)
+        </Text>
+      ) : null}
       <Text style={styles.picksHint}>
         {picksSubmitted
-          ? 'Overall and league ties break on bonus picks when results are set. Pull to refresh.'
-          : 'Submit all picks to unlock the league board and see everyone’s selections.'}
+          ? 'Standard overall ties break on bonus picks. Confidence overall uses your 1–3 pt stakes only. Pull to refresh.'
+          : 'Submit all picks to unlock the league board. Set confidence (1–3) on each team for the second overall rank.'}
       </Text>
     </View>
   );
@@ -171,6 +193,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
     marginTop: 14,
+  },
+  rankCardsSecond: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  rankCardFull: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minHeight: 88,
   },
   rankCard: {
     flex: 1,

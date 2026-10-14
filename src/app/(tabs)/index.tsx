@@ -19,6 +19,7 @@ import { useSport } from '../../contexts/SportContext';
 import { useBonusPicks } from '../../hooks/useBonusPicks';
 import { useLeagueMembership } from '../../hooks/useLeagueMembership';
 import { useLeagueRank } from '../../hooks/useLeagueRank';
+import { useOverallConfidenceRank } from '../../hooks/useOverallConfidenceRank';
 import { useOverallRank } from '../../hooks/useOverallRank';
 import { usePredictions } from '../../hooks/usePredictions';
 import { useSeasonLock } from '../../hooks/useSeasonLock';
@@ -35,7 +36,9 @@ export default function StandingsScreen() {
   const { locked: seasonLocked, countdownLabel, lockAtLabel } = useSeasonLock();
   const {
     picks,
+    confidence,
     togglePick,
+    setTeamConfidence,
     loading: picksLoading,
     savingTeamId,
     error: picksError,
@@ -62,6 +65,7 @@ export default function StandingsScreen() {
     setAnswer: setBonusAnswer,
   } = useBonusPicks(seasonLocked);
   const overallRank = useOverallRank(teams);
+  const overallConfidenceRank = useOverallConfidenceRank(teams);
   const leagueRank = useLeagueRank(teams, picksSubmitted);
   const myScore = leagueRank.myScore;
   const clinched = leagueRank.clinched;
@@ -116,6 +120,12 @@ export default function StandingsScreen() {
           totalPlayers: overallRank.totalPlayers,
           loading: overallRank.loading,
         }}
+        overallConfidence={{
+          rank: overallConfidenceRank.rank,
+          totalPlayers: overallConfidenceRank.totalPlayers,
+          loading: overallConfidenceRank.loading,
+        }}
+        overallConfidenceScore={overallConfidenceRank.myScore}
         league={{
           rank: leagueRankDisplay.rank,
           totalPlayers: leagueRank.totalPlayers,
@@ -202,9 +212,11 @@ export default function StandingsScreen() {
             <TeamCard
               team={item}
               pick={picks[item.id]}
+              confidence={confidence[item.id] ?? 1}
               saving={savingTeamId === item.id}
               picksLocked={seasonLocked}
               onPickChange={(teamId, side) => void togglePick(teamId, side)}
+              onConfidenceChange={(teamId, pts) => void setTeamConfidence(teamId, pts)}
             />
           )}
           ListHeaderComponent={
@@ -237,7 +249,7 @@ export default function StandingsScreen() {
                 <Text style={styles.seasonLockBody}>
                   {seasonLocked
                     ? 'The first NBA games have started. Your O/U and bonus picks can no longer be changed.'
-                    : `One pick card for all your ${sport ?? 'NBA'} leagues. You can change picks until the first game (${lockAtLabel}).`}
+                    : `One pick card for all your ${sport ?? 'NBA'} leagues. Set confidence 1–3 for the second overall rank. You can change until the first game (${lockAtLabel}).`}
                 </Text>
               </View>
               {seasonLocked ? (

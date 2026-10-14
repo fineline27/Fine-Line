@@ -86,3 +86,16 @@ export function scorePick(team: Team, pick: PickSide): number {
   }
   return 0;
 }
+
+/** Confidence board: +points if pick won, −points if lost, 0 while still live. */
+export function scoreConfidencePick(team: Team, pick: PickSide, confidence: number): number {
+  const pts = Math.min(3, Math.max(1, Math.round(confidence)));
+  const result = evaluatePick(team, pick);
+  if (result === 'won') {
+    return pts;
+  }
+  if (result === 'lost') {
+    return -pts;
+  }
+  return 0;
+}

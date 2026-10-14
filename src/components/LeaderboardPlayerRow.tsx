@@ -73,6 +73,9 @@ export function LeaderboardPlayerRow({
                 <Text style={[styles.ouSide, p.pick === 'over' ? styles.over : styles.under]}>
                   {p.pick === 'over' ? 'O' : 'U'}
                 </Text>
+                {p.confidence != null ? (
+                  <Text style={styles.ouConf}>×{p.confidence}</Text>
+                ) : null}
                 <Text style={styles.ouLine}>{p.ouLine.toFixed(1)}</Text>
               </View>
             ))}
@@ -206,6 +209,11 @@ const styles = StyleSheet.create({
   },
   under: {
     color: '#f87171',
+  },
+  ouConf: {
+    color: colors.accent,
+    fontWeight: '800',
+    fontSize: 10,
   },
   ouLine: {
     color: colors.textMuted,
