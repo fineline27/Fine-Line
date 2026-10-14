@@ -118,7 +118,6 @@ const styles = StyleSheet.create({
     color: formatColors.stakes,
     fontWeight: '900',
     fontSize: 18,
-    fontVariant: ['tabular-nums'],
   },
   segmentTextActive: {
     color: '#fff',

@@ -61,9 +61,8 @@ Do **not** put the **service role** or **secret** key in the web app or Vercel �
 
 **Authentication** → **URL configuration**:
 
-1. **Site URL** — your main public URL, e.g.  
-   `https://fine-line.vercel.app`  
-   (Use your real Vercel URL after first deploy; update again if you add a custom domain.)
+1. **Site URL** — your **NBA app’s** Vercel URL from the project linked to **`fineline27/Fine-Line`** (Dashboard → that project → **Domains**).  
+   Do **not** use unrelated `fine-line*.vercel.app` sites that belong to other Vercel projects.
 
 2. **Redirect URLs** — add **each** of these (one per line in the allow list):
 

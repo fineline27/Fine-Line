@@ -2,7 +2,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { getEmailConfirmRedirectUrl } from '../lib/authRedirect';
-import { getSupabaseClient, resetSupabaseClient } from '../lib/supabase';
+import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient } from '../lib/supabase';
 
 type AuthContextValue = {
   session: Session | null;
@@ -20,6 +20,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setIsLoading(false);
+      return;
+    }
+
     const supabase = getSupabaseClient();
 
     supabase.auth.getSession().then(({ data }) => {

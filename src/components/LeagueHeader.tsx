@@ -1,7 +1,7 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Link, type Href } from 'expo-router';
+import { router, type Href } from 'expo-router';
 
 const PROFILE_HREF = '/profile' as Href;
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { OverallFormatsGuide } from './OverallFormatsGuide';
 import { classicFormat, formatColors, stakesFormat } from '../content/overallFormats';
@@ -64,16 +64,12 @@ export function LeagueHeader({
           </Text>
         </View>
         <View style={styles.headerLinks}>
-          <Link href={PROFILE_HREF} asChild>
-            <Pressable>
-              <Text style={styles.link}>Profile</Text>
-            </Pressable>
-          </Link>
-          <Link href="/league-setup" asChild>
-            <Pressable>
-              <Text style={styles.link}>Private leagues</Text>
-            </Pressable>
-          </Link>
+          <Pressable onPress={() => router.push(PROFILE_HREF)}>
+            <Text style={styles.link}>Profile</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push('/league-setup')}>
+            <Text style={styles.link}>Private leagues</Text>
+          </Pressable>
         </View>
       </View>
       {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
@@ -83,36 +79,30 @@ export function LeagueHeader({
       </Text>
 
       <View style={styles.rankCards}>
-        <Link href="/overall-leaderboard?mode=classic" asChild>
-          <Pressable style={[styles.rankCard, styles.rankCardClassic]}>
-            <Text style={[styles.rankCardTitle, styles.rankCardTitleClassic]}>
-              {classicFormat.title}
-            </Text>
-            <Text style={styles.rankCardHint}>+1 per win · bonus ties</Text>
-            {overall.loading ? (
-              <ActivityIndicator color={formatColors.classic} size="small" style={styles.spinner} />
-            ) : (
-              <Text style={[styles.rankCardValue, styles.rankCardValueClassic]}>
-                {formatRank(overall)}
-              </Text>
-            )}
-          </Pressable>
-        </Link>
-        <Link href="/overall-leaderboard?mode=stakes" asChild>
-          <Pressable style={[styles.rankCard, styles.rankCardStakes]}>
-            <Text style={[styles.rankCardTitle, styles.rankCardTitleStakes]}>
-              {stakesFormat.title}
-            </Text>
-            <Text style={styles.rankCardHintStakes}>1–3 stake · win or lose all</Text>
-            {overallStakes.loading ? (
-              <ActivityIndicator color={formatColors.stakes} size="small" style={styles.spinner} />
-            ) : (
-              <Text style={[styles.rankCardValue, styles.rankCardValueStakes]}>
-                {formatRank(overallStakes)}
-              </Text>
-            )}
-          </Pressable>
-        </Link>
+        <Pressable
+          style={styles.rankCardClassic}
+          onPress={() => router.push('/overall-leaderboard?mode=classic')}
+        >
+          <Text style={styles.rankCardTitleClassic}>{classicFormat.title}</Text>
+          <Text style={styles.rankCardHint}>+1 per win · bonus ties</Text>
+          {overall.loading ? (
+            <ActivityIndicator color={formatColors.classic} size="small" style={styles.spinner} />
+          ) : (
+            <Text style={styles.rankCardValueClassic}>{formatRank(overall)}</Text>
+          )}
+        </Pressable>
+        <Pressable
+          style={styles.rankCardStakes}
+          onPress={() => router.push('/overall-leaderboard?mode=stakes')}
+        >
+          <Text style={styles.rankCardTitleStakes}>{stakesFormat.title}</Text>
+          <Text style={styles.rankCardHintStakes}>1–3 stake · win or lose all</Text>
+          {overallStakes.loading ? (
+            <ActivityIndicator color={formatColors.stakesStrong} size="small" style={styles.spinner} />
+          ) : (
+            <Text style={styles.rankCardValueStakes}>{formatRank(overallStakes)}</Text>
+          )}
+        </Pressable>
       </View>
 
       <OverallFormatsGuide compact />
@@ -228,29 +218,43 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     minHeight: 88,
   },
-  rankCard: {
+  rankCardClassic: {
     flex: 1,
     borderRadius: 12,
     padding: 12,
     borderWidth: 2,
     minHeight: 96,
-  },
-  rankCardClassic: {
     backgroundColor: formatColors.classicBg,
     borderColor: formatColors.classic,
   },
   rankCardStakes: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 2,
+    minHeight: 96,
     backgroundColor: formatColors.stakesBg,
     borderColor: formatColors.stakesBorder,
   },
   rankCardTitle: {
+    color: colors.textPrimary,
     fontWeight: '800',
-    fontSize: 15,
+    fontSize: 14,
+  },
+  rankCardValue: {
+    color: colors.accent,
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 8,
   },
   rankCardTitleClassic: {
+    fontWeight: '800',
+    fontSize: 15,
     color: formatColors.classic,
   },
   rankCardTitleStakes: {
+    fontWeight: '800',
+    fontSize: 15,
     color: formatColors.stakesStrong,
   },
   rankCardHint: {
@@ -264,15 +268,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '600',
   },
-  rankCardValue: {
+  rankCardValueClassic: {
     fontSize: 20,
     fontWeight: '800',
     marginTop: 8,
-  },
-  rankCardValueClassic: {
     color: formatColors.classic,
   },
   rankCardValueStakes: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 8,
     color: formatColors.stakesStrong,
   },
   spinner: {
