@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import { useAuth } from './AuthContext';
 
-export type SportId = 'NBA' | 'AFL';
+export type SportId = 'NBA' | 'NFL' | 'AFL';
 
 export type SportOption = {
   id: SportId;
@@ -18,6 +18,12 @@ export const SPORT_OPTIONS: SportOption[] = [
     label: 'NBA',
     description: '30 teams · 82-game season O/U',
     available: true,
+  },
+  {
+    id: 'NFL',
+    label: 'NFL',
+    description: 'Coming soon',
+    available: false,
   },
   {
     id: 'AFL',
@@ -61,7 +67,7 @@ export function SportProvider({ children }: { children: React.ReactNode }) {
         if (!cancelled && (stored === 'NBA' || stored === 'AFL')) {
           setSportState(stored);
         }
-        // Do not force null when storage is empty — avoids racing select-sport before setItem finishes.
+        // Do not force null when storage is empty — avoids racing home before setItem finishes.
       } finally {
         if (!cancelled) {
           setIsLoading(false);

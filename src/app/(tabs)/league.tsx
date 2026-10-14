@@ -68,7 +68,7 @@ export default function LeagueBoardScreen() {
   }
 
   if (!authLoading && !sportLoading && session && !sport) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/home" />;
   }
 
 

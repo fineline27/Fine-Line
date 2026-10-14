@@ -88,7 +88,7 @@ export default function AuthCallbackScreen() {
 
   function onContinue() {
     if (session) {
-      router.replace('/select-sport');
+      router.replace('/home');
     } else {
       router.replace('/login');
     }

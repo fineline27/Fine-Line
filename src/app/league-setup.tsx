@@ -40,7 +40,7 @@ export default function LeagueSetupScreen() {
   }
 
   if (!authLoading && !sportLoading && session && !sport) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/home" />;
   }
 
   function formatLeagueError(err: unknown): string {
@@ -127,7 +127,7 @@ export default function LeagueSetupScreen() {
             </Text>
           </Pressable>
         ))}
-        <Pressable onPress={() => void clearSport().then(() => router.replace('/select-sport'))}>
+        <Pressable onPress={() => void clearSport().then(() => router.replace('/home'))}>
           <Text style={styles.changeSport}>Change sport</Text>
         </Pressable>
       </View>
