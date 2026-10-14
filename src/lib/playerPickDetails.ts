@@ -2,12 +2,16 @@ import { dedupeBonusQuestions, findBonusAnswerForUser } from './bonusDedupe';
 import type { SportPredictionRow } from './predictions';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import { clampConfidence } from '../types/confidence';
-import { effectiveLockedOuLine } from './ouLine';
+import { effectiveLockedOuLine, marketLineDiffersFromPickLock } from './ouLine';
 import type { PickSide, Team } from '../types/team';
 
 export type PlayerOuPick = {
   abbreviation: string;
+  /** Line used to grade this pick (locked when set). */
   ouLine: number;
+  /** Current board line for the team. */
+  marketLine: number;
+  lockedLineDiffers: boolean;
   pick: PickSide;
   confidence?: number;
 };
@@ -52,9 +56,12 @@ export function buildPlayerOuPicks(
     .sort((a, b) => a.abbreviation.localeCompare(b.abbreviation))
     .map((team) => {
       const entry = byTeam.get(team.id)!;
+      const ouLine = effectiveLockedOuLine(entry.lockedOuLine, team);
       return {
         abbreviation: team.abbreviation,
-        ouLine: effectiveLockedOuLine(entry.lockedOuLine, team),
+        ouLine,
+        marketLine: team.ou_line,
+        lockedLineDiffers: marketLineDiffersFromPickLock(entry.lockedOuLine, team, true),
         pick: entry.pick,
         confidence: includeConfidence ? (entry.confidence ?? 1) : undefined,
       };

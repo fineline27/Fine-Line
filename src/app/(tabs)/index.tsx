@@ -24,6 +24,7 @@ import { useOverallConfidenceRank } from '../../hooks/useOverallConfidenceRank';
 import { useOverallRank } from '../../hooks/useOverallRank';
 import { usePredictions } from '../../hooks/usePredictions';
 import { useSeasonLock } from '../../hooks/useSeasonLock';
+import { marketLineDiffersFromPickLock } from '../../lib/ouLine';
 import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
 import type { Team } from '../../types/team';
 import { colors } from '../../theme/colors';
@@ -76,6 +77,11 @@ export default function StandingsScreen() {
     requiredPicks > 0 &&
     pickCount >= requiredPicks &&
     bonusAllAnswered;
+  const lockedOffBoardCount = teams.filter(
+    (t) =>
+      picks[t.id] != null &&
+      marketLineDiffersFromPickLock(lockedOuLines[t.id], t, true),
+  ).length;
   const showListLoader = loading || picksLoading || leagueLoading;
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -243,6 +249,19 @@ export default function StandingsScreen() {
                   onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
                 />
               ) : null}
+              {lockedOffBoardCount > 0 ? (
+                <View style={styles.offBoardLockBanner}>
+                  <Text style={styles.offBoardLockTitle}>
+                    {lockedOffBoardCount} pick{lockedOffBoardCount === 1 ? '' : 's'} locked off the
+                    current board line
+                  </Text>
+                  <Text style={styles.offBoardLockBody}>
+                    Those teams show a LOCK badge on your card — you&apos;re graded at your saved line,
+                    not today&apos;s board number. League and overall views show the same when you
+                    expand picks.
+                  </Text>
+                </View>
+              ) : null}
               <View style={styles.seasonLockBanner}>
                 <Text style={styles.seasonLockTitle}>
                   {seasonLocked ? 'Picks locked for the season' : countdownLabel}
@@ -345,6 +364,25 @@ const styles = StyleSheet.create({
   bonusMissingText: {
     color: colors.textSecondary,
     fontSize: 12,
+    lineHeight: 17,
+  },
+  offBoardLockBanner: {
+    backgroundColor: colors.statusAroundBg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.45)',
+    padding: 14,
+    marginBottom: 12,
+  },
+  offBoardLockTitle: {
+    color: colors.textPrimary,
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  offBoardLockBody: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 6,
     lineHeight: 17,
   },
   seasonLockBanner: {

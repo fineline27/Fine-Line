@@ -16,13 +16,23 @@ import type { PickSide, Team } from '../types/team';
 
 export type TeamGroupPick = {
   team: Team;
-  entries: Array<{ userId: string; displayName: string; pick: PickSide }>;
+  entries: Array<{
+    userId: string;
+    displayName: string;
+    pick: PickSide;
+    lockedOuLine?: number | null;
+  }>;
 };
 
 type BoardState = {
   members: LeagueMember[];
   leaderboard: LeaderboardEntry[];
-  predictions: Array<{ user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }>;
+  predictions: Array<{
+    user_id: string;
+    team_id: string;
+    pick: 'OVER' | 'UNDER';
+    locked_ou_line?: number | null;
+  }>;
   teamPicks: TeamGroupPick[];
   bonusQuestions: BonusQuestion[];
   bonusQuestionsRaw: BonusQuestion[];
@@ -73,7 +83,12 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         members.map((m) => [m.user_id, m.display_name?.trim() || 'Player']),
       );
 
-      let predictions: Array<{ user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }> = [];
+      let predictions: Array<{
+        user_id: string;
+        team_id: string;
+        pick: 'OVER' | 'UNDER';
+        locked_ou_line?: number | null;
+      }> = [];
       if (picksSubmitted) {
         predictions = await fetchAllPredictionsInLeague(activeLeague.id);
       }
@@ -114,6 +129,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
             userId: row.user_id,
             displayName: nameByUser.get(row.user_id) ?? 'Player',
             pick: row.pick === 'OVER' ? 'over' : 'under',
+            lockedOuLine: row.locked_ou_line,
           });
         }
       }

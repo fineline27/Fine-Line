@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { PlayerBonusPick, PlayerOuPick } from '../lib/playerPickDetails';
+import { LockedLineIndicator } from './LockedLineIndicator';
 import { formatColors } from '../content/overallFormats';
 import type { LeaderboardEntry } from '../lib/rankings';
 import { colors } from '../theme/colors';
@@ -67,9 +68,17 @@ export function LeaderboardPlayerRow({
             </View>
           ) : null}
           <Text style={styles.detailTitle}>O/U picks</Text>
+          {ouPicks.some((p) => p.lockedLineDiffers) ? (
+            <Text style={styles.lockHint}>
+              LOCK = graded at your saved line when it differs from today&apos;s board number.
+            </Text>
+          ) : null}
           <View style={styles.ouGrid}>
             {ouPicks.map((p) => (
-              <View key={p.abbreviation} style={styles.ouChip}>
+              <View
+                key={p.abbreviation}
+                style={[styles.ouChip, p.lockedLineDiffers && styles.ouChipLocked]}
+              >
                 <Text style={styles.ouAbbr}>{p.abbreviation}</Text>
                 <Text style={[styles.ouSide, p.pick === 'over' ? styles.over : styles.under]}>
                   {p.pick === 'over' ? 'O' : 'U'}
@@ -77,7 +86,11 @@ export function LeaderboardPlayerRow({
                 {p.confidence != null ? (
                   <Text style={styles.ouConf}>×{p.confidence}</Text>
                 ) : null}
-                <Text style={styles.ouLine}>{p.ouLine.toFixed(1)}</Text>
+                <LockedLineIndicator
+                  lockedLine={p.ouLine}
+                  marketLine={p.marketLine}
+                  compact
+                />
               </View>
             ))}
           </View>
@@ -185,6 +198,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  lockHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: 8,
+  },
   ouChip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -195,6 +214,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingVertical: 6,
     paddingHorizontal: 8,
+  },
+  ouChipLocked: {
+    borderColor: 'rgba(234, 179, 8, 0.45)',
+    backgroundColor: colors.statusAroundBg,
   },
   ouAbbr: {
     color: colors.textPrimary,
@@ -214,10 +237,6 @@ const styles = StyleSheet.create({
   ouConf: {
     color: formatColors.stakesStrong,
     fontWeight: '800',
-    fontSize: 10,
-  },
-  ouLine: {
-    color: colors.textMuted,
     fontSize: 10,
   },
 });

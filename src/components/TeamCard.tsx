@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { LockedLineIndicator } from './LockedLineIndicator';
 import { marketLineDiffersFromPickLock } from '../lib/ouLine';
 import { evaluatePick } from '../lib/pickScoring';
 import { formatRecord, formatWinPace, getTeamStatus } from '../lib/teamStatus';
@@ -105,17 +106,27 @@ export function TeamCard({
         </View>
       </View>
 
-      <View style={styles.ouCenter}>
-        <Text style={styles.ouValue}>{displayLine.toFixed(1)}</Text>
-        <Text style={styles.ouLabel}>{lineMoved ? 'Your locked O/U' : 'Season O/U'}</Text>
-        {lineMoved ? (
-          <Text style={styles.ouMoved}>
-            Current line {team.ou_line.toFixed(1)} · switch sides only after choosing to keep your
-            lock or accept the new line
-          </Text>
-        ) : pick ? (
-          <Text style={styles.ouLockedHint}>Locked at this line for your pick</Text>
-        ) : null}
+      <View style={[styles.ouCenter, lineMoved && styles.ouCenterLocked]}>
+        {lineMoved && lockedOuLine != null ? (
+          <>
+            <LockedLineIndicator
+              lockedLine={lockedOuLine}
+              marketLine={team.ou_line}
+              prominent
+            />
+            <Text style={styles.ouMoved}>
+              Switch sides only after choosing to keep your lock or accept the board line
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.ouValue}>{displayLine.toFixed(1)}</Text>
+            <Text style={styles.ouLabel}>{pick ? 'Locked O/U' : 'Season O/U'}</Text>
+            {pick ? (
+              <Text style={styles.ouLockedHint}>Locked at this line for your pick</Text>
+            ) : null}
+          </>
+        )}
       </View>
 
       {lineMoved ? (
@@ -193,6 +204,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  ouCenterLocked: {
+    backgroundColor: colors.statusAroundBg,
+    borderColor: 'rgba(234, 179, 8, 0.45)',
   },
   ouValue: {
     color: colors.textPrimary,

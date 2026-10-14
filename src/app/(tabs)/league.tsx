@@ -27,7 +27,9 @@ import {
   buildPlayerBonusPicks,
   buildPlayerOuPicks,
 } from '../../lib/playerPickDetails';
+import { LockedLineIndicator } from '../../components/LockedLineIndicator';
 import { canDeleteLeague } from '../../lib/leagues';
+import { effectiveLockedOuLine, marketLineDiffersFromPickLock } from '../../lib/ouLine';
 import { isOpenPoolInviteCode } from '../../lib/openPool';
 import { colors } from '../../theme/colors';
 
@@ -206,24 +208,47 @@ export default function LeagueBoardScreen() {
               {teamPicks.map(({ team, entries }) => (
                 <View key={team.id} style={styles.teamBlock}>
                   <Text style={styles.teamTitle}>
-                    {team.abbreviation} · O/U {team.ou_line.toFixed(1)}
+                    {team.abbreviation} · Board O/U {team.ou_line.toFixed(1)}
                   </Text>
                   {entries.length === 0 ? (
                     <Text style={styles.emptyPicks}>No submitted picks yet</Text>
                   ) : (
-                    entries.map((entry) => (
-                      <View key={`${team.id}-${entry.userId}`} style={styles.pickRow}>
-                        <Text style={styles.pickName}>{entry.displayName}</Text>
-                        <Text
-                          style={[
-                            styles.pickSide,
-                            entry.pick === 'over' ? styles.pickOver : styles.pickUnder,
-                          ]}
+                    entries.map((entry) => {
+                      const gradedLine = effectiveLockedOuLine(entry.lockedOuLine, team);
+                      const lockDiffers = marketLineDiffersFromPickLock(
+                        entry.lockedOuLine,
+                        team,
+                        true,
+                      );
+                      const isMe = entry.userId === user?.id;
+                      return (
+                        <View
+                          key={`${team.id}-${entry.userId}`}
+                          style={[styles.pickRow, lockDiffers && isMe && styles.pickRowLockedMe]}
                         >
-                          {entry.pick === 'over' ? 'OVER' : 'UNDER'}
-                        </Text>
-                      </View>
-                    ))
+                          <View style={styles.pickNameCol}>
+                            <Text style={styles.pickName}>
+                              {entry.displayName}
+                              {isMe ? ' (you)' : ''}
+                            </Text>
+                            {lockDiffers ? (
+                              <LockedLineIndicator
+                                lockedLine={gradedLine}
+                                marketLine={team.ou_line}
+                              />
+                            ) : null}
+                          </View>
+                          <Text
+                            style={[
+                              styles.pickSide,
+                              entry.pick === 'over' ? styles.pickOver : styles.pickUnder,
+                            ]}
+                          >
+                            {entry.pick === 'over' ? 'OVER' : 'UNDER'}
+                          </Text>
+                        </View>
+                      );
+                    })
                   )}
                 </View>
               ))}
@@ -424,6 +449,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 6,
+    gap: 8,
+  },
+  pickRowLockedMe: {
+    backgroundColor: colors.statusAroundBg,
+    marginHorizontal: -8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  pickNameCol: {
+    flex: 1,
+    gap: 4,
   },
   pickName: {
     color: colors.textSecondary,
