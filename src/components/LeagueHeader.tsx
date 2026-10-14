@@ -1,10 +1,9 @@
 import { router, type Href } from 'expo-router';
-
-const PROFILE_HREF = '/profile' as Href;
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { OverallFormatsGuide } from './OverallFormatsGuide';
-import { classicFormat, formatColors, stakesFormat } from '../content/overallFormats';
+const PROFILE_HREF = '/profile' as Href;
+
+import { formatColors } from '../content/overallFormats';
 import { colors } from '../theme/colors';
 
 type RankBlock = {
@@ -19,6 +18,7 @@ type Props = {
   overall: RankBlock;
   overallStakes: RankBlock;
   overallStakesScore?: number;
+  overallClassicScore?: number;
   league: RankBlock;
   myScore: number;
   clinched: number;
@@ -45,24 +45,70 @@ export function LeagueHeader({
   overall,
   overallStakes,
   overallStakesScore = 0,
+  overallClassicScore = 0,
   league,
   myScore,
-  clinched,
+  clinched: _clinched,
   pickCount,
   teamCount,
   picksSubmitted,
   bonusScore = 0,
-  overallBonusScore = 0,
 }: Props) {
+  const leagueRankText = !picksSubmitted ? 'Locked' : formatRank(league);
+
   return (
     <View style={styles.container}>
       <View style={styles.titleRow}>
-        <View>
+        <View style={styles.titleBlock}>
           <Text style={styles.title}>Fine Line</Text>
           <Text style={styles.tagline}>
             {sport ? `${sport} season O/U` : 'Season O/U standings'}
           </Text>
+
+          <View style={styles.statsStrip}>
+            <Pressable
+              style={styles.statCellClassic}
+              onPress={() => router.push('/overall-leaderboard?mode=classic')}
+            >
+              <Text style={styles.statLabelClassic}>Classic</Text>
+              {overall.loading ? (
+                <ActivityIndicator color={formatColors.classic} size="small" />
+              ) : (
+                <Text style={styles.statRankClassic}>{formatRank(overall)}</Text>
+              )}
+              <Text style={styles.statMeta}>{overallClassicScore} pts overall</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.statCellStakes}
+              onPress={() => router.push('/overall-leaderboard?mode=stakes')}
+            >
+              <Text style={styles.statLabelStakes}>Stakes</Text>
+              {overallStakes.loading ? (
+                <ActivityIndicator color={formatColors.stakes} size="small" />
+              ) : (
+                <Text style={styles.statRankStakes}>{formatRank(overallStakes)}</Text>
+              )}
+              <Text style={styles.statMetaStakes}>{overallStakesScore} pts overall</Text>
+            </Pressable>
+
+            <View style={styles.statCellLeague}>
+              <Text style={styles.statLabelLeague}>Your league</Text>
+              {league.loading ? (
+                <ActivityIndicator color={colors.accent} size="small" />
+              ) : (
+                <Text style={styles.statRankLeague}>{leagueRankText}</Text>
+              )}
+              <Text style={styles.statMeta} numberOfLines={2}>
+                {myScore} pts · {leagueName ?? 'League'}
+                {' · '}
+                {pickCount}/{teamCount || 30}
+                {picksSubmitted ? ' ✓' : ''}
+              </Text>
+            </View>
+          </View>
         </View>
+
         <View style={styles.headerLinks}>
           <Pressable onPress={() => router.push(PROFILE_HREF)}>
             <Text style={styles.link}>Profile</Text>
@@ -72,274 +118,128 @@ export function LeagueHeader({
           </Pressable>
         </View>
       </View>
-      {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
-
-      <View style={styles.rankCards}>
-        <Pressable
-          style={styles.rankCardClassic}
-          onPress={() => router.push('/overall-leaderboard?mode=classic')}
-        >
-          <Text style={styles.rankCardTitleClassic}>{classicFormat.title}</Text>
-          <Text style={styles.rankCardHint}>+1 per win · bonus ties</Text>
-          {overall.loading ? (
-            <ActivityIndicator color={formatColors.classic} size="small" style={styles.spinner} />
-          ) : (
-            <Text style={styles.rankCardValueClassic}>{formatRank(overall)}</Text>
-          )}
-        </Pressable>
-        <Pressable
-          style={styles.rankCardStakes}
-          onPress={() => router.push('/overall-leaderboard?mode=stakes')}
-        >
-          <Text style={styles.rankCardTitleStakes}>{stakesFormat.title}</Text>
-          <Text style={styles.rankCardHintStakes}>1–3 stake · win or lose all</Text>
-          {overallStakes.loading ? (
-            <ActivityIndicator color={formatColors.stakes} size="small" style={styles.spinner} />
-          ) : (
-            <Text style={styles.rankCardValueStakes}>{formatRank(overallStakes)}</Text>
-          )}
-        </Pressable>
-      </View>
-
-      <OverallFormatsGuide />
-
-      <View style={styles.rankCardsSecond}>
-        <View style={styles.rankCardFull}>
-          <Text style={styles.rankCardTitle}>Your league</Text>
-          <Text style={styles.rankCardHint} numberOfLines={1}>
-            {leagueName ?? 'Current league'} · Classic scoring
-          </Text>
-          {league.loading ? (
-            <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
-          ) : (
-            <Text style={styles.rankCardValue}>
-              {!picksSubmitted ? 'Locked' : formatRank(league)}
-            </Text>
-          )}
-        </View>
-      </View>
-
-      <View style={styles.scorePanels}>
-        <View style={styles.classicPanel}>
-          <Text style={styles.classicPanelLabel}>Your league · Classic</Text>
-          <Text style={styles.classicPanelValue}>{myScore} pts</Text>
-          <Text style={styles.classicPanelMeta}>
-            {bonusScore} bonus · {clinched} clinched · {pickCount}/{teamCount || 30} picks
-            {picksSubmitted ? ' · submitted' : ''}
-          </Text>
-        </View>
-        <View style={styles.stakesPanel}>
-          <Text style={styles.stakesPanelLabel}>Stakes overall</Text>
-          {overallStakes.loading ? (
-            <ActivityIndicator color={formatColors.stakes} size="small" style={styles.stakesSpinner} />
-          ) : (
-            <Text style={styles.stakesPanelValue}>{overallStakesScore} pts</Text>
-          )}
-          <Text style={styles.stakesPanelMeta}>Set stake 1–3 on each team card</Text>
-        </View>
-      </View>
-      {!picksSubmitted ? (
-        <Text style={styles.picksHint}>
-          Pick all teams, then set Stakes (1–3) on every card before you submit.
-        </Text>
-      ) : null}
     </View>
   );
 }
 
+const statCellBase = {
+  flex: 1,
+  borderRadius: 10,
+  paddingVertical: 8,
+  paddingHorizontal: 8,
+  minWidth: 0,
+  borderWidth: 1,
+} as const;
+
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 16,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     backgroundColor: colors.headerGradientStart,
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    gap: 10,
+  },
+  titleBlock: {
+    flex: 1,
+    minWidth: 0,
   },
   title: {
     color: colors.textPrimary,
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
   tagline: {
     color: colors.textMuted,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
     marginTop: 2,
   },
-  headerLinks: {
-    alignItems: 'flex-end',
+  statsStrip: {
+    flexDirection: 'row',
     gap: 6,
-  },
-  link: {
-    color: colors.accent,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  leagueName: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  rankCards: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-  },
-  rankCardsSecond: {
-    flexDirection: 'row',
-    gap: 10,
     marginTop: 10,
   },
-  rankCardFull: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 88,
-  },
-  rankCardClassic: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 2,
-    minHeight: 96,
+  statCellClassic: {
+    ...statCellBase,
     backgroundColor: formatColors.classicBg,
     borderColor: formatColors.classic,
   },
-  rankCardStakes: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 2,
-    minHeight: 96,
+  statCellStakes: {
+    ...statCellBase,
     backgroundColor: formatColors.stakesBg,
-    borderColor: formatColors.stakes,
+    borderColor: formatColors.stakesBorder,
   },
-  rankCardTitle: {
-    color: colors.textPrimary,
-    fontWeight: '800',
-    fontSize: 14,
+  statCellLeague: {
+    ...statCellBase,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
-  rankCardValue: {
-    color: colors.accent,
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 8,
-  },
-  rankCardTitleClassic: {
-    fontWeight: '800',
-    fontSize: 15,
+  statLabelClassic: {
     color: formatColors.classic,
-  },
-  rankCardTitleStakes: {
-    fontWeight: '800',
-    fontSize: 15,
-    color: formatColors.stakes,
-  },
-  rankCardHint: {
-    color: colors.textMuted,
-    fontSize: 11,
-    marginTop: 2,
-  },
-  rankCardHintStakes: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    marginTop: 2,
-    fontWeight: '600',
-  },
-  rankCardValueClassic: {
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 8,
-    color: formatColors.classic,
-  },
-  rankCardValueStakes: {
-    fontSize: 20,
-    fontWeight: '800',
-    marginTop: 8,
-    color: formatColors.stakes,
-  },
-  spinner: {
-    marginTop: 12,
-    alignSelf: 'flex-start',
-  },
-  scorePanels: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-  },
-  classicPanel: {
-    flex: 1,
-    backgroundColor: formatColors.classicBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: formatColors.classic,
-    padding: 12,
-  },
-  classicPanelLabel: {
-    color: formatColors.classic,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
-  classicPanelValue: {
+  statLabelStakes: {
+    color: formatColors.stakes,
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  statLabelLeague: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  statRankClassic: {
     color: formatColors.classic,
-    fontSize: 22,
+    fontSize: 15,
     fontWeight: '800',
     marginTop: 4,
   },
-  classicPanelMeta: {
-    color: colors.textMuted,
-    fontSize: 10,
+  statRankStakes: {
+    color: formatColors.stakes,
+    fontSize: 15,
+    fontWeight: '800',
     marginTop: 4,
-    lineHeight: 14,
   },
-  stakesPanel: {
-    flex: 1,
-    backgroundColor: formatColors.stakesBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: formatColors.stakesBorder,
-    padding: 12,
+  statRankLeague: {
+    color: colors.accent,
+    fontSize: 15,
+    fontWeight: '800',
+    marginTop: 4,
   },
-  stakesPanelLabel: {
-    color: formatColors.stakes,
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+  statMeta: {
+    color: colors.textMuted,
+    fontSize: 9,
+    marginTop: 3,
+    lineHeight: 12,
   },
-  stakesPanelValue: {
-    color: formatColors.stakes,
-    fontSize: 26,
-    fontWeight: '900',
-    marginTop: 2,
+  statMetaStakes: {
+    color: colors.textMuted,
+    fontSize: 9,
+    marginTop: 3,
   },
-  stakesPanelMeta: {
-    color: formatColors.stakes,
-    fontSize: 10,
+  headerLinks: {
+    alignItems: 'flex-end',
+    gap: 6,
+    paddingTop: 2,
+  },
+  link: {
+    color: colors.accent,
     fontWeight: '700',
-    marginTop: 4,
-  },
-  stakesSpinner: {
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  picksHint: {
-    color: colors.textMuted,
-    fontSize: 12,
-    marginTop: 10,
-    lineHeight: 17,
+    fontSize: 14,
   },
 });

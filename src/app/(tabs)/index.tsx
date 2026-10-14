@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BonusPicksSection } from '../../components/BonusPicksSection';
 import { LeagueHeader } from '../../components/LeagueHeader';
+import { OverallFormatsGuide } from '../../components/OverallFormatsGuide';
 import { TeamCard } from '../../components/TeamCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLeague } from '../../contexts/LeagueContext';
@@ -123,6 +124,7 @@ export default function StandingsScreen() {
           loading: overallConfidenceRank.loading,
         }}
         overallStakesScore={overallConfidenceRank.myScore}
+        overallClassicScore={overallRank.myScore}
         league={{
           rank: leagueRankDisplay.rank,
           totalPlayers: leagueRank.totalPlayers,
@@ -217,6 +219,7 @@ export default function StandingsScreen() {
           )}
           ListHeaderComponent={
             <>
+              <OverallFormatsGuide />
               {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
                 <View style={styles.bonusMissing}>
                   <Text style={styles.bonusMissingText}>
