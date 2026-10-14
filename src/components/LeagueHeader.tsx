@@ -74,10 +74,6 @@ export function LeagueHeader({
       </View>
       {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
 
-      <Text style={styles.formatsIntro}>
-        Two separate overall rankings — same picks, different scoring.
-      </Text>
-
       <View style={styles.rankCards}>
         <Pressable
           style={styles.rankCardClassic}
@@ -105,7 +101,7 @@ export function LeagueHeader({
         </Pressable>
       </View>
 
-      <OverallFormatsGuide compact />
+      <OverallFormatsGuide />
 
       <View style={styles.rankCardsSecond}>
         <View style={styles.rankCardFull}>
@@ -192,17 +188,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
-  formatsIntro: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    marginTop: 12,
-    lineHeight: 18,
-  },
   rankCards: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 10,
+    marginTop: 12,
   },
   rankCardsSecond: {
     flexDirection: 'row',

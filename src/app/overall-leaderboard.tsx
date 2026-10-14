@@ -104,7 +104,7 @@ export default function OverallLeaderboardScreen() {
           </Pressable>
         </View>
         <View style={styles.guideInHeader}>
-          <OverallFormatsGuide compact />
+          <OverallFormatsGuide compact defaultExpanded={false} />
         </View>
       </View>
 

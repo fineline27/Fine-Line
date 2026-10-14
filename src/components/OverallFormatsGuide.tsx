@@ -1,11 +1,14 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { classicFormat, formatColors, stakesFormat } from '../content/overallFormats';
 import { colors } from '../theme/colors';
 
 type Props = {
-  /** Shorter copy for the home header */
+  /** Shorter bullets when expanded (home header) */
   compact?: boolean;
+  /** Start collapsed so picks list gets more room */
+  defaultExpanded?: boolean;
 };
 
 function FormatBlock({
@@ -47,53 +50,93 @@ function FormatBlock({
   );
 }
 
-export function OverallFormatsGuide({ compact }: Props) {
+export function OverallFormatsGuide({ compact = false, defaultExpanded = false }: Props) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+
   return (
     <View style={styles.wrap}>
-      {!compact ? (
-        <Text style={styles.heading}>Two overall formats</Text>
-      ) : (
-        <Text style={styles.headingCompact}>Classic vs Stakes</Text>
-      )}
-      <FormatBlock
-        title={classicFormat.title}
-        tagline={classicFormat.tagline}
-        bullets={classicFormat.bullets}
-        accent={formatColors.classic}
-        accentBg={formatColors.classicBg}
-        compact={compact}
-      />
-      <FormatBlock
-        title={stakesFormat.title}
-        tagline={stakesFormat.tagline}
-        bullets={stakesFormat.bullets}
-        accent={formatColors.stakes}
-        accentBg={formatColors.stakesBg}
-        compact={compact}
-      />
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        onPress={() => setExpanded((v) => !v)}
+        style={({ pressed }) => [styles.toggle, pressed && styles.togglePressed]}
+      >
+        <View style={styles.toggleTextCol}>
+          <Text style={styles.toggleTitle}>Classic vs Stakes</Text>
+          <Text style={styles.toggleHint}>
+            {expanded ? 'Tap to hide scoring rules' : 'Tap to see how each overall format works'}
+          </Text>
+        </View>
+        <Text style={styles.chevron}>{expanded ? '▾' : '▸'}</Text>
+      </Pressable>
+
+      {expanded ? (
+        <View style={styles.expanded}>
+          <FormatBlock
+            title={classicFormat.title}
+            tagline={classicFormat.tagline}
+            bullets={classicFormat.bullets}
+            accent={formatColors.classic}
+            accentBg={formatColors.classicBg}
+            compact={compact}
+          />
+          <FormatBlock
+            title={stakesFormat.title}
+            tagline={stakesFormat.tagline}
+            bullets={stakesFormat.bullets}
+            accent={formatColors.stakesStrong}
+            accentBg={formatColors.stakesBg}
+            compact={compact}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 10,
     marginTop: 4,
     marginBottom: 4,
   },
-  heading: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '800',
-    marginBottom: 2,
+  toggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  headingCompact: {
-    color: colors.textSecondary,
-    fontSize: 12,
+  togglePressed: {
+    opacity: 0.9,
+  },
+  toggleTextCol: {
+    flex: 1,
+    minWidth: 0,
+  },
+  toggleTitle: {
+    color: colors.textPrimary,
+    fontSize: 14,
     fontWeight: '800',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
-    marginBottom: 4,
+  },
+  toggleHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  chevron: {
+    color: colors.accent,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  expanded: {
+    gap: 10,
+    marginTop: 10,
   },
   block: {
     borderRadius: 12,
