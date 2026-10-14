@@ -5,6 +5,7 @@ import { useLeague } from '../contexts/LeagueContext';
 import {
   fetchBonusAnswersForLeague,
   fetchBonusQuestionsForLeague,
+  fetchBonusQuestionsRawForLeague,
 } from '../lib/bonusQuestions';
 import { fetchLeagueMembers } from '../lib/leagueMembers';
 import { fetchAllPredictionsInLeague } from '../lib/predictions';
@@ -24,6 +25,7 @@ type BoardState = {
   predictions: Array<{ user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }>;
   teamPicks: TeamGroupPick[];
   bonusQuestions: BonusQuestion[];
+  bonusQuestionsRaw: BonusQuestion[];
   bonusAnswers: BonusAnswerRow[];
   loading: boolean;
   error: string | null;
@@ -38,6 +40,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
     predictions: [],
     teamPicks: [],
     bonusQuestions: [],
+    bonusQuestionsRaw: [],
     bonusAnswers: [],
     loading: true,
     error: null,
@@ -51,6 +54,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         predictions: [],
         teamPicks: [],
         bonusQuestions: [],
+        bonusQuestionsRaw: [],
         bonusAnswers: [],
         loading: false,
         error: null,
@@ -75,14 +79,17 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
       }
 
       let bonusQuestions: BonusQuestion[] = [];
+      let bonusQuestionsRaw: BonusQuestion[] = [];
       let bonusAnswers: BonusAnswerRow[] = [];
       try {
+        bonusQuestionsRaw = await fetchBonusQuestionsRawForLeague(activeLeague.id);
         bonusQuestions = await fetchBonusQuestionsForLeague(activeLeague.id);
         if (picksSubmitted) {
           bonusAnswers = await fetchBonusAnswersForLeague(activeLeague.id);
         }
       } catch {
         bonusQuestions = [];
+        bonusQuestionsRaw = [];
         bonusAnswers = [];
       }
       const bonusBundle =
@@ -126,6 +133,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         predictions,
         teamPicks,
         bonusQuestions,
+        bonusQuestionsRaw,
         bonusAnswers,
         loading: false,
         error: null,
@@ -137,6 +145,7 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
         predictions: [],
         teamPicks: [],
         bonusQuestions: [],
+        bonusQuestionsRaw: [],
         bonusAnswers: [],
         loading: false,
         error: err instanceof Error ? err.message : 'Failed to load league board',

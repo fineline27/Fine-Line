@@ -54,6 +54,51 @@ export function buildPlayerOuPicks(
     });
 }
 
+export type LeagueBonusQuestionBlock = {
+  questionId: string;
+  label: string;
+  pointsWorth: number;
+  winningAnswer: string | null;
+  answers: Array<{ userId: string; displayName: string; answer: string; isMe: boolean }>;
+};
+
+export function buildLeagueBonusByQuestion(
+  members: Array<{
+    user_id: string;
+    display_name: string | null;
+    picks_submitted_at: string | null;
+  }>,
+  questions: BonusQuestion[],
+  allQuestions: BonusQuestion[],
+  answers: BonusAnswerRow[],
+  currentUserId: string | undefined,
+): LeagueBonusQuestionBlock[] {
+  const submitted = members.filter((m) => m.picks_submitted_at);
+  const deduped = dedupeBonusQuestions(questions);
+
+  return deduped.map((q) => {
+    const rows = submitted
+      .map((member) => {
+        const row = findBonusAnswerForUser(member.user_id, q, allQuestions, answers);
+        return {
+          userId: member.user_id,
+          displayName: member.display_name?.trim() || 'Player',
+          answer: row?.user_answer?.trim() || '—',
+          isMe: member.user_id === currentUserId,
+        };
+      })
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+    return {
+      questionId: q.id,
+      label: q.question_text,
+      pointsWorth: q.points_worth,
+      winningAnswer: q.winning_answer,
+      answers: rows,
+    };
+  });
+}
+
 export function buildPlayerBonusPicks(
   userId: string,
   questions: BonusQuestion[],

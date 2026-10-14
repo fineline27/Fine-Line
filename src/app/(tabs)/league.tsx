@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DeleteLeagueSection } from '../../components/DeleteLeagueSection';
+import { LeagueBonusBoard } from '../../components/LeagueBonusBoard';
 import { LeaderboardPlayerRow } from '../../components/LeaderboardPlayerRow';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLeague } from '../../contexts/LeagueContext';
@@ -21,6 +22,7 @@ import { useLeagueBoard } from '../../hooks/useLeagueBoard';
 import { useLeagueMembership } from '../../hooks/useLeagueMembership';
 import { useTeams } from '../../hooks/useTeams';
 import {
+  buildLeagueBonusByQuestion,
   buildPlayerBonusPicks,
   buildPlayerOuPicks,
 } from '../../lib/playerPickDetails';
@@ -43,6 +45,7 @@ export default function LeagueBoardScreen() {
     predictions,
     teamPicks,
     bonusQuestions,
+    bonusQuestionsRaw,
     bonusAnswers,
     members,
     loading,
@@ -52,6 +55,13 @@ export default function LeagueBoardScreen() {
   const [segment, setSegment] = useState<Segment>('leaderboard');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const showBonus = bonusQuestions.length > 0;
+  const bonusByQuestion = buildLeagueBonusByQuestion(
+    members,
+    bonusQuestions,
+    bonusQuestionsRaw.length > 0 ? bonusQuestionsRaw : bonusQuestions,
+    bonusAnswers,
+    user?.id,
+  );
 
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -222,31 +232,10 @@ export default function LeagueBoardScreen() {
               }
             >
               <Text style={styles.listHint}>
-                Bonus answers from members who submitted. Points count once official results are
-                set on each question.
+                Each tiebreaker once — every submitted member&apos;s pick listed underneath.
+                Points apply when official results are set.
               </Text>
-              {members
-                .filter((m) => m.picks_submitted_at)
-                .map((member) => {
-                  const name = member.display_name?.trim() || 'Player';
-                  return (
-                    <View key={member.user_id} style={styles.teamBlock}>
-                      <Text style={styles.teamTitle}>{name}</Text>
-                      {bonusQuestions.map((q) => {
-                        const ans = bonusAnswers.find(
-                          (a) =>
-                            a.question_id === q.id && a.user_id === member.user_id,
-                        );
-                        return (
-                          <View key={q.id} style={styles.pickRow}>
-                            <Text style={styles.pickName}>{q.question_text}</Text>
-                            <Text style={styles.pickSide}>{ans?.user_answer ?? '—'}</Text>
-                          </View>
-                        );
-                      })}
-                    </View>
-                  );
-                })}
+              <LeagueBonusBoard blocks={bonusByQuestion} />
             </ScrollView>
           )}
         </>
