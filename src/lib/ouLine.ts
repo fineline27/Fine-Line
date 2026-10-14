@@ -23,6 +23,33 @@ export function lineHasMovedFromLock(
   return !ouLinesEqual(locked, team.ou_line);
 }
 
+/** Resolved lock for an existing pick (DB, device backup, or market if unknown). */
+export function resolvedPickLockedLine(
+  locked: number | null | undefined,
+  team: Team,
+  hasPick: boolean,
+): number | null {
+  if (typeof locked === 'number' && Number.isFinite(locked)) {
+    return locked;
+  }
+  if (!hasPick) {
+    return null;
+  }
+  return null;
+}
+
+export function marketLineDiffersFromPickLock(
+  locked: number | null | undefined,
+  team: Team,
+  hasPick: boolean,
+): boolean {
+  const pickLock = resolvedPickLockedLine(locked, team, hasPick);
+  if (pickLock == null) {
+    return false;
+  }
+  return !ouLinesEqual(pickLock, team.ou_line);
+}
+
 /** Team record with the O/U line used to grade this pick. */
 export function teamForPickLine(team: Team, lockedOuLine: number | null | undefined): Team {
   const line = effectiveLockedOuLine(lockedOuLine, team);

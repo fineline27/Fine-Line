@@ -218,9 +218,16 @@ export async function syncPredictionsToAllSportLeagues(
     onConflict: 'league_id,user_id,team_id',
   });
 
-  if (error?.message?.includes('confidence_points') || error?.message?.includes('locked_ou_line')) {
-    const fallbackRows = rows.map(({ confidence_points: _c, locked_ou_line: _l, ...rest }) => rest);
-    ({ error } = await supabase.from('team_predictions').upsert(fallbackRows, {
+  if (error?.message?.includes('locked_ou_line')) {
+    const withoutLock = rows.map(({ locked_ou_line: _l, ...rest }) => rest);
+    ({ error } = await supabase.from('team_predictions').upsert(withoutLock, {
+      onConflict: 'league_id,user_id,team_id',
+    }));
+  }
+
+  if (error?.message?.includes('confidence_points')) {
+    const withoutConfidence = rows.map(({ confidence_points: _c, ...rest }) => rest);
+    ({ error } = await supabase.from('team_predictions').upsert(withoutConfidence, {
       onConflict: 'league_id,user_id,team_id',
     }));
   }
@@ -268,9 +275,16 @@ export async function upsertPredictionForSport(
     onConflict: 'league_id,user_id,team_id',
   });
 
-  if (error?.message?.includes('confidence_points') || error?.message?.includes('locked_ou_line')) {
-    const fallbackRows = rows.map(({ confidence_points: _c, locked_ou_line: _l, ...rest }) => rest);
-    ({ error } = await supabase.from('team_predictions').upsert(fallbackRows, {
+  if (error?.message?.includes('locked_ou_line')) {
+    const withoutLock = rows.map(({ locked_ou_line: _l, ...rest }) => rest);
+    ({ error } = await supabase.from('team_predictions').upsert(withoutLock, {
+      onConflict: 'league_id,user_id,team_id',
+    }));
+  }
+
+  if (error?.message?.includes('confidence_points')) {
+    const withoutConfidence = rows.map(({ confidence_points: _c, ...rest }) => rest);
+    ({ error } = await supabase.from('team_predictions').upsert(withoutConfidence, {
       onConflict: 'league_id,user_id,team_id',
     }));
   }

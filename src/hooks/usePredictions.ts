@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useSport } from '../contexts/SportContext';
 import type { SportId } from '../contexts/SportContext';
-import { effectiveLockedOuLine, lineHasMovedFromLock } from '../lib/ouLine';
+import {
+  clearStoredLockedOuLine,
+  mergeLockedOuLinesFromDevice,
+  writeStoredLockedOuLine,
+} from '../lib/lockedOuLineStorage';
+import { marketLineDiffersFromPickLock } from '../lib/ouLine';
 import {
   deletePredictionForSport,
   fetchPredictionsForSport,
@@ -15,7 +20,18 @@ import type { PickSide, Team } from '../types/team';
 
 export type TogglePickOptions = {
   acceptNewLine?: boolean;
+  retainLockedLine?: boolean;
 };
+
+export type TogglePickResult =
+  | { needsLineAcceptance: false }
+  | {
+      needsLineAcceptance: true;
+      teamId: string;
+      side: PickSide;
+      lockedLine: number;
+      marketLine: number;
+    };
 
 export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
   const { sport } = useSport();
@@ -28,6 +44,14 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
   const [error, setError] = useState<string | null>(null);
 
   const teamById = useCallback(() => new Map(teams.map((t) => [t.id, t])), [teams]);
+
+  const persistLock = useCallback(
+    async (teamId: string, line: number) => {
+      await writeStoredLockedOuLine(sportId, teamId, line);
+      setLockedOuLines((prev) => ({ ...prev, [teamId]: line }));
+    },
+    [sportId],
+  );
 
   const refresh = useCallback(async () => {
     if (!sport) {
@@ -42,14 +66,19 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
     setError(null);
     try {
       const data = await fetchPredictionsForSport(sportId);
+      const mergedLocks = await mergeLockedOuLinesFromDevice(
+        sportId,
+        data.lockedOuLines,
+        Object.keys(data.picks),
+      );
       setPicks(data.picks);
       setConfidence(data.confidence);
-      setLockedOuLines(data.lockedOuLines);
+      setLockedOuLines(mergedLocks);
       await syncPredictionsToAllSportLeagues(
         sportId,
         data.picks,
         data.confidence,
-        data.lockedOuLines,
+        mergedLocks,
       ).catch(() => undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load picks');
@@ -66,28 +95,36 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
   }, [refresh]);
 
   const togglePick = useCallback(
-    async (teamId: string, side: PickSide, options?: TogglePickOptions) => {
+    async (teamId: string, side: PickSide, options?: TogglePickOptions): Promise<TogglePickResult> => {
       if (!sport || picksLocked) {
-        return { needsLineAcceptance: false as const };
+        return { needsLineAcceptance: false };
       }
 
       const team = teamById().get(teamId);
       if (!team) {
-        return { needsLineAcceptance: false as const };
+        return { needsLineAcceptance: false };
       }
 
       const current = picks[teamId];
       const storedLock = lockedOuLines[teamId];
-      const effectiveLock = effectiveLockedOuLine(storedLock, team);
-      const lineMoved = current != null && lineHasMovedFromLock(storedLock, team);
+      const lineMoved =
+        current != null &&
+        marketLineDiffersFromPickLock(storedLock, team, true);
 
       if (
         current != null &&
         current !== side &&
         lineMoved &&
-        !options?.acceptNewLine
+        !options?.acceptNewLine &&
+        !options?.retainLockedLine
       ) {
-        return { needsLineAcceptance: true as const, teamId, side };
+        return {
+          needsLineAcceptance: true,
+          teamId,
+          side,
+          lockedLine: storedLock!,
+          marketLine: team.ou_line,
+        };
       }
 
       setSavingTeamId(teamId);
@@ -100,12 +137,13 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
             confidencePoints: pts,
             lockedOuLine: team.ou_line,
           });
-          setLockedOuLines((prev) => ({ ...prev, [teamId]: team.ou_line }));
-          return { needsLineAcceptance: false as const };
+          await persistLock(teamId, team.ou_line);
+          return { needsLineAcceptance: false };
         }
 
         if (current === side) {
           await deletePredictionForSport(sportId, teamId);
+          await clearStoredLockedOuLine(sportId, teamId);
           setPicks((prev) => {
             const next = { ...prev };
             delete next[teamId];
@@ -123,28 +161,34 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
           });
         } else {
           const pts = confidence[teamId] ?? 1;
-          const nextLock =
-            current == null || options?.acceptNewLine ? team.ou_line : effectiveLock;
+          let nextLock: number;
+          if (current == null) {
+            nextLock = team.ou_line;
+          } else if (options?.acceptNewLine) {
+            nextLock = team.ou_line;
+          } else if (storedLock != null) {
+            nextLock = storedLock;
+          } else {
+            nextLock = team.ou_line;
+          }
+
           await upsertPredictionForSport(sportId, teamId, side, {
             confidencePoints: pts,
             lockedOuLine: nextLock,
           });
-          const nextPicks = { ...picks, [teamId]: side };
-          const nextConfidence = { ...confidence, [teamId]: pts };
-          const nextLocks = { ...lockedOuLines, [teamId]: nextLock };
-          setPicks(nextPicks);
-          setConfidence(nextConfidence);
-          setLockedOuLines(nextLocks);
+          await persistLock(teamId, nextLock);
+          setPicks((prev) => ({ ...prev, [teamId]: side }));
+          setConfidence((prev) => ({ ...prev, [teamId]: pts }));
         }
-        return { needsLineAcceptance: false as const };
+        return { needsLineAcceptance: false };
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to save pick');
-        return { needsLineAcceptance: false as const };
+        return { needsLineAcceptance: false };
       } finally {
         setSavingTeamId(null);
       }
     },
-    [sport, sportId, picks, confidence, lockedOuLines, picksLocked, teamById],
+    [sport, sportId, picks, confidence, lockedOuLines, picksLocked, teamById, persistLock],
   );
 
   const setTeamConfidence = useCallback(
@@ -167,7 +211,7 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
       setError(null);
 
       try {
-        const lock = effectiveLockedOuLine(lockedOuLines[teamId], team);
+        const lock = lockedOuLines[teamId] ?? team.ou_line;
         await updateConfidenceForSport(sportId, teamId, side, points, lock);
         setConfidence((prev) => ({ ...prev, [teamId]: points }));
       } catch (err) {

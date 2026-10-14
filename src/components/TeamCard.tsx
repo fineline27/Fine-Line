@@ -1,12 +1,15 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { lineHasMovedFromLock } from '../lib/ouLine';
+import { marketLineDiffersFromPickLock } from '../lib/ouLine';
 import { evaluatePick } from '../lib/pickScoring';
 import { formatRecord, formatWinPace, getTeamStatus } from '../lib/teamStatus';
 import type { PickSide, Team } from '../types/team';
 import { colors } from '../theme/colors';
 import type { ConfidencePoints } from '../types/confidence';
+import type { TogglePickResult } from '../hooks/usePredictions';
 import { ConfidenceSelector } from './ConfidenceSelector';
+import { PickLineChangeModal } from './PickLineChangeModal';
 import { PickStatusBadge } from './PickStatusBadge';
 import { PickToggle } from './PickToggle';
 import { StatusBadge } from './StatusBadge';
@@ -22,8 +25,8 @@ type Props = {
   onPickChange: (
     teamId: string,
     side: PickSide,
-    options?: { acceptNewLine?: boolean },
-  ) => void | Promise<{ needsLineAcceptance?: boolean; teamId?: string; side?: PickSide }>;
+    options?: { acceptNewLine?: boolean; retainLockedLine?: boolean },
+  ) => Promise<TogglePickResult> | TogglePickResult;
   onConfidenceChange?: (teamId: string, points: ConfidencePoints) => void;
 };
 
@@ -37,41 +40,56 @@ export function TeamCard({
   onPickChange,
   onConfidenceChange,
 }: Props) {
+  const [lineChangePrompt, setLineChangePrompt] = useState<{
+    side: PickSide;
+    lockedLine: number;
+    marketLine: number;
+  } | null>(null);
+
   const status = getTeamStatus(team);
   const pickEval = pick ? evaluatePick(team, pick, lockedOuLine) : null;
   const record = formatRecord(team.current_wins, team.current_losses);
   const gamesPlayed = team.current_wins + team.current_losses;
-  const lineMoved = pick != null && lineHasMovedFromLock(lockedOuLine, team);
-  const displayLine = lineMoved && lockedOuLine != null ? lockedOuLine : team.ou_line;
+  const lineMoved = pick != null && marketLineDiffersFromPickLock(lockedOuLine, team, true);
+  const displayLine =
+    lineMoved && lockedOuLine != null ? lockedOuLine : team.ou_line;
 
-  function requestPick(side: PickSide) {
+  async function requestPick(side: PickSide) {
     if (picksLocked) {
       return;
     }
 
-    void (async () => {
-      const result = await onPickChange(team.id, side);
-      if (result?.needsLineAcceptance && result.teamId && result.side) {
-        Alert.alert(
-          'Line updated',
-          `${team.name} is now ${team.ou_line.toFixed(1)} wins (you locked ${lockedOuLine?.toFixed(1) ?? '—'}). Change your pick only if you accept the new line for scoring.`,
-          [
-            { text: 'Keep my pick', style: 'cancel' },
-            {
-              text: `Accept ${team.ou_line.toFixed(1)} & change`,
-              style: 'default',
-              onPress: () => {
-                void onPickChange(team.id, side, { acceptNewLine: true });
-              },
-            },
-          ],
-        );
-      }
-    })();
+    const result = await onPickChange(team.id, side);
+    if (result.needsLineAcceptance) {
+      setLineChangePrompt({
+        side: result.side,
+        lockedLine: result.lockedLine,
+        marketLine: result.marketLine,
+      });
+    }
   }
 
   return (
     <View style={styles.card}>
+      <PickLineChangeModal
+        visible={lineChangePrompt != null}
+        teamName={team.name}
+        lockedLine={lineChangePrompt?.lockedLine ?? lockedOuLine ?? team.ou_line}
+        marketLine={lineChangePrompt?.marketLine ?? team.ou_line}
+        targetSide={lineChangePrompt?.side ?? 'over'}
+        onKeepPick={() => setLineChangePrompt(null)}
+        onChangeKeepLock={() => {
+          const side = lineChangePrompt!.side;
+          setLineChangePrompt(null);
+          void onPickChange(team.id, side, { retainLockedLine: true });
+        }}
+        onChangeAcceptNewLine={() => {
+          const side = lineChangePrompt!.side;
+          setLineChangePrompt(null);
+          void onPickChange(team.id, side, { acceptNewLine: true });
+        }}
+      />
+
       <View style={styles.headerRow}>
         <TeamColorBadge abbreviation={team.abbreviation} primaryColor={team.primary_color} />
         <View style={styles.nameBlock}>
@@ -92,8 +110,8 @@ export function TeamCard({
         <Text style={styles.ouLabel}>{lineMoved ? 'Your locked O/U' : 'Season O/U'}</Text>
         {lineMoved ? (
           <Text style={styles.ouMoved}>
-            Current line {team.ou_line.toFixed(1)} · pick early to lock a line; change pick only
-            after accepting the new number
+            Current line {team.ou_line.toFixed(1)} · switch sides only after choosing to keep your
+            lock or accept the new line
           </Text>
         ) : pick ? (
           <Text style={styles.ouLockedHint}>Locked at this line for your pick</Text>
@@ -117,7 +135,7 @@ export function TeamCard({
         {pickEval ? <PickStatusBadge evaluation={pickEval} /> : null}
       </View>
 
-      <PickToggle selected={pick} disabled={picksLocked} onSelect={requestPick} />
+      <PickToggle selected={pick} disabled={picksLocked} onSelect={(side) => void requestPick(side)} />
       {pick && onConfidenceChange ? (
         <ConfidenceSelector
           value={confidence}
