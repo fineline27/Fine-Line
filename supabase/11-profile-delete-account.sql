@@ -17,6 +17,7 @@ begin
   delete from public.bonus_answers where user_id = uid;
   delete from public.team_predictions where user_id = uid;
   delete from public.league_members where user_id = uid;
+  delete from public.usernames where user_id = uid;
 
   delete from public.leagues
   where creator_id = uid

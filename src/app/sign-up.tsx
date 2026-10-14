@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LegalFooterLinks } from '../components/LegalFooterLinks';
 import { useAuth } from '../contexts/AuthContext';
+import { mapSignUpError } from '../lib/authErrors';
 import { validateUsername } from '../lib/displayName';
 import { colors } from '../theme/colors';
 
@@ -53,7 +54,7 @@ export default function SignUpScreen() {
       );
       router.replace('/login');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign up failed');
+      setError(mapSignUpError(err));
     } finally {
       setSubmitting(false);
     }

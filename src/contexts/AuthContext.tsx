@@ -2,7 +2,9 @@ import { Session, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { getEmailConfirmRedirectUrl } from '../lib/authRedirect';
+import { normalizeUsername } from '../lib/displayName';
 import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient } from '../lib/supabase';
+import { assertUsernameAvailable, ensureUsernameClaimedFromMetadata } from '../lib/usernames';
 
 type AuthContextValue = {
   session: Session | null;
@@ -32,8 +34,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
 
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
+      if (
+        nextSession?.user &&
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED')
+      ) {
+        void ensureUsernameClaimedFromMetadata(nextSession.user);
+      }
     });
 
     return () => {
@@ -42,16 +50,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
+    const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
     if (error) {
       throw error;
     }
+    await ensureUsernameClaimedFromMetadata(data.user);
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, username: string) => {
     const emailRedirectTo = getEmailConfirmRedirectUrl();
-    const displayName = username.trim();
-    const { error } = await getSupabaseClient().auth.signUp({
+    const displayName = normalizeUsername(username);
+    await assertUsernameAvailable(displayName);
+    const { data, error } = await getSupabaseClient().auth.signUp({
       email,
       password,
       options: {
@@ -64,6 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) {
       throw error;
+    }
+    if (data.user) {
+      await ensureUsernameClaimedFromMetadata(data.user);
     }
   }, []);
 
