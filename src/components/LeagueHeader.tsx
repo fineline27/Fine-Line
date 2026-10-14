@@ -1,5 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, type Href } from 'expo-router';
+
+const PROFILE_HREF = '/profile' as Href;
 
 import { colors } from '../theme/colors';
 
@@ -57,11 +59,18 @@ export function LeagueHeader({
             {sport ? `${sport} season O/U` : 'Season O/U standings'}
           </Text>
         </View>
-        <Link href="/league-setup" asChild>
-          <Pressable>
-            <Text style={styles.link}>Private leagues</Text>
-          </Pressable>
-        </Link>
+        <View style={styles.headerLinks}>
+          <Link href={PROFILE_HREF} asChild>
+            <Pressable>
+              <Text style={styles.link}>Profile</Text>
+            </Pressable>
+          </Link>
+          <Link href="/league-setup" asChild>
+            <Pressable>
+              <Text style={styles.link}>Private leagues</Text>
+            </Pressable>
+          </Link>
+        </View>
       </View>
       {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
 
@@ -142,6 +151,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
     marginTop: 2,
+  },
+  headerLinks: {
+    alignItems: 'flex-end',
+    gap: 6,
   },
   link: {
     color: colors.accent,
