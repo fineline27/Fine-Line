@@ -129,7 +129,7 @@ export default function OverallLeaderboardScreen() {
           ListHeaderComponent={
             <Text style={styles.listHint}>
               Tap a player to expand their picks
-              {isStakes ? ' and stake sizes (×1–×3 in red).' : ' and bonus tiebreakers where shown.'}
+              {isStakes ? ' and stake sizes (×1–×3).' : ' and bonus tiebreakers where shown.'}
             </Text>
           }
           renderItem={({ item }) => (

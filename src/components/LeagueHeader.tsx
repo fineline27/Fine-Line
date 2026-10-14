@@ -94,7 +94,7 @@ export function LeagueHeader({
           <Text style={styles.rankCardTitleStakes}>{stakesFormat.title}</Text>
           <Text style={styles.rankCardHintStakes}>1–3 stake · win or lose all</Text>
           {overallStakes.loading ? (
-            <ActivityIndicator color={formatColors.stakesStrong} size="small" style={styles.spinner} />
+            <ActivityIndicator color={formatColors.stakes} size="small" style={styles.spinner} />
           ) : (
             <Text style={styles.rankCardValueStakes}>{formatRank(overallStakes)}</Text>
           )}
@@ -131,16 +131,16 @@ export function LeagueHeader({
         <View style={styles.stakesPanel}>
           <Text style={styles.stakesPanelLabel}>Stakes overall</Text>
           {overallStakes.loading ? (
-            <ActivityIndicator color={formatColors.stakesStrong} size="small" style={styles.stakesSpinner} />
+            <ActivityIndicator color={formatColors.stakes} size="small" style={styles.stakesSpinner} />
           ) : (
             <Text style={styles.stakesPanelValue}>{overallStakesScore} pts</Text>
           )}
-          <Text style={styles.stakesPanelMeta}>Red stakes on each team card</Text>
+          <Text style={styles.stakesPanelMeta}>Set stake 1–3 on each team card</Text>
         </View>
       </View>
       {!picksSubmitted ? (
         <Text style={styles.picksHint}>
-          Pick all teams, then set the red Stakes (1–3) on every card before you submit.
+          Pick all teams, then set Stakes (1–3) on every card before you submit.
         </Text>
       ) : null}
     </View>
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     minHeight: 96,
     backgroundColor: formatColors.stakesBg,
-    borderColor: formatColors.stakesBorder,
+    borderColor: formatColors.stakes,
   },
   rankCardTitle: {
     color: colors.textPrimary,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   rankCardTitleStakes: {
     fontWeight: '800',
     fontSize: 15,
-    color: formatColors.stakesStrong,
+    color: formatColors.stakes,
   },
   rankCardHint: {
     color: colors.textMuted,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     marginTop: 8,
-    color: formatColors.stakesStrong,
+    color: formatColors.stakes,
   },
   spinner: {
     marginTop: 12,
@@ -309,19 +309,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: formatColors.stakesBg,
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: formatColors.stakesBorder,
     padding: 12,
   },
   stakesPanelLabel: {
-    color: formatColors.stakesStrong,
+    color: formatColors.stakes,
     fontSize: 11,
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   stakesPanelValue: {
-    color: formatColors.stakesStrong,
+    color: formatColors.stakes,
     fontSize: 26,
     fontWeight: '900',
     marginTop: 2,

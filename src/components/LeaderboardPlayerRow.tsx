@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     color: '#f87171',
   },
   ouConf: {
-    color: formatColors.stakes,
+    color: formatColors.stakesStrong,
     fontWeight: '800',
     fontSize: 10,
   },

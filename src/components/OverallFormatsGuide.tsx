@@ -84,7 +84,7 @@ export function OverallFormatsGuide({ compact = false, defaultExpanded = false }
             title={stakesFormat.title}
             tagline={stakesFormat.tagline}
             bullets={stakesFormat.bullets}
-            accent={formatColors.stakesStrong}
+            accent={formatColors.stakes}
             accentBg={formatColors.stakesBg}
             compact={compact}
           />
@@ -145,20 +145,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   blockStakes: {
-    borderWidth: 2,
-    paddingVertical: 14,
+    borderWidth: 1,
   },
   stakesStripe: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    width: 5,
-    backgroundColor: formatColors.stakesStrong,
+    width: 4,
+    backgroundColor: formatColors.stakes,
   },
   blockTitleStakes: {
-    fontSize: 17,
-    marginLeft: 4,
+    marginLeft: 2,
   },
   blockTitle: {
     fontSize: 16,

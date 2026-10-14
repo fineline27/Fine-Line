@@ -1,12 +1,13 @@
 import { colors } from '../theme/colors';
 
+/** Stakes uses amber/gold — distinct from Classic blue, not alarm red. */
 export const formatColors = {
   classic: colors.accent,
   classicBg: 'rgba(59, 130, 246, 0.14)',
-  stakes: '#f87171',
-  stakesStrong: '#ef4444',
-  stakesBg: 'rgba(239, 68, 68, 0.22)',
-  stakesBorder: '#ef4444',
+  stakes: colors.statusAround,
+  stakesStrong: '#ca8a04',
+  stakesBg: colors.statusAroundBg,
+  stakesBorder: 'rgba(234, 179, 8, 0.45)',
 } as const;
 
 export const classicFormat = {
