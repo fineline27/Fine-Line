@@ -222,6 +222,7 @@ Open the URL printed (often `http://localhost:3000`). Click `/login`, `/privacy`
 | “Supabase is not configured” on live site | Missing env at **build** | Add `EXPO_PUBLIC_*` on Vercel → Redeploy |
 | Sign-in spins or “invalid redirect” | Redirect URLs | Supabase Auth URLs include exact Vercel host + `/**` |
 | Email sign-up never completes | Confirm email on | User must click email link; check spam; or disable confirm for testing |
+| Sign-up: “Database error saving new user” | Unique-username trigger / RLS on `usernames` | Run [`supabase/14-fix-signup-database-error.sql`](supabase/14-fix-signup-database-error.sql) in Supabase SQL Editor; redeploy app; try a fresh username |
 | “permission denied for table teams” | RLS/grant | Run teams RLS SQL from README / `01-seed` |
 | 404 on `/login` or refresh on deep link | SPA routing | `vercel.json` rewrites should be in repo; redeploy |
 | Blank page after deploy | Build failed | Vercel → Deployment → **Build logs** |

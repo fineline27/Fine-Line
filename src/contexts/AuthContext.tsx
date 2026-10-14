@@ -2,7 +2,9 @@ import { Session, User } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { getEmailConfirmRedirectUrl } from '../lib/authRedirect';
+import { normalizeUsername } from '../lib/displayName';
 import { getSupabaseClient, isSupabaseConfigured, resetSupabaseClient } from '../lib/supabase';
+import { assertUsernameAvailable } from '../lib/usernames';
 
 type AuthContextValue = {
   session: Session | null;
@@ -50,7 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = useCallback(async (email: string, password: string, username: string) => {
     const emailRedirectTo = getEmailConfirmRedirectUrl();
-    const displayName = username.trim();
+    const displayName = normalizeUsername(username);
+    await assertUsernameAvailable(displayName);
     const { error } = await getSupabaseClient().auth.signUp({
       email,
       password,
