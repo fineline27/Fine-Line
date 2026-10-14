@@ -7,6 +7,7 @@ import { getSupabaseClient } from './supabase';
 /** Fixed invite codes for shared overall pools. */
 export const OPEN_POOL_INVITE: Record<SportId, string> = {
   NBA: 'OPENNBA',
+  NFL: 'OPENNFL',
   AFL: 'OPENAFL',
 };
 
@@ -15,7 +16,11 @@ export function isOpenPoolInviteCode(code: string | undefined | null): boolean {
     return false;
   }
   const upper = code.trim().toUpperCase();
-  return upper === OPEN_POOL_INVITE.NBA || upper === OPEN_POOL_INVITE.AFL;
+  return (
+    upper === OPEN_POOL_INVITE.NBA ||
+    upper === OPEN_POOL_INVITE.NFL ||
+    upper === OPEN_POOL_INVITE.AFL
+  );
 }
 
 /** Join the sport-wide overall pool so picks and overall rank work without creating a league. */

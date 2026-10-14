@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTopMenu } from '../components/AppTopMenu';
 import { LegalFooterLinks } from '../components/LegalFooterLinks';
 import { useAuth } from '../contexts/AuthContext';
 import { profileUsername, updateProfileUsername, deleteMyAccount } from '../lib/profile';
@@ -68,6 +69,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <AppTopMenu active="profile" />
         <Pressable onPress={() => router.back()} style={styles.back}>
           <Text style={styles.backText}>← Back</Text>
         </Pressable>

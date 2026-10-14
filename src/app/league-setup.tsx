@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTopMenu } from '../components/AppTopMenu';
 import { useAuth } from '../contexts/AuthContext';
 import { useLeague } from '../contexts/LeagueContext';
 import { SPORT_OPTIONS, useSport } from '../contexts/SportContext';
@@ -23,7 +24,7 @@ import { colors } from '../theme/colors';
 
 export default function LeagueSetupScreen() {
   const { session, user, isLoading: authLoading, signOut } = useAuth();
-  const { sport, isLoading: sportLoading, setSport, clearSport } = useSport();
+  const { sport, isLoading: sportLoading, setSport } = useSport();
   const { leagues, activeLeague, refreshLeagues, setActiveLeagueId } = useLeague();
   const [inviteCode, setInviteCode] = useState('');
   const [leagueName, setLeagueName] = useState('');
@@ -40,7 +41,7 @@ export default function LeagueSetupScreen() {
   }
 
   if (!authLoading && !sportLoading && session && !sport) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/home" />;
   }
 
   function formatLeagueError(err: unknown): string {
@@ -94,6 +95,7 @@ export default function LeagueSetupScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <AppTopMenu active="leagues" />
       <Pressable onPress={() => router.replace('/')} style={styles.backRow}>
         <Text style={styles.backText}>← Back to picks</Text>
       </Pressable>
@@ -127,9 +129,6 @@ export default function LeagueSetupScreen() {
             </Text>
           </Pressable>
         ))}
-        <Pressable onPress={() => void clearSport().then(() => router.replace('/select-sport'))}>
-          <Text style={styles.changeSport}>Change sport</Text>
-        </Pressable>
       </View>
 
       <View style={styles.section}>
@@ -372,5 +371,4 @@ const styles = StyleSheet.create({
   sportChipText: { color: colors.textSecondary, fontWeight: '700' },
   sportChipTextActive: { color: '#fff' },
   sportChipTextLocked: { color: colors.textMuted },
-  changeSport: { color: colors.accent, fontWeight: '600', fontSize: 13, marginLeft: 4 },
 });

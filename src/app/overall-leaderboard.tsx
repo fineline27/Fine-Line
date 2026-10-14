@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppTopMenu } from '../components/AppTopMenu';
 import { LeaderboardPlayerRow } from '../components/LeaderboardPlayerRow';
 import { OverallFormatsGuide } from '../components/OverallFormatsGuide';
 import { formatColors } from '../content/overallFormats';
@@ -66,13 +67,16 @@ export default function OverallLeaderboardScreen() {
   }
 
   if (!authLoading && !sportLoading && session && !sport) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/home" />;
   }
 
   const busy = teamsLoading || loading;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <View style={styles.topMenuWrap}>
+        <AppTopMenu active="picks" />
+      </View>
       <View style={styles.header}>
         <Link href="/" asChild>
           <Pressable>
@@ -153,6 +157,13 @@ export default function OverallLeaderboardScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  topMenuWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    backgroundColor: colors.headerGradientStart,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   header: {
     paddingHorizontal: 20,
     paddingTop: 8,

@@ -1,8 +1,7 @@
-import { router, type Href } from 'expo-router';
+import { router } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-const PROFILE_HREF = '/profile' as Href;
-
+import { AppTopMenu } from './AppTopMenu';
 import { formatColors } from '../content/overallFormats';
 import { colors } from '../theme/colors';
 
@@ -58,6 +57,7 @@ export function LeagueHeader({
 
   return (
     <View style={styles.container}>
+      <AppTopMenu active="picks" />
       <View style={styles.titleRow}>
         <View style={styles.titleBlock}>
           <Text style={styles.title}>Fine Line</Text>
@@ -108,15 +108,6 @@ export function LeagueHeader({
             </View>
           </View>
         </View>
-
-        <View style={styles.headerLinks}>
-          <Pressable onPress={() => router.push(PROFILE_HREF)}>
-            <Text style={styles.link}>Profile</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/league-setup')}>
-            <Text style={styles.link}>Private leagues</Text>
-          </Pressable>
-        </View>
       </View>
     </View>
   );
@@ -144,7 +135,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: 10,
   },
   titleBlock: {
     flex: 1,
@@ -231,15 +221,5 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 9,
     marginTop: 3,
-  },
-  headerLinks: {
-    alignItems: 'flex-end',
-    gap: 6,
-    paddingTop: 2,
-  },
-  link: {
-    color: colors.accent,
-    fontWeight: '700',
-    fontSize: 14,
   },
 });

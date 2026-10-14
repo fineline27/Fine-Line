@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import { useAuth } from './AuthContext';
 
-export type SportId = 'NBA' | 'AFL';
+export type SportId = 'NBA' | 'NFL' | 'AFL';
 
 export type SportOption = {
   id: SportId;
@@ -18,6 +18,12 @@ export const SPORT_OPTIONS: SportOption[] = [
     label: 'NBA',
     description: '30 teams · 82-game season O/U',
     available: true,
+  },
+  {
+    id: 'NFL',
+    label: 'NFL',
+    description: 'Coming soon',
+    available: false,
   },
   {
     id: 'AFL',
@@ -58,8 +64,9 @@ export function SportProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       try {
         const stored = await AsyncStorage.getItem(SPORT_STORAGE_KEY);
-        if (!cancelled && (stored === 'NBA' || stored === 'AFL')) {
-          setSportState(stored);
+        const storedOption = SPORT_OPTIONS.find((o) => o.id === stored);
+        if (!cancelled && storedOption?.available) {
+          setSportState(storedOption.id);
         }
         // Do not force null when storage is empty — avoids racing select-sport before setItem finishes.
       } finally {
