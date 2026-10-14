@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { LockedLineIndicator } from './LockedLineIndicator';
-import { marketLineDiffersFromPickLock } from '../lib/ouLine';
+import { effectiveLockedOuLine, marketLineDiffersFromPickLock } from '../lib/ouLine';
 import { evaluatePick } from '../lib/pickScoring';
 import { formatRecord, formatWinPace, getTeamStatus } from '../lib/teamStatus';
 import type { PickSide, Team } from '../types/team';
@@ -52,8 +51,8 @@ export function TeamCard({
   const record = formatRecord(team.current_wins, team.current_losses);
   const gamesPlayed = team.current_wins + team.current_losses;
   const lineMoved = pick != null && marketLineDiffersFromPickLock(lockedOuLine, team, true);
-  const displayLine =
-    lineMoved && lockedOuLine != null ? lockedOuLine : team.ou_line;
+  const gradedLine = pick != null ? effectiveLockedOuLine(lockedOuLine, team) : team.ou_line;
+  const boardLine = team.ou_line;
 
   async function requestPick(side: PickSide) {
     if (picksLocked) {
@@ -106,25 +105,44 @@ export function TeamCard({
         </View>
       </View>
 
-      <View style={[styles.ouCenter, lineMoved && styles.ouCenterLocked]}>
-        {lineMoved && lockedOuLine != null ? (
+      <View style={[styles.ouCenter, pick && lineMoved && styles.ouCenterLocked]}>
+        {pick ? (
           <>
-            <LockedLineIndicator
-              lockedLine={lockedOuLine}
-              marketLine={team.ou_line}
-              prominent
-            />
-            <Text style={styles.ouMoved}>
-              Switch sides only after choosing to keep your lock or accept the board line
-            </Text>
+            {lineMoved ? (
+              <View style={styles.lockBadgeRow}>
+                <Text style={styles.lockBadgeText}>LOCK</Text>
+              </View>
+            ) : null}
+            <View style={styles.dualLineRow}>
+              <View style={styles.lineCol}>
+                <Text style={styles.lineColLabel}>Your lock</Text>
+                <Text style={styles.lineColValue}>{gradedLine.toFixed(1)}</Text>
+                <Text style={styles.lineColHint}>Used for scoring</Text>
+              </View>
+              <View style={styles.lineColDivider} />
+              <View style={styles.lineCol}>
+                <Text style={styles.lineColLabel}>Current board</Text>
+                <Text
+                  style={[styles.lineColValue, lineMoved && styles.lineColValueBoardMoved]}
+                >
+                  {boardLine.toFixed(1)}
+                </Text>
+                <Text style={styles.lineColHint}>Today&apos;s O/U</Text>
+              </View>
+            </View>
+            {lineMoved ? (
+              <Text style={styles.ouMoved}>
+                Switch sides only after choosing to keep your lock or accept the board line
+              </Text>
+            ) : (
+              <Text style={styles.ouLockedHint}>Your lock matches the current board line</Text>
+            )}
           </>
         ) : (
           <>
-            <Text style={styles.ouValue}>{displayLine.toFixed(1)}</Text>
-            <Text style={styles.ouLabel}>{pick ? 'Locked O/U' : 'Season O/U'}</Text>
-            {pick ? (
-              <Text style={styles.ouLockedHint}>Locked at this line for your pick</Text>
-            ) : null}
+            <Text style={styles.ouValue}>{boardLine.toFixed(1)}</Text>
+            <Text style={styles.ouLabel}>Season O/U</Text>
+            <Text style={styles.ouLockedHint}>Pick OVER or UNDER to lock this line</Text>
           </>
         )}
       </View>
@@ -208,6 +226,60 @@ const styles = StyleSheet.create({
   ouCenterLocked: {
     backgroundColor: colors.statusAroundBg,
     borderColor: 'rgba(234, 179, 8, 0.45)',
+  },
+  lockBadgeRow: {
+    backgroundColor: colors.statusAroundBg,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.45)',
+    marginBottom: 10,
+  },
+  lockBadgeText: {
+    color: colors.statusAround,
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.6,
+  },
+  dualLineRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    width: '100%',
+  },
+  lineCol: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  lineColDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+    marginVertical: 4,
+  },
+  lineColLabel: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  lineColValue: {
+    color: colors.textPrimary,
+    fontSize: 44,
+    fontWeight: '800',
+    letterSpacing: -1,
+    lineHeight: 48,
+    marginTop: 6,
+  },
+  lineColValueBoardMoved: {
+    color: colors.statusAround,
+  },
+  lineColHint: {
+    color: colors.textMuted,
+    fontSize: 11,
+    marginTop: 4,
+    textAlign: 'center',
   },
   ouValue: {
     color: colors.textPrimary,
