@@ -11,8 +11,8 @@ export const PRIVACY_SECTIONS: Array<{ title: string; body: string }> = [
   {
     title: 'Information we collect',
     body:
-      'Account: email address and password (stored and secured by our auth provider; we do not store your password in plain text).\n\n' +
-      'Profile & play: display name, league memberships, over/under picks, bonus tiebreaker answers, and whether you have submitted your pick card.\n\n' +
+      'Account: email address, password, and username you choose at sign-up (stored and secured by our auth provider; we do not store your password in plain text).\n\n' +
+      'Profile & play: your username is shown on leaderboards as your display name; we also store league memberships, over/under picks, bonus tiebreaker answers, and whether you have submitted your pick card.\n\n' +
       'Device: on your phone or browser we store a login session and preferences (such as your sport and active league) locally so the app works offline between visits.\n\n' +
       'We do not run advertising trackers in the app today. If we add analytics or ads later, we will update this policy.',
   },

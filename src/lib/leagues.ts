@@ -2,7 +2,7 @@ import type { League } from '../types/league';
 import { ensureBonusQuestionsForLeague } from './bonusQuestions';
 import { getErrorMessage } from './errors';
 import { isMissingRpcError, LEAGUE_POOL_FIX_HINT } from './leagueFixHint';
-import { defaultDisplayName } from './leagueMembers';
+import { displayNameForUser } from './leagueMembers';
 import { isOpenPoolInviteCode } from './openPool';
 import { getSupabaseClient } from './supabase';
 
@@ -77,7 +77,7 @@ export async function createLeague(name: string, sport = 'NBA'): Promise<League>
       const { error: memberError } = await supabase.from('league_members').insert({
         league_id: data.id,
         user_id: user.id,
-        display_name: defaultDisplayName(user.email),
+        display_name: displayNameForUser(user),
       });
       if (memberError) {
         throw new Error(getErrorMessage(memberError, 'Could not add you to the league'));
@@ -137,7 +137,7 @@ export async function joinLeagueByCode(code: string): Promise<League> {
     {
       league_id: league.id,
       user_id: user.id,
-      display_name: defaultDisplayName(user.email),
+      display_name: displayNameForUser(user),
     },
     { onConflict: 'league_id,user_id', ignoreDuplicates: true },
   );

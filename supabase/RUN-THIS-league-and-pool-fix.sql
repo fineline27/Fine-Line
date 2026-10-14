@@ -103,6 +103,26 @@ exception
 end;
 $bonus$;
 
+create or replace function public.auth_user_display_name(uid uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    nullif(trim(u.raw_user_meta_data->>'display_name'), ''),
+    nullif(trim(u.raw_user_meta_data->>'username'), ''),
+    nullif(split_part(u.email, '@', 1), ''),
+    'Player'
+  )
+  from auth.users u
+  where u.id = uid;
+$$;
+
+revoke all on function public.auth_user_display_name(uuid) from public;
+grant execute on function public.auth_user_display_name(uuid) to authenticated;
+
 -- Reliable auto-join overall pool (bypasses RLS edge cases)
 create or replace function public.join_open_nba_pool()
 returns uuid
@@ -127,14 +147,12 @@ begin
     returning id into lid;
   end if;
 
-  select coalesce(nullif(split_part(email, '@', 1), ''), 'Player')
-    into dname
-  from auth.users
-  where id = uid;
+  dname := public.auth_user_display_name(uid);
 
   insert into public.league_members (league_id, user_id, display_name)
   values (lid, uid, coalesce(dname, 'Player'))
-  on conflict (league_id, user_id) do nothing;
+  on conflict (league_id, user_id) do update
+    set display_name = excluded.display_name;
 
   return lid;
 end;
@@ -192,14 +210,12 @@ begin
     end;
   end loop;
 
-  select coalesce(nullif(split_part(email, '@', 1), ''), 'Player')
-    into dname
-  from auth.users
-  where id = uid;
+  dname := public.auth_user_display_name(uid);
 
   insert into public.league_members (league_id, user_id, display_name)
   values (row.id, uid, coalesce(dname, 'Player'))
-  on conflict (league_id, user_id) do nothing;
+  on conflict (league_id, user_id) do update
+    set display_name = excluded.display_name;
 
   return to_jsonb(row);
 end;

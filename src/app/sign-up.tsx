@@ -15,10 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LegalFooterLinks } from '../components/LegalFooterLinks';
 import { useAuth } from '../contexts/AuthContext';
+import { validateUsername } from '../lib/displayName';
 import { colors } from '../theme/colors';
 
 export default function SignUpScreen() {
   const { session, isLoading, signUp } = useAuth();
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [acceptedLegal, setAcceptedLegal] = useState(false);
@@ -35,11 +37,17 @@ export default function SignUpScreen() {
       setError('Please agree to the Terms and Privacy Policy to create an account.');
       return;
     }
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setError(usernameError);
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     setMessage(null);
     try {
-      await signUp(email.trim(), password);
+      await signUp(email.trim(), password, username.trim());
       setMessage(
         'Account created. Check your inbox for the confirmation link — it opens a “Email confirmed” page, then sign in.',
       );
@@ -55,6 +63,16 @@ export default function SignUpScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.card}>
         <Text style={styles.title}>Create account</Text>
+        <Text style={styles.hint}>Username is shown on leaderboards (not your email).</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          placeholderTextColor={colors.textMuted}
+          autoCapitalize="none"
+          autoCorrect={false}
+          value={username}
+          onChangeText={setUsername}
+        />
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -124,7 +142,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 16 },
+  title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 8 },
+  hint: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginBottom: 14 },
   input: {
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,

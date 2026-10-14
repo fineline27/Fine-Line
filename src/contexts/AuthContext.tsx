@@ -9,7 +9,7 @@ type AuthContextValue = {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -43,12 +43,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string, username: string) => {
     const emailRedirectTo = getEmailConfirmRedirectUrl();
+    const displayName = username.trim();
     const { error } = await getSupabaseClient().auth.signUp({
       email,
       password,
-      options: emailRedirectTo ? { emailRedirectTo } : undefined,
+      options: {
+        ...(emailRedirectTo ? { emailRedirectTo } : {}),
+        data: {
+          username: displayName,
+          display_name: displayName,
+        },
+      },
     });
     if (error) {
       throw error;

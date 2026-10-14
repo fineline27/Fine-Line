@@ -1,9 +1,34 @@
 import type { LeagueMember } from '../types/leagueMember';
 import { getSupabaseClient } from './supabase';
 
+import type { User } from '@supabase/supabase-js';
+
+import { defaultDisplayNameFromEmail, resolveDisplayName } from './displayName';
+
+/** @deprecated Use resolveDisplayName(user) */
 export function defaultDisplayName(email: string | undefined): string {
-  const local = email?.split('@')[0]?.trim();
-  return local && local.length > 0 ? local : 'Player';
+  return defaultDisplayNameFromEmail(email);
+}
+
+export function displayNameForUser(user: User): string {
+  return resolveDisplayName(user);
+}
+
+/** Keeps league_members.display_name in sync with sign-up username (user metadata). */
+export async function syncDisplayNameAcrossLeagues(): Promise<void> {
+  const supabase = getSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return;
+  }
+  const name = displayNameForUser(user);
+  await supabase
+    .from('league_members')
+    .update({ display_name: name })
+    .eq('user_id', user.id)
+    .neq('display_name', name);
 }
 
 export async function fetchLeagueMembers(leagueId: string): Promise<LeagueMember[]> {

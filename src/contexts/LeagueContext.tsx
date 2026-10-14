@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useAuth } from './AuthContext';
 import { useSport } from './SportContext';
 import { getErrorMessage } from '../lib/errors';
+import { syncDisplayNameAcrossLeagues } from '../lib/leagueMembers';
 import { fetchMyLeagues } from '../lib/leagues';
 import { LEAGUE_POOL_FIX_HINT } from '../lib/leagueFixHint';
 import { ensureOpenPoolMembership, OPEN_POOL_INVITE } from '../lib/openPool';
@@ -46,6 +47,7 @@ export function LeagueProvider({ children }: { children: React.ReactNode }) {
       if (sport) {
         try {
           await ensureOpenPoolMembership(sport as SportId);
+          await syncDisplayNameAcrossLeagues().catch(() => undefined);
         } catch (err) {
           setPoolError(getErrorMessage(err, 'Could not join overall pool'));
         }
