@@ -81,7 +81,7 @@ export default function StandingsScreen() {
   }
 
   if (!authLoading && !sportLoading && session && !sport) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/home" />;
   }
 
   async function onRefresh() {

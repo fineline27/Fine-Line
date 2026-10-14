@@ -7,6 +7,7 @@ import { getSupabaseClient } from './supabase';
 /** Fixed invite codes for shared overall pools. */
 export const OPEN_POOL_INVITE: Record<SportId, string> = {
   NBA: 'OPENNBA',
+  NFL: 'OPENNFL',
   AFL: 'OPENAFL',
 };
 

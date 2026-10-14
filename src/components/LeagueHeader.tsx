@@ -1,6 +1,7 @@
 import { router, type Href } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+const HOME_HREF = '/home' as Href;
 const PROFILE_HREF = '/profile' as Href;
 
 import { formatColors } from '../content/overallFormats';
@@ -110,6 +111,9 @@ export function LeagueHeader({
         </View>
 
         <View style={styles.headerLinks}>
+          <Pressable onPress={() => router.push(HOME_HREF)}>
+            <Text style={styles.link}>Home</Text>
+          </Pressable>
           <Pressable onPress={() => router.push(PROFILE_HREF)}>
             <Text style={styles.link}>Profile</Text>
           </Pressable>
