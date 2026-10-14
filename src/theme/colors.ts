@@ -19,4 +19,7 @@ export const colors = {
   pickInactive: '#2a3441',
   headerGradientStart: '#111827',
   headerGradientEnd: '#0b0f14',
+  /** Stakes overall format (Classic uses accent). */
+  stakes: '#ef4444',
+  stakesBg: 'rgba(239, 68, 68, 0.15)',
 } as const;

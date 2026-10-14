@@ -3,6 +3,8 @@ import { Link, type Href } from 'expo-router';
 
 const PROFILE_HREF = '/profile' as Href;
 
+import { OverallFormatsGuide } from './OverallFormatsGuide';
+import { classicFormat, formatColors, stakesFormat } from '../content/overallFormats';
 import { colors } from '../theme/colors';
 
 type RankBlock = {
@@ -78,35 +80,50 @@ export function LeagueHeader({
       </View>
       {leagueName ? <Text style={styles.leagueName}>{leagueName}</Text> : null}
 
+      <Text style={styles.formatsIntro}>
+        Two separate overall rankings — same picks, different scoring.
+      </Text>
+
       <View style={styles.rankCards}>
         <Link href="/overall-leaderboard?mode=classic" asChild>
-          <Pressable style={styles.rankCard}>
-            <Text style={styles.rankCardTitle}>Classic</Text>
-            <Text style={styles.rankCardHint}>Overall · 1 pt per win</Text>
+          <Pressable style={[styles.rankCard, styles.rankCardClassic]}>
+            <Text style={[styles.rankCardTitle, styles.rankCardTitleClassic]}>
+              {classicFormat.title}
+            </Text>
+            <Text style={styles.rankCardHint}>+1 per win · bonus ties</Text>
             {overall.loading ? (
-              <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
+              <ActivityIndicator color={formatColors.classic} size="small" style={styles.spinner} />
             ) : (
-              <Text style={styles.rankCardValue}>{formatRank(overall)}</Text>
+              <Text style={[styles.rankCardValue, styles.rankCardValueClassic]}>
+                {formatRank(overall)}
+              </Text>
             )}
           </Pressable>
         </Link>
         <Link href="/overall-leaderboard?mode=stakes" asChild>
-          <Pressable style={styles.rankCard}>
-            <Text style={styles.rankCardTitle}>Stakes</Text>
-            <Text style={styles.rankCardHint}>Overall · 1–3 win/lose</Text>
+          <Pressable style={[styles.rankCard, styles.rankCardStakes]}>
+            <Text style={[styles.rankCardTitle, styles.rankCardTitleStakes]}>
+              {stakesFormat.title}
+            </Text>
+            <Text style={styles.rankCardHintStakes}>1–3 stake · win or lose all</Text>
             {overallStakes.loading ? (
-              <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
+              <ActivityIndicator color={formatColors.stakes} size="small" style={styles.spinner} />
             ) : (
-              <Text style={styles.rankCardValue}>{formatRank(overallStakes)}</Text>
+              <Text style={[styles.rankCardValue, styles.rankCardValueStakes]}>
+                {formatRank(overallStakes)}
+              </Text>
             )}
           </Pressable>
         </Link>
       </View>
+
+      <OverallFormatsGuide compact />
+
       <View style={styles.rankCardsSecond}>
         <View style={styles.rankCardFull}>
           <Text style={styles.rankCardTitle}>Your league</Text>
           <Text style={styles.rankCardHint} numberOfLines={1}>
-            {leagueName ?? 'Current league'}
+            {leagueName ?? 'Current league'} · Classic scoring
           </Text>
           {league.loading ? (
             <ActivityIndicator color={colors.accent} size="small" style={styles.spinner} />
@@ -125,24 +142,22 @@ export function LeagueHeader({
         <Text style={styles.projectRef}>Supabase: {supabaseProjectRef}</Text>
       ) : null}
       <Text style={styles.scoreLine}>
-        League: {myScore} pts · {bonusScore} bonus · {clinched} clinched · {pickCount}/
+        League (Classic): {myScore} pts · {bonusScore} bonus · {clinched} clinched · {pickCount}/
         {teamCount || 30} picks
         {picksSubmitted ? ' · locked in' : ''}
       </Text>
-      {!overall.loading && overallBonusScore > 0 ? (
-        <Text style={styles.overallScoreLine}>
-          Overall bonus tiebreak: {overallBonusScore} pt{overallBonusScore === 1 ? '' : 's'}
-        </Text>
-      ) : null}
       {!overallStakes.loading ? (
-        <Text style={styles.overallScoreLine}>
-          Stakes score: {overallStakesScore} pts (separate overall format)
+        <Text style={styles.stakesScoreLine}>
+          Stakes overall: {overallStakesScore} pts
+          {!overall.loading && overallBonusScore > 0
+            ? ` · Classic bonus tiebreak: ${overallBonusScore} pt${overallBonusScore === 1 ? '' : 's'}`
+            : ''}
         </Text>
       ) : null}
       <Text style={styles.picksHint}>
         {picksSubmitted
-          ? 'Classic overall ties break on bonus picks. Stakes overall uses your 1–3 pt stakes only. Pull to refresh.'
-          : 'Submit all picks to unlock the league board. Set a 1–3 stake on each team for the Stakes overall format.'}
+          ? 'Tap Classic or Stakes above for full leaderboards. Pull to refresh scores.'
+          : 'Pick all 30 teams, set red Stakes (1–3) on each card, then submit to open your league board.'}
       </Text>
     </View>
   );
@@ -189,10 +204,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 4,
   },
+  formatsIntro: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 12,
+    lineHeight: 18,
+  },
   rankCards: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 14,
+    marginTop: 10,
   },
   rankCardsSecond: {
     flexDirection: 'row',
@@ -210,28 +232,50 @@ const styles = StyleSheet.create({
   },
   rankCard: {
     flex: 1,
-    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 88,
+    borderWidth: 2,
+    minHeight: 96,
+  },
+  rankCardClassic: {
+    backgroundColor: formatColors.classicBg,
+    borderColor: formatColors.classic,
+  },
+  rankCardStakes: {
+    backgroundColor: formatColors.stakesBg,
+    borderColor: formatColors.stakes,
   },
   rankCardTitle: {
-    color: colors.textPrimary,
     fontWeight: '800',
-    fontSize: 14,
+    fontSize: 15,
+  },
+  rankCardTitleClassic: {
+    color: formatColors.classic,
+  },
+  rankCardTitleStakes: {
+    color: formatColors.stakes,
   },
   rankCardHint: {
     color: colors.textMuted,
     fontSize: 11,
     marginTop: 2,
   },
+  rankCardHintStakes: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '600',
+  },
   rankCardValue: {
-    color: colors.accent,
     fontSize: 20,
     fontWeight: '800',
     marginTop: 8,
+  },
+  rankCardValueClassic: {
+    color: formatColors.classic,
+  },
+  rankCardValueStakes: {
+    color: formatColors.stakes,
   },
   spinner: {
     marginTop: 12,
@@ -255,11 +299,11 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontWeight: '500',
   },
-  overallScoreLine: {
-    color: colors.textMuted,
+  stakesScoreLine: {
+    color: formatColors.stakes,
     fontSize: 12,
     marginTop: 4,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   picksHint: {
     color: colors.textMuted,

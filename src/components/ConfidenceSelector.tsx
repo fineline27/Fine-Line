@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { formatColors } from '../content/overallFormats';
 import type { ConfidencePoints } from '../types/confidence';
 import { colors } from '../theme/colors';
 
@@ -15,7 +16,7 @@ export function ConfidenceSelector({ value, disabled, onChange }: Props) {
   return (
     <View style={styles.wrap}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>Stake</Text>
+        <Text style={styles.label}>Stakes format</Text>
         <Text style={styles.hint}>Win +{value} · lose −{value}</Text>
       </View>
       <View style={styles.row}>
@@ -49,7 +50,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: formatColors.stakes,
+    backgroundColor: formatColors.stakesBg,
+    marginHorizontal: -4,
+    paddingHorizontal: 8,
+    paddingBottom: 4,
+    borderRadius: 10,
   },
   labelRow: {
     flexDirection: 'row',
@@ -58,7 +64,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   label: {
-    color: colors.textSecondary,
+    color: formatColors.stakes,
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.4,
@@ -85,8 +91,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   segmentActive: {
-    backgroundColor: colors.surfaceElevated,
-    borderColor: colors.accent,
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
+    borderColor: formatColors.stakes,
   },
   segmentPressed: {
     opacity: 0.85,
@@ -101,6 +107,6 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   segmentTextActive: {
-    color: colors.accent,
+    color: formatColors.stakes,
   },
 });

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { PlayerBonusPick, PlayerOuPick } from '../lib/playerPickDetails';
+import { formatColors } from '../content/overallFormats';
 import type { LeaderboardEntry } from '../lib/rankings';
 import { colors } from '../theme/colors';
 
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
     color: '#f87171',
   },
   ouConf: {
-    color: colors.accent,
+    color: formatColors.stakes,
     fontWeight: '800',
     fontSize: 10,
   },

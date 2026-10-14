@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LeaderboardPlayerRow } from '../components/LeaderboardPlayerRow';
+import { OverallFormatsGuide } from '../components/OverallFormatsGuide';
+import { formatColors } from '../content/overallFormats';
 import { useAuth } from '../contexts/AuthContext';
 import { useSport } from '../contexts/SportContext';
 import {
@@ -78,28 +80,31 @@ export default function OverallLeaderboardScreen() {
           </Pressable>
         </Link>
         <Text style={styles.title}>Overall {sport ?? ''}</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.subtitle, isStakes && styles.subtitleStakes]}>
           {isStakes
-            ? 'Stakes format · win +stake, lose −stake (1–3 per team)'
-            : 'Classic format · 1 pt per correct O/U'}
+            ? 'Stakes · win the full stake or lose the full stake (1–3 per team)'
+            : 'Classic · +1 for each correct O/U, bonus picks break ties'}
         </Text>
         <View style={styles.modeRow}>
           <Pressable
-            style={[styles.modeChip, !isStakes && styles.modeChipActive]}
+            style={[styles.modeChip, !isStakes && styles.modeChipClassicActive]}
             onPress={() => setMode('classic')}
           >
-            <Text style={[styles.modeChipText, !isStakes && styles.modeChipTextActive]}>
+            <Text style={[styles.modeChipText, !isStakes && styles.modeChipClassicText]}>
               Classic
             </Text>
           </Pressable>
           <Pressable
-            style={[styles.modeChip, isStakes && styles.modeChipActive]}
+            style={[styles.modeChip, isStakes && styles.modeChipStakesActive]}
             onPress={() => setMode('stakes')}
           >
-            <Text style={[styles.modeChipText, isStakes && styles.modeChipTextActive]}>
+            <Text style={[styles.modeChipText, isStakes && styles.modeChipStakesText]}>
               Stakes
             </Text>
           </Pressable>
+        </View>
+        <View style={styles.guideInHeader}>
+          <OverallFormatsGuide compact />
         </View>
       </View>
 
@@ -107,7 +112,7 @@ export default function OverallLeaderboardScreen() {
 
       {busy && leaderboard.length === 0 ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.accent} />
+          <ActivityIndicator size="large" color={isStakes ? formatColors.stakes : colors.accent} />
         </View>
       ) : (
         <FlatList
@@ -123,9 +128,8 @@ export default function OverallLeaderboardScreen() {
           }
           ListHeaderComponent={
             <Text style={styles.listHint}>
-              {isStakes
-                ? 'Same 30 O/U picks with a 1–3 stake on each. Tap a player to see picks and stakes.'
-                : 'Classic ties break on bonus picks (MVP, champion, ROY) where leagues use them. Tap a player to see their selections.'}
+              Tap a player to expand their picks
+              {isStakes ? ' and stake sizes (×1–×3 in red).' : ' and bonus tiebreakers where shown.'}
             </Text>
           }
           renderItem={({ item }) => (
@@ -158,7 +162,9 @@ const styles = StyleSheet.create({
   },
   back: { color: colors.accent, fontWeight: '700', marginBottom: 8 },
   title: { color: colors.textPrimary, fontSize: 26, fontWeight: '800' },
-  subtitle: { color: colors.textSecondary, marginTop: 4, fontSize: 14 },
+  subtitle: { color: colors.textSecondary, marginTop: 4, fontSize: 14, lineHeight: 20 },
+  subtitleStakes: { color: formatColors.stakes, fontWeight: '600' },
+  guideInHeader: { marginTop: 4 },
   modeRow: {
     flexDirection: 'row',
     gap: 8,
@@ -173,17 +179,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     alignItems: 'center',
   },
-  modeChipActive: {
-    borderColor: colors.accent,
-    backgroundColor: colors.surfaceElevated,
+  modeChipClassicActive: {
+    borderColor: formatColors.classic,
+    borderWidth: 2,
+    backgroundColor: formatColors.classicBg,
+  },
+  modeChipStakesActive: {
+    borderColor: formatColors.stakes,
+    borderWidth: 2,
+    backgroundColor: formatColors.stakesBg,
   },
   modeChipText: {
     color: colors.textSecondary,
     fontWeight: '700',
     fontSize: 14,
   },
-  modeChipTextActive: {
-    color: colors.accent,
+  modeChipClassicText: {
+    color: formatColors.classic,
+  },
+  modeChipStakesText: {
+    color: formatColors.stakes,
   },
   error: { color: colors.statusNeedsWork, padding: 16, fontSize: 13 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
