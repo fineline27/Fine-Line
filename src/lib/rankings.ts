@@ -9,11 +9,13 @@ export type PredictionRow = {
   team_id: string;
   pick: 'OVER' | 'UNDER';
   confidence_points?: number;
+  locked_ou_line?: number | null;
 };
 
 type UserTeamPick = {
   side: 'over' | 'under';
   confidence: number;
+  lockedOuLine?: number | null;
 };
 
 function indexPredictions(predictions: PredictionRow[]): Map<string, Map<string, UserTeamPick>> {
@@ -25,6 +27,7 @@ function indexPredictions(predictions: PredictionRow[]): Map<string, Map<string,
     picksByUser.get(row.user_id)!.set(row.team_id, {
       side: row.pick === 'OVER' ? 'over' : 'under',
       confidence: row.confidence_points ?? 1,
+      lockedOuLine: row.locked_ou_line,
     });
   }
   return picksByUser;
@@ -65,12 +68,12 @@ export function computeStandings(
   for (const [uid, teamPicks] of picksByUser) {
     let total = 0;
     let clinchedCount = 0;
-    for (const [teamId, { side }] of teamPicks) {
+    for (const [teamId, { side, lockedOuLine }] of teamPicks) {
       const team = teamById.get(teamId);
       if (!team) {
         continue;
       }
-      const pts = scorePick(team, side);
+      const pts = scorePick(team, side, lockedOuLine);
       total += pts;
       if (pts === 1) {
         clinchedCount += 1;
@@ -121,12 +124,12 @@ export function computeConfidenceStandings(
   for (const [uid, teamPicks] of picksByUser) {
     let total = 0;
     let clinchedCount = 0;
-    for (const [teamId, { side, confidence }] of teamPicks) {
+    for (const [teamId, { side, confidence, lockedOuLine }] of teamPicks) {
       const team = teamById.get(teamId);
       if (!team) {
         continue;
       }
-      const pts = scoreConfidencePick(team, side, clampConfidence(confidence));
+      const pts = scoreConfidencePick(team, side, clampConfidence(confidence), lockedOuLine);
       total += pts;
       if (pts > 0) {
         clinchedCount += 1;
@@ -172,12 +175,12 @@ export function computeLeaderboard(
     let score = 0;
     let clinched = 0;
     if (teamPicks) {
-      for (const [teamId, { side }] of teamPicks) {
+      for (const [teamId, { side, lockedOuLine }] of teamPicks) {
         const team = teamById.get(teamId);
         if (!team) {
           continue;
         }
-        const pts = scorePick(team, side);
+        const pts = scorePick(team, side, lockedOuLine);
         score += pts;
         if (pts === 1) {
           clinched += 1;
@@ -260,12 +263,12 @@ export function computeConfidenceLeaderboard(
     let score = 0;
     let clinched = 0;
     if (teamPicks) {
-      for (const [teamId, { side, confidence }] of teamPicks) {
+      for (const [teamId, { side, confidence, lockedOuLine }] of teamPicks) {
         const team = teamById.get(teamId);
         if (!team) {
           continue;
         }
-        const pts = scoreConfidencePick(team, side, clampConfidence(confidence));
+        const pts = scoreConfidencePick(team, side, clampConfidence(confidence), lockedOuLine);
         score += pts;
         if (pts > 0) {
           clinched += 1;

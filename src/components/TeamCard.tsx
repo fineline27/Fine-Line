@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { lineHasMovedFromLock } from '../lib/ouLine';
 import { evaluatePick } from '../lib/pickScoring';
 import { formatRecord, formatWinPace, getTeamStatus } from '../lib/teamStatus';
 import type { PickSide, Team } from '../types/team';
@@ -15,9 +16,14 @@ type Props = {
   team: Team;
   pick?: PickSide;
   confidence?: ConfidencePoints;
+  lockedOuLine?: number;
   saving?: boolean;
   picksLocked?: boolean;
-  onPickChange: (teamId: string, side: PickSide) => void;
+  onPickChange: (
+    teamId: string,
+    side: PickSide,
+    options?: { acceptNewLine?: boolean },
+  ) => void | Promise<{ needsLineAcceptance?: boolean; teamId?: string; side?: PickSide }>;
   onConfidenceChange?: (teamId: string, points: ConfidencePoints) => void;
 };
 
@@ -25,15 +31,44 @@ export function TeamCard({
   team,
   pick,
   confidence = 1,
+  lockedOuLine,
   saving,
   picksLocked,
   onPickChange,
   onConfidenceChange,
 }: Props) {
   const status = getTeamStatus(team);
-  const pickEval = pick ? evaluatePick(team, pick) : null;
+  const pickEval = pick ? evaluatePick(team, pick, lockedOuLine) : null;
   const record = formatRecord(team.current_wins, team.current_losses);
   const gamesPlayed = team.current_wins + team.current_losses;
+  const lineMoved = pick != null && lineHasMovedFromLock(lockedOuLine, team);
+  const displayLine = lineMoved && lockedOuLine != null ? lockedOuLine : team.ou_line;
+
+  function requestPick(side: PickSide) {
+    if (picksLocked) {
+      return;
+    }
+
+    void (async () => {
+      const result = await onPickChange(team.id, side);
+      if (result?.needsLineAcceptance && result.teamId && result.side) {
+        Alert.alert(
+          'Line updated',
+          `${team.name} is now ${team.ou_line.toFixed(1)} wins (you locked ${lockedOuLine?.toFixed(1) ?? '—'}). Change your pick only if you accept the new line for scoring.`,
+          [
+            { text: 'Keep my pick', style: 'cancel' },
+            {
+              text: `Accept ${team.ou_line.toFixed(1)} & change`,
+              style: 'default',
+              onPress: () => {
+                void onPickChange(team.id, side, { acceptNewLine: true });
+              },
+            },
+          ],
+        );
+      }
+    })();
+  }
 
   return (
     <View style={styles.card}>
@@ -53,20 +88,36 @@ export function TeamCard({
       </View>
 
       <View style={styles.ouCenter}>
-        <Text style={styles.ouValue}>{team.ou_line.toFixed(1)}</Text>
-        <Text style={styles.ouLabel}>Season O/U</Text>
+        <Text style={styles.ouValue}>{displayLine.toFixed(1)}</Text>
+        <Text style={styles.ouLabel}>{lineMoved ? 'Your locked O/U' : 'Season O/U'}</Text>
+        {lineMoved ? (
+          <Text style={styles.ouMoved}>
+            Current line {team.ou_line.toFixed(1)} · pick early to lock a line; change pick only
+            after accepting the new number
+          </Text>
+        ) : pick ? (
+          <Text style={styles.ouLockedHint}>Locked at this line for your pick</Text>
+        ) : null}
       </View>
+
+      {lineMoved ? (
+        <Pressable
+          style={styles.acceptLineButton}
+          disabled={picksLocked || saving}
+          onPress={() => void onPickChange(team.id, pick!, { acceptNewLine: true })}
+        >
+          <Text style={styles.acceptLineText}>
+            Accept new line ({team.ou_line.toFixed(1)}) — keep {pick?.toUpperCase()}
+          </Text>
+        </Pressable>
+      ) : null}
 
       <View style={styles.badgeRow}>
         <StatusBadge status={status} />
         {pickEval ? <PickStatusBadge evaluation={pickEval} /> : null}
       </View>
 
-      <PickToggle
-        selected={pick}
-        disabled={picksLocked}
-        onSelect={(side) => onPickChange(team.id, side)}
-      />
+      <PickToggle selected={pick} disabled={picksLocked} onSelect={requestPick} />
       {pick && onConfidenceChange ? (
         <ConfidenceSelector
           value={confidence}
@@ -139,6 +190,38 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginTop: 6,
     textTransform: 'uppercase',
+  },
+  ouLockedHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 17,
+    paddingHorizontal: 8,
+  },
+  ouMoved: {
+    color: colors.statusAround,
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 17,
+    paddingHorizontal: 4,
+    fontWeight: '600',
+  },
+  acceptLineButton: {
+    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: colors.statusAroundBg,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.45)',
+  },
+  acceptLineText: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   badgeRow: {
     flexDirection: 'row',

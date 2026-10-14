@@ -37,13 +37,14 @@ export default function StandingsScreen() {
   const {
     picks,
     confidence,
+    lockedOuLines,
     togglePick,
     setTeamConfidence,
     loading: picksLoading,
     savingTeamId,
     error: picksError,
     refresh: refreshPicks,
-  } = usePredictions(seasonLocked);
+  } = usePredictions(seasonLocked, teams);
   const pickCount = Object.keys(picks).length;
   const requiredPicks = teams.length;
   const {
@@ -211,9 +212,10 @@ export default function StandingsScreen() {
               team={item}
               pick={picks[item.id]}
               confidence={confidence[item.id] ?? 1}
+              lockedOuLine={lockedOuLines[item.id]}
               saving={savingTeamId === item.id}
               picksLocked={seasonLocked}
-              onPickChange={(teamId, side) => void togglePick(teamId, side)}
+              onPickChange={(teamId, side, options) => togglePick(teamId, side, options)}
               onConfidenceChange={(teamId, pts) => void setTeamConfidence(teamId, pts)}
             />
           )}
@@ -248,7 +250,7 @@ export default function StandingsScreen() {
                 <Text style={styles.seasonLockBody}>
                   {seasonLocked
                     ? 'The first NBA games have started. Your O/U and bonus picks can no longer be changed.'
-                    : `One pick card for all your ${sport ?? 'NBA'} leagues. Classic and Stakes are separate overall formats — set a 1–3 stake per team for Stakes. You can change until the first game (${lockAtLabel}).`}
+                    : `One pick card for all your ${sport ?? 'NBA'} leagues. Each pick locks the O/U line at save time — if the line moves later, you keep your locked number until you change the pick (and accept the new line). Classic and Stakes share picks; set a 1–3 stake per team for Stakes. Edit until the first game (${lockAtLabel}).`}
                 </Text>
               </View>
               {seasonLocked ? (

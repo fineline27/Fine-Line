@@ -35,6 +35,7 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`10-signup-username-display-name.sql`](supabase/10-signup-username-display-name.sql) | Leaderboard name from sign-up username (in RUN-THIS) |
 | [`11-profile-delete-account.sql`](supabase/11-profile-delete-account.sql) | In-app **Delete account** on Profile screen |
 | [`12-confidence-picks.sql`](supabase/12-confidence-picks.sql) | **Stakes** overall format — 1–3 pt stake per team (win/lose stake) |
+| [`16-locked-pick-ou-line.sql`](supabase/16-locked-pick-ou-line.sql) | Lock each pick to the O/U line at save time; accept new line to change pick after moves |
 | [`13-unique-usernames.sql`](supabase/13-unique-usernames.sql) | Globally unique usernames (case-insensitive) at sign-up and profile |
 | [`14-fix-signup-database-error.sql`](supabase/14-fix-signup-database-error.sql) | **Run if sign-up shows “Database error saving new user”** |
 | [`15-unblock-signup-drop-username-trigger.sql`](supabase/15-unblock-signup-drop-username-trigger.sql) | **Fastest fix** — only removes the blocking auth trigger (2 lines) |

@@ -14,7 +14,7 @@ export const classicFormat = {
   title: 'Classic',
   tagline: 'Original overall & your league',
   bullets: [
-    'Same 30 season O/U picks (OVER or UNDER).',
+    'Same 30 season O/U picks (OVER or UNDER); each pick locks the line at save time.',
     '+1 point when your pick is right; 0 while the season is still open or if you’re wrong.',
     'Worldwide Classic rank; close scores tiebreak with bonus picks (MVP, champion, ROY).',
     'Private leagues score Classic only.',

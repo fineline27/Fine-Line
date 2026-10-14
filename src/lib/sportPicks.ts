@@ -59,12 +59,24 @@ function preferredLeagueIdForSport(
 export type SportPicksBundle = {
   picks: Record<string, PickSide>;
   confidence: Record<string, ConfidencePoints>;
+  lockedOuLines: Record<string, number>;
 };
+
+function parseLockedOuLine(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
 
 export async function fetchPredictionsForSport(sport: SportId): Promise<SportPicksBundle> {
   const leagueIds = await fetchMyLeagueIdsForSport(sport);
   if (leagueIds.length === 0) {
-    return { picks: {}, confidence: {} };
+    return { picks: {}, confidence: {}, lockedOuLines: {} };
   }
 
   const supabase = getSupabaseClient();
@@ -72,7 +84,7 @@ export async function fetchPredictionsForSport(sport: SportId): Promise<SportPic
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { picks: {}, confidence: {} };
+    return { picks: {}, confidence: {}, lockedOuLines: {} };
   }
 
   const { data: leagues } = await supabase
@@ -91,39 +103,57 @@ export async function fetchPredictionsForSport(sport: SportId): Promise<SportPic
     team_id: string;
     pick: string;
     confidence_points?: number;
+    locked_ou_line?: number | string | null;
   };
 
   const full = await supabase
     .from('team_predictions')
-    .select('league_id, team_id, pick, confidence_points')
+    .select('league_id, team_id, pick, confidence_points, locked_ou_line')
     .eq('user_id', user.id)
     .in('league_id', leagueIds);
 
   let rows: Row[] = full.data ?? [];
   let error = full.error;
 
-  if (error?.message?.includes('confidence_points')) {
+  if (error?.message?.includes('confidence_points') || error?.message?.includes('locked_ou_line')) {
     const fallback = await supabase
       .from('team_predictions')
-      .select('league_id, team_id, pick')
+      .select('league_id, team_id, pick, confidence_points')
       .eq('user_id', user.id)
       .in('league_id', leagueIds);
     rows = fallback.data ?? [];
     error = fallback.error;
+    if (error?.message?.includes('confidence_points')) {
+      const minimal = await supabase
+        .from('team_predictions')
+        .select('league_id, team_id, pick')
+        .eq('user_id', user.id)
+        .in('league_id', leagueIds);
+      rows = minimal.data ?? [];
+      error = minimal.error;
+    }
   }
 
   if (error) {
     throw error;
   }
 
-  const byTeam = new Map<string, { side: PickSide; confidence: ConfidencePoints }>();
+  const byTeam = new Map<
+    string,
+    { side: PickSide; confidence: ConfidencePoints; lockedOuLine?: number }
+  >();
 
   function applyRow(row: Row) {
     const side: PickSide = row.pick === 'OVER' ? 'over' : 'under';
     const confidence = clampConfidence(
       typeof row.confidence_points === 'number' ? row.confidence_points : 1,
     );
-    byTeam.set(row.team_id, { side, confidence });
+    const locked = parseLockedOuLine(row.locked_ou_line);
+    byTeam.set(row.team_id, {
+      side,
+      confidence,
+      lockedOuLine: locked ?? undefined,
+    });
   }
 
   for (const row of rows) {
@@ -139,17 +169,22 @@ export async function fetchPredictionsForSport(sport: SportId): Promise<SportPic
 
   const picks: Record<string, PickSide> = {};
   const confidence: Record<string, ConfidencePoints> = {};
-  for (const [teamId, { side, confidence: pts }] of byTeam) {
+  const lockedOuLines: Record<string, number> = {};
+  for (const [teamId, { side, confidence: pts, lockedOuLine }] of byTeam) {
     picks[teamId] = side;
     confidence[teamId] = pts;
+    if (lockedOuLine != null) {
+      lockedOuLines[teamId] = lockedOuLine;
+    }
   }
-  return { picks, confidence };
+  return { picks, confidence, lockedOuLines };
 }
 
 export async function syncPredictionsToAllSportLeagues(
   sport: SportId,
   picks: Record<string, PickSide>,
   confidence: Record<string, ConfidencePoints>,
+  lockedOuLines: Record<string, number> = {},
 ): Promise<void> {
   const leagueIds = await fetchMyLeagueIdsForSport(sport);
   if (leagueIds.length === 0) {
@@ -171,6 +206,7 @@ export async function syncPredictionsToAllSportLeagues(
       team_id: teamId,
       pick: toDbPick(side),
       confidence_points: clampConfidence(confidence[teamId] ?? 1),
+      ...(lockedOuLines[teamId] != null ? { locked_ou_line: lockedOuLines[teamId] } : {}),
     })),
   );
 
@@ -182,8 +218,8 @@ export async function syncPredictionsToAllSportLeagues(
     onConflict: 'league_id,user_id,team_id',
   });
 
-  if (error?.message?.includes('confidence_points')) {
-    const fallbackRows = rows.map(({ confidence_points: _c, ...rest }) => rest);
+  if (error?.message?.includes('confidence_points') || error?.message?.includes('locked_ou_line')) {
+    const fallbackRows = rows.map(({ confidence_points: _c, locked_ou_line: _l, ...rest }) => rest);
     ({ error } = await supabase.from('team_predictions').upsert(fallbackRows, {
       onConflict: 'league_id,user_id,team_id',
     }));
@@ -194,11 +230,16 @@ export async function syncPredictionsToAllSportLeagues(
   }
 }
 
+export type UpsertPickOptions = {
+  confidencePoints?: ConfidencePoints;
+  lockedOuLine: number;
+};
+
 export async function upsertPredictionForSport(
   sport: SportId,
   teamId: string,
   side: PickSide,
-  confidencePoints: ConfidencePoints = 1,
+  options: UpsertPickOptions,
 ): Promise<void> {
   const leagueIds = await fetchMyLeagueIdsForSport(sport);
   if (leagueIds.length === 0) {
@@ -213,21 +254,22 @@ export async function upsertPredictionForSport(
     throw new Error('Sign in to save picks.');
   }
 
-  const pts = clampConfidence(confidencePoints);
+  const pts = clampConfidence(options.confidencePoints ?? 1);
   const rows = leagueIds.map((leagueId) => ({
     league_id: leagueId,
     user_id: user.id,
     team_id: teamId,
     pick: toDbPick(side),
     confidence_points: pts,
+    locked_ou_line: options.lockedOuLine,
   }));
 
   let { error } = await supabase.from('team_predictions').upsert(rows, {
     onConflict: 'league_id,user_id,team_id',
   });
 
-  if (error?.message?.includes('confidence_points')) {
-    const fallbackRows = rows.map(({ confidence_points: _c, ...rest }) => rest);
+  if (error?.message?.includes('confidence_points') || error?.message?.includes('locked_ou_line')) {
+    const fallbackRows = rows.map(({ confidence_points: _c, locked_ou_line: _l, ...rest }) => rest);
     ({ error } = await supabase.from('team_predictions').upsert(fallbackRows, {
       onConflict: 'league_id,user_id,team_id',
     }));
@@ -243,8 +285,12 @@ export async function updateConfidenceForSport(
   teamId: string,
   side: PickSide,
   confidencePoints: ConfidencePoints,
+  lockedOuLine: number,
 ): Promise<void> {
-  await upsertPredictionForSport(sport, teamId, side, confidencePoints);
+  await upsertPredictionForSport(sport, teamId, side, {
+    confidencePoints,
+    lockedOuLine,
+  });
 }
 
 export async function deletePredictionForSport(sport: SportId, teamId: string): Promise<void> {

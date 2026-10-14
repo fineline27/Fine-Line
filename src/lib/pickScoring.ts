@@ -1,3 +1,4 @@
+import { teamForPickLine } from './ouLine';
 import { calculateWinPace } from './teamStatus';
 import type { PickSide, Team } from '../types/team';
 
@@ -26,38 +27,43 @@ export function underWinsAtEnd(wins: number, line: number): boolean {
   return wins < winsNeededForOver(line);
 }
 
-export function evaluatePick(team: Team, pick: PickSide): PickEvaluation {
-  const line = team.ou_line;
-  const { current_wins: wins } = team;
+export function evaluatePick(
+  team: Team,
+  pick: PickSide,
+  lockedOuLine?: number | null,
+): PickEvaluation {
+  const gradedTeam = teamForPickLine(team, lockedOuLine);
+  const line = gradedTeam.ou_line;
+  const { current_wins: wins } = gradedTeam;
   const overNeed = winsNeededForOver(line);
 
   if (pick === 'over') {
-    if (seasonComplete(team)) {
+    if (seasonComplete(gradedTeam)) {
       return overWinsAtEnd(wins, line) ? 'won' : 'lost';
     }
     if (wins >= overNeed) {
       return 'won';
     }
-    if (maxPossibleWins(team) < overNeed) {
+    if (maxPossibleWins(gradedTeam) < overNeed) {
       return 'lost';
     }
-    if (maxPossibleWins(team) < overNeed) {
+    if (maxPossibleWins(gradedTeam) < overNeed) {
       return 'lost';
     }
-    const pace = calculateWinPace(team);
+    const pace = calculateWinPace(gradedTeam);
     return pace >= line ? 'ahead' : 'behind';
   }
 
-  if (seasonComplete(team)) {
+  if (seasonComplete(gradedTeam)) {
     return underWinsAtEnd(wins, line) ? 'won' : 'lost';
   }
-  if (maxPossibleWins(team) < overNeed) {
+  if (maxPossibleWins(gradedTeam) < overNeed) {
     return 'won';
   }
   if (wins >= overNeed) {
     return 'lost';
   }
-  const pace = calculateWinPace(team);
+  const pace = calculateWinPace(gradedTeam);
   return pace <= line ? 'ahead' : 'behind';
 }
 
@@ -76,8 +82,8 @@ export function pickEvaluationLabel(state: PickEvaluation): string {
   }
 }
 
-export function scorePick(team: Team, pick: PickSide): number {
-  const result = evaluatePick(team, pick);
+export function scorePick(team: Team, pick: PickSide, lockedOuLine?: number | null): number {
+  const result = evaluatePick(team, pick, lockedOuLine);
   if (result === 'won') {
     return 1;
   }
@@ -88,9 +94,14 @@ export function scorePick(team: Team, pick: PickSide): number {
 }
 
 /** Stakes format: +stake if pick won, −stake if lost, 0 while still live. */
-export function scoreConfidencePick(team: Team, pick: PickSide, confidence: number): number {
+export function scoreConfidencePick(
+  team: Team,
+  pick: PickSide,
+  confidence: number,
+  lockedOuLine?: number | null,
+): number {
   const pts = Math.min(3, Math.max(1, Math.round(confidence)));
-  const result = evaluatePick(team, pick);
+  const result = evaluatePick(team, pick, lockedOuLine);
   if (result === 'won') {
     return pts;
   }

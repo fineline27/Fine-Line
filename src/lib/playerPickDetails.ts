@@ -2,6 +2,7 @@ import { dedupeBonusQuestions, findBonusAnswerForUser } from './bonusDedupe';
 import type { SportPredictionRow } from './predictions';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import { clampConfidence } from '../types/confidence';
+import { effectiveLockedOuLine } from './ouLine';
 import type { PickSide, Team } from '../types/team';
 
 export type PlayerOuPick = {
@@ -21,21 +22,27 @@ export function buildPlayerOuPicks(
   userId: string,
   teams: Team[],
   predictions: Array<
-    | { user_id: string; team_id: string; pick: 'OVER' | 'UNDER' }
+    | { user_id: string; team_id: string; pick: 'OVER' | 'UNDER'; locked_ou_line?: number | null }
     | SportPredictionRow
   >,
   includeConfidence = false,
 ): PlayerOuPick[] {
-  const byTeam = new Map<string, { pick: PickSide; confidence?: number }>();
+  const byTeam = new Map<
+    string,
+    { pick: PickSide; confidence?: number; lockedOuLine?: number | null }
+  >();
   for (const row of predictions) {
     if (row.user_id === userId) {
       const confidence =
         'confidence_points' in row && typeof row.confidence_points === 'number'
           ? clampConfidence(row.confidence_points)
           : undefined;
+      const lockedOuLine =
+        'locked_ou_line' in row ? (row.locked_ou_line ?? null) : undefined;
       byTeam.set(row.team_id, {
         pick: row.pick === 'OVER' ? 'over' : 'under',
         confidence,
+        lockedOuLine,
       });
     }
   }
@@ -47,7 +54,7 @@ export function buildPlayerOuPicks(
       const entry = byTeam.get(team.id)!;
       return {
         abbreviation: team.abbreviation,
-        ouLine: team.ou_line,
+        ouLine: effectiveLockedOuLine(entry.lockedOuLine, team),
         pick: entry.pick,
         confidence: includeConfidence ? (entry.confidence ?? 1) : undefined,
       };
