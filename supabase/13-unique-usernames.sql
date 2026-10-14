@@ -3,12 +3,28 @@
 create table if not exists public.usernames (
   user_id uuid primary key references auth.users (id) on delete cascade,
   username text not null,
-  username_norm text generated always as (lower(trim(username))) stored,
   created_at timestamptz not null default now(),
   constraint usernames_username_len check (char_length(trim(username)) between 3 and 24)
 );
 
-create unique index if not exists usernames_username_norm_key on public.usernames (username_norm);
+-- Repair partial runs (e.g. table created without username_norm).
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'usernames'
+      and column_name = 'username_norm'
+  ) then
+    alter table public.usernames drop column if exists username_norm;
+  end if;
+end $$;
+
+drop index if exists public.usernames_username_norm_key;
+
+create unique index if not exists usernames_lower_username_key
+  on public.usernames (lower(trim(username)));
 
 alter table public.usernames enable row level security;
 
@@ -26,7 +42,7 @@ as $$
       and not exists (
         select 1
         from public.usernames u
-        where u.username_norm = lower(trim(p_username))
+        where lower(trim(u.username)) = lower(trim(p_username))
           and (auth.uid() is null or u.user_id <> auth.uid())
       ),
     false
@@ -132,5 +148,18 @@ where coalesce(
     nullif(trim(u.raw_user_meta_data->>'display_name'), ''),
     nullif(split_part(u.email, '@', 1), '')
   ) is not null
+  and char_length(trim(coalesce(
+    nullif(trim(u.raw_user_meta_data->>'username'), ''),
+    nullif(trim(u.raw_user_meta_data->>'display_name'), ''),
+    nullif(split_part(u.email, '@', 1), '')
+  ))) between 3 and 24
   and not exists (select 1 from public.usernames un where un.user_id = u.id)
-on conflict (username_norm) do nothing;
+  and not exists (
+    select 1
+    from public.usernames un
+    where lower(trim(un.username)) = lower(trim(coalesce(
+      nullif(trim(u.raw_user_meta_data->>'username'), ''),
+      nullif(trim(u.raw_user_meta_data->>'display_name'), ''),
+      nullif(split_part(u.email, '@', 1), '')
+    )))
+  );
