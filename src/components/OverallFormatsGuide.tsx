@@ -23,10 +23,20 @@ function FormatBlock({
   accentBg: string;
   compact?: boolean;
 }) {
+  const isStakes = title === 'Stakes';
   const shown = compact ? bullets.slice(0, 2) : bullets;
   return (
-    <View style={[styles.block, { borderColor: accent, backgroundColor: accentBg }]}>
-      <Text style={[styles.blockTitle, { color: accent }]}>{title}</Text>
+    <View
+      style={[
+        styles.block,
+        { borderColor: accent, backgroundColor: accentBg },
+        isStakes && styles.blockStakes,
+      ]}
+    >
+      {isStakes ? <View style={styles.stakesStripe} /> : null}
+      <Text style={[styles.blockTitle, { color: accent }, isStakes && styles.blockTitleStakes]}>
+        {title}
+      </Text>
       <Text style={styles.blockTagline}>{tagline}</Text>
       {shown.map((line) => (
         <Text key={line} style={[styles.bullet, compact && styles.bulletCompact]}>
@@ -89,6 +99,23 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     padding: 12,
+    overflow: 'hidden',
+  },
+  blockStakes: {
+    borderWidth: 2,
+    paddingVertical: 14,
+  },
+  stakesStripe: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 5,
+    backgroundColor: formatColors.stakesStrong,
+  },
+  blockTitleStakes: {
+    fontSize: 17,
+    marginLeft: 4,
   },
   blockTitle: {
     fontSize: 16,

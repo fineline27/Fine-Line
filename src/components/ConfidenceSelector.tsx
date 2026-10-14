@@ -16,9 +16,14 @@ export function ConfidenceSelector({ value, disabled, onChange }: Props) {
   return (
     <View style={styles.wrap}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>Stakes format</Text>
-        <Text style={styles.hint}>Win +{value} · lose −{value}</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>Stakes</Text>
+        </View>
+        <Text style={styles.hint}>
+          Right +{value} · wrong −{value}
+        </Text>
       </View>
+      <Text style={styles.subhint}>Choose how many points this pick is worth on the Stakes board.</Text>
       <View style={styles.row}>
         {OPTIONS.map((pts) => {
           const selected = value === pts;
@@ -48,32 +53,41 @@ export function ConfidenceSelector({ value, disabled, onChange }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: formatColors.stakes,
+    padding: 12,
+    borderWidth: 2,
+    borderColor: formatColors.stakesBorder,
     backgroundColor: formatColors.stakesBg,
-    marginHorizontal: -4,
-    paddingHorizontal: 8,
-    paddingBottom: 4,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  label: {
-    color: formatColors.stakes,
+  badge: {
+    backgroundColor: formatColors.stakesStrong,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  badgeText: {
+    color: '#fff',
     fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.4,
+    fontWeight: '900',
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   hint: {
-    color: colors.textMuted,
+    color: formatColors.stakes,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  subhint: {
+    color: colors.textSecondary,
     fontSize: 11,
-    fontWeight: '600',
+    lineHeight: 15,
+    marginBottom: 10,
   },
   row: {
     flexDirection: 'row',
@@ -81,32 +95,32 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 11,
+    borderRadius: 10,
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 2,
   },
   segmentInactive: {
-    backgroundColor: colors.pickInactive,
-    borderColor: colors.border,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(248, 113, 113, 0.55)',
   },
   segmentActive: {
-    backgroundColor: 'rgba(239, 68, 68, 0.25)',
-    borderColor: formatColors.stakes,
+    backgroundColor: formatColors.stakesStrong,
+    borderColor: '#fca5a5',
   },
   segmentPressed: {
-    opacity: 0.85,
+    opacity: 0.88,
   },
   segmentDisabled: {
     opacity: 0.45,
   },
   segmentText: {
-    color: colors.textSecondary,
-    fontWeight: '800',
-    fontSize: 16,
+    color: formatColors.stakes,
+    fontWeight: '900',
+    fontSize: 18,
     fontVariant: ['tabular-nums'],
   },
   segmentTextActive: {
-    color: formatColors.stakes,
+    color: '#fff',
   },
 });

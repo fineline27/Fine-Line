@@ -25,7 +25,6 @@ import { usePredictions } from '../../hooks/usePredictions';
 import { useSeasonLock } from '../../hooks/useSeasonLock';
 import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
 import type { Team } from '../../types/team';
-import { getSupabaseProjectRef } from '../../lib/supabaseConfig';
 import { colors } from '../../theme/colors';
 
 export default function StandingsScreen() {
@@ -76,8 +75,6 @@ export default function StandingsScreen() {
     pickCount >= requiredPicks &&
     bonusAllAnswered;
   const showListLoader = loading || picksLoading || leagueLoading;
-  const supabaseProjectRef = getSupabaseProjectRef();
-
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
   }
@@ -138,7 +135,6 @@ export default function StandingsScreen() {
         picksSubmitted={picksSubmitted}
         bonusScore={leagueRank.bonusScore}
         overallBonusScore={overallRank.bonusScore}
-        supabaseProjectRef={supabaseProjectRef}
       />
 
       {picksError ? <Text style={styles.pickError}>{picksError}</Text> : null}

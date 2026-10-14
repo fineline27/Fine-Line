@@ -27,7 +27,6 @@ type Props = {
   picksSubmitted: boolean;
   bonusScore?: number;
   overallBonusScore?: number;
-  supabaseProjectRef: string | null;
 };
 
 function formatRank({ rank, totalPlayers, loading }: RankBlock): string {
@@ -54,7 +53,6 @@ export function LeagueHeader({
   picksSubmitted,
   bonusScore = 0,
   overallBonusScore = 0,
-  supabaseProjectRef,
 }: Props) {
   return (
     <View style={styles.container}>
@@ -135,30 +133,30 @@ export function LeagueHeader({
         </View>
       </View>
 
-      {teamCount > 0 ? (
-        <Text style={styles.teamCount}>{teamCount} teams loaded</Text>
-      ) : null}
-      {supabaseProjectRef ? (
-        <Text style={styles.projectRef}>Supabase: {supabaseProjectRef}</Text>
-      ) : null}
-      <Text style={styles.scoreLine}>
-        League (Classic): {myScore} pts · {bonusScore} bonus · {clinched} clinched · {pickCount}/
-        {teamCount || 30} picks
-        {picksSubmitted ? ' · locked in' : ''}
-      </Text>
-      {!overallStakes.loading ? (
-        <Text style={styles.stakesScoreLine}>
-          Stakes overall: {overallStakesScore} pts
-          {!overall.loading && overallBonusScore > 0
-            ? ` · Classic bonus tiebreak: ${overallBonusScore} pt${overallBonusScore === 1 ? '' : 's'}`
-            : ''}
+      <View style={styles.scorePanels}>
+        <View style={styles.classicPanel}>
+          <Text style={styles.classicPanelLabel}>Your league · Classic</Text>
+          <Text style={styles.classicPanelValue}>{myScore} pts</Text>
+          <Text style={styles.classicPanelMeta}>
+            {bonusScore} bonus · {clinched} clinched · {pickCount}/{teamCount || 30} picks
+            {picksSubmitted ? ' · submitted' : ''}
+          </Text>
+        </View>
+        <View style={styles.stakesPanel}>
+          <Text style={styles.stakesPanelLabel}>Stakes overall</Text>
+          {overallStakes.loading ? (
+            <ActivityIndicator color={formatColors.stakesStrong} size="small" style={styles.stakesSpinner} />
+          ) : (
+            <Text style={styles.stakesPanelValue}>{overallStakesScore} pts</Text>
+          )}
+          <Text style={styles.stakesPanelMeta}>Red stakes on each team card</Text>
+        </View>
+      </View>
+      {!picksSubmitted ? (
+        <Text style={styles.picksHint}>
+          Pick all teams, then set the red Stakes (1–3) on every card before you submit.
         </Text>
       ) : null}
-      <Text style={styles.picksHint}>
-        {picksSubmitted
-          ? 'Tap Classic or Stakes above for full leaderboards. Pull to refresh scores.'
-          : 'Pick all 30 teams, set red Stakes (1–3) on each card, then submit to open your league board.'}
-      </Text>
     </View>
   );
 }
@@ -243,7 +241,7 @@ const styles = StyleSheet.create({
   },
   rankCardStakes: {
     backgroundColor: formatColors.stakesBg,
-    borderColor: formatColors.stakes,
+    borderColor: formatColors.stakesBorder,
   },
   rankCardTitle: {
     fontWeight: '800',
@@ -253,7 +251,7 @@ const styles = StyleSheet.create({
     color: formatColors.classic,
   },
   rankCardTitleStakes: {
-    color: formatColors.stakes,
+    color: formatColors.stakesStrong,
   },
   rankCardHint: {
     color: colors.textMuted,
@@ -275,40 +273,79 @@ const styles = StyleSheet.create({
     color: formatColors.classic,
   },
   rankCardValueStakes: {
-    color: formatColors.stakes,
+    color: formatColors.stakesStrong,
   },
   spinner: {
     marginTop: 12,
     alignSelf: 'flex-start',
   },
-  teamCount: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 10,
+  scorePanels: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
   },
-  projectRef: {
-    color: colors.textMuted,
+  classicPanel: {
+    flex: 1,
+    backgroundColor: formatColors.classicBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: formatColors.classic,
+    padding: 12,
+  },
+  classicPanelLabel: {
+    color: formatColors.classic,
     fontSize: 11,
-    marginTop: 2,
-    fontFamily: 'monospace',
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  scoreLine: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginTop: 6,
-    fontWeight: '500',
-  },
-  stakesScoreLine: {
-    color: formatColors.stakes,
-    fontSize: 12,
+  classicPanelValue: {
+    color: formatColors.classic,
+    fontSize: 22,
+    fontWeight: '800',
     marginTop: 4,
+  },
+  classicPanelMeta: {
+    color: colors.textMuted,
+    fontSize: 10,
+    marginTop: 4,
+    lineHeight: 14,
+  },
+  stakesPanel: {
+    flex: 1,
+    backgroundColor: formatColors.stakesBg,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: formatColors.stakesBorder,
+    padding: 12,
+  },
+  stakesPanelLabel: {
+    color: formatColors.stakesStrong,
+    fontSize: 11,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  stakesPanelValue: {
+    color: formatColors.stakesStrong,
+    fontSize: 26,
+    fontWeight: '900',
+    marginTop: 2,
+  },
+  stakesPanelMeta: {
+    color: formatColors.stakes,
+    fontSize: 10,
     fontWeight: '700',
+    marginTop: 4,
+  },
+  stakesSpinner: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
   },
   picksHint: {
     color: colors.textMuted,
     fontSize: 12,
-    marginTop: 6,
+    marginTop: 10,
     lineHeight: 17,
   },
 });

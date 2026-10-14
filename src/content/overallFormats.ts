@@ -2,9 +2,11 @@ import { colors } from '../theme/colors';
 
 export const formatColors = {
   classic: colors.accent,
-  classicBg: 'rgba(59, 130, 246, 0.12)',
-  stakes: colors.statusNeedsWork,
-  stakesBg: colors.statusNeedsWorkBg,
+  classicBg: 'rgba(59, 130, 246, 0.14)',
+  stakes: '#f87171',
+  stakesStrong: '#ef4444',
+  stakesBg: 'rgba(239, 68, 68, 0.22)',
+  stakesBorder: '#ef4444',
 } as const;
 
 export const classicFormat = {
