@@ -67,7 +67,7 @@ export default function OverallLeaderboardScreen() {
   }
 
   if (!authLoading && !sportLoading && session && !sport) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/home" />;
   }
 
   const busy = teamsLoading || loading;

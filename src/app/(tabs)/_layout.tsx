@@ -15,6 +15,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: colors.textMuted,
       }}
     >
+      <Tabs.Screen name="home" options={{ title: 'Home' }} />
       <Tabs.Screen name="index" options={{ title: 'My picks' }} />
       <Tabs.Screen name="league" options={{ title: 'League' }} />
     </Tabs>

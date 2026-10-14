@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '../theme/colors';
 
-const HOME_HREF = '/select-sport' as Href;
+const HOME_HREF = '/home' as Href;
 const PICKS_HREF = '/' as Href;
 const PROFILE_HREF = '/profile' as Href;
 const LEAGUES_HREF = '/league-setup' as Href;
@@ -37,7 +37,11 @@ export function AppTopMenu({ active }: Props) {
             key={item.key}
             onPress={() => {
               if (!isActive) {
-                router.push(item.href);
+                if (item.key === 'home') {
+                  router.replace(item.href);
+                } else {
+                  router.push(item.href);
+                }
               }
             }}
             style={({ pressed }) => [styles.linkWrap, pressed && !isActive && styles.linkPressed]}
