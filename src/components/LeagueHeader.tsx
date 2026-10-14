@@ -110,6 +110,9 @@ export function LeagueHeader({
         </View>
 
         <View style={styles.headerLinks}>
+          <Pressable onPress={() => router.push('/select-sport')}>
+            <Text style={styles.link}>Home</Text>
+          </Pressable>
           <Pressable onPress={() => router.push(PROFILE_HREF)}>
             <Text style={styles.link}>Profile</Text>
           </Pressable>

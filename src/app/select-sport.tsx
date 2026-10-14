@@ -14,11 +14,11 @@ export default function SelectSportScreen() {
     return <Redirect href="/login" />;
   }
 
-  if (!sportLoading && sport) {
-    return <Redirect href="/" />;
-  }
-
   async function onSelectSport(id: (typeof SPORT_OPTIONS)[number]['id']) {
+    if (sport === id) {
+      router.replace('/');
+      return;
+    }
     await setSport(id);
     router.replace('/');
   }
@@ -34,6 +34,7 @@ export default function SelectSportScreen() {
 
       {SPORT_OPTIONS.map((option) => {
         const locked = !option.available;
+        const isCurrent = sport === option.id;
         return (
           <Pressable
             key={option.id}
@@ -45,7 +46,7 @@ export default function SelectSportScreen() {
             }}
             style={({ pressed }) => [
               styles.card,
-              option.id === 'NBA' && styles.cardActive,
+              isCurrent && styles.cardActive,
               locked && styles.cardLocked,
               pressed && option.available && styles.cardPressed,
             ]}
@@ -57,13 +58,19 @@ export default function SelectSportScreen() {
                   <Text style={styles.lockText}>Locked</Text>
                 </View>
               ) : (
-                <Text style={styles.selectHint}>Select</Text>
+                <Text style={styles.selectHint}>{isCurrent ? 'Continue' : 'Select'}</Text>
               )}
             </View>
             <Text style={[styles.cardDesc, locked && styles.textMuted]}>{option.description}</Text>
           </Pressable>
         );
       })}
+
+      {sport ? (
+        <Pressable onPress={() => router.replace('/')} style={styles.backToPicks}>
+          <Text style={styles.backToPicksText}>Back to My picks</Text>
+        </Pressable>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -151,5 +158,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
+  },
+  backToPicks: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  backToPicksText: {
+    color: colors.textSecondary,
+    fontWeight: '600',
+    fontSize: 15,
   },
 });

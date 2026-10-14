@@ -127,8 +127,8 @@ export default function LeagueSetupScreen() {
             </Text>
           </Pressable>
         ))}
-        <Pressable onPress={() => void clearSport().then(() => router.replace('/select-sport'))}>
-          <Text style={styles.changeSport}>Change sport</Text>
+        <Pressable onPress={() => router.replace('/select-sport')}>
+          <Text style={styles.changeSport}>Sport home</Text>
         </Pressable>
       </View>
 

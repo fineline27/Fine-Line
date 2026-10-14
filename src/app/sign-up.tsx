@@ -29,7 +29,7 @@ export default function SignUpScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!isLoading && session) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/" />;
   }
 
   async function onSubmit() {

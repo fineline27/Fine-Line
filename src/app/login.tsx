@@ -26,7 +26,7 @@ export default function LoginScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!isLoading && session) {
-    return <Redirect href="/select-sport" />;
+    return <Redirect href="/" />;
   }
 
   async function onSubmit() {
@@ -34,7 +34,7 @@ export default function LoginScreen() {
     setError(null);
     try {
       await signIn(email.trim(), password);
-      router.replace('/select-sport');
+      router.replace('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
