@@ -26,7 +26,7 @@ export default function LoginScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!isLoading && session) {
-    return <Redirect href="/" />;
+    return <Redirect href="/select-sport" />;
   }
 
   async function onSubmit() {

@@ -18,15 +18,16 @@ export default function SelectSportScreen() {
     return <Redirect href="/" />;
   }
 
-  async function onSelectNba() {
-    await setSport('NBA');
+  async function onSelectSport(id: (typeof SPORT_OPTIONS)[number]['id']) {
+    await setSport(id);
     router.replace('/');
   }
 
   return (
     <SafeAreaView style={styles.safe}>
       <Text style={styles.brand}>Fine Line</Text>
-      <Text style={styles.title}>Choose a sport</Text>
+      <Text style={styles.title}>Home</Text>
+      <Text style={styles.heading}>Choose a sport</Text>
       <Text style={styles.subtitle}>
         Pick a sport — you&apos;ll join the overall pool automatically. Friend leagues are optional later.
       </Text>
@@ -38,8 +39,8 @@ export default function SelectSportScreen() {
             key={option.id}
             disabled={locked}
             onPress={() => {
-              if (option.id === 'NBA') {
-                void onSelectNba();
+              if (option.available) {
+                void onSelectSport(option.id);
               }
             }}
             style={({ pressed }) => [
@@ -85,6 +86,12 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 28,
     fontWeight: '800',
+  },
+  heading: {
+    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 4,
   },
   subtitle: {
     color: colors.textSecondary,
