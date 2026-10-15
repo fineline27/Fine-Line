@@ -36,7 +36,7 @@ export function TeamRecordStrip({ team, style }: Props) {
         <Text style={styles.paceLabel}>{seasonStarted ? 'Win pace' : 'Projected wins'}</Text>
         <Text style={styles.paceValue}>{seasonStarted ? formatWinPace(team) : '—'}</Text>
         <Text style={styles.paceHint}>
-          {seasonStarted ? 'At current rate' : 'Updates after first game'}
+          {seasonStarted ? 'At current rate' : 'Updated weekly'}
         </Text>
       </View>
     </View>
