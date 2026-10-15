@@ -230,6 +230,7 @@ Open the URL printed (often `http://localhost:3000`). Click `/login`, `/privacy`
 | Blank page after deploy | Build failed | Vercel → Deployment → **Build logs** |
 | Old UI after push | Cache | Hard refresh; check latest deployment is **Production** |
 | Bonus / submit broken | Migrations | Run `05` and `06` SQL |
+| Search Console: verification file “wrong content” | SPA rewrite or edited file | Put Google's **downloaded** file in **`public/`** unchanged; deploy with latest `vercel.json` (serves `google*.html` as static). In browser, URL must show one verification line—not the app. Or use **HTML tag** + `EXPO_PUBLIC_GOOGLE_SITE_VERIFICATION` instead. |
 
 ---
 
@@ -256,7 +257,10 @@ The web build adds **`robots.txt`**, **`sitemap.xml`**, and SEO meta tags (title
 
 1. **Deploy** the latest code to Vercel (so `/robots.txt` and `/sitemap.xml` return text/XML, not the app shell).
 2. Open [Google Search Console](https://search.google.com/search-console) → **Add property** → **URL prefix** → `https://finelinesports.vercel.app`.
-3. **Verify ownership** — easiest is **DNS** (if you add a custom domain) or **HTML tag** / **Google Analytics**; for Vercel-only URLs, use the **HTML file** or **meta tag** method Search Console offers (add the tag in `inject-share-meta.mjs` or a one-off Vercel redirect if needed).
+3. **Verify ownership** (pick one method):
+   - **HTML file (recommended):** In Search Console, choose **HTML file** → **Download** the file (name like `googleXXXXXXXX.html`). Do **not** open and re-save it in a text editor. Put the **exact** downloaded file in the repo folder **`public/`**, commit, deploy. After deploy, open `https://finelinesports.vercel.app/googleXXXXXXXX.html` in the browser — you must see **one line** of plain text (`google-site-verification: google….html`), **not** the Fine Line app. If you see the app, the file is not being served (see troubleshooting below). Then click **Verify** in Search Console.
+   - **HTML meta tag:** Search Console → **HTML tag** → copy the `content="…"` token only. On Vercel add env **`EXPO_PUBLIC_GOOGLE_SITE_VERIFICATION`** = that token → **Redeploy**. Verify in Search Console.
+   - **DNS:** If you use a custom domain, add the TXT record Google gives you at your registrar.
 4. **Sitemaps** → submit `https://finelinesports.vercel.app/sitemap.xml`.
 5. **URL inspection** → paste `https://finelinesports.vercel.app/` → **Request indexing** (do the same for `/login` if you want).
 6. Wait **days to a few weeks** for first results. Ranking for competitive terms (e.g. “NBA picks”) takes content and links; you will show up sooner for **“Fine Line” + your domain** once indexed.
