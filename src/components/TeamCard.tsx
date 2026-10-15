@@ -275,20 +275,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   ouCenterLocked: {
-    backgroundColor: colors.statusAroundBg,
-    borderColor: 'rgba(234, 179, 8, 0.45)',
+    backgroundColor: colors.lineUpdateBg,
+    borderColor: colors.lineUpdateBorder,
   },
   lockBadgeRow: {
-    backgroundColor: colors.statusAroundBg,
+    backgroundColor: colors.lineUpdateBg,
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.45)',
+    borderColor: colors.lineUpdateBorder,
     marginBottom: 10,
   },
   lockBadgeText: {
-    color: colors.statusAround,
+    color: colors.lineUpdateStrong,
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 0.6,
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     color: '#f1f5f9',
   },
   lineColValueCurrentMoved: {
-    color: colors.statusAround,
+    color: colors.lineUpdate,
   },
   lineColEmpty: {
     color: colors.textMuted,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   ouMoved: {
-    color: colors.statusAround,
+    color: colors.lineUpdate,
     fontSize: 12,
     marginTop: 8,
     textAlign: 'center',
@@ -405,9 +405,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: colors.statusAroundBg,
+    backgroundColor: colors.lineUpdateBg,
     borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.45)',
+    borderColor: colors.lineUpdateBorder,
   },
   acceptLineText: {
     color: colors.textPrimary,

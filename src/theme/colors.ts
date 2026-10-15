@@ -11,6 +11,11 @@ export const colors = {
   statusOnTrackBg: 'rgba(34, 197, 94, 0.15)',
   statusAround: '#eab308',
   statusAroundBg: 'rgba(234, 179, 8, 0.15)',
+  /** Line moved / lock vs board — not Stakes (also yellow). */
+  lineUpdate: '#22d3ee',
+  lineUpdateStrong: '#06b6d4',
+  lineUpdateBg: 'rgba(34, 211, 238, 0.14)',
+  lineUpdateBorder: 'rgba(34, 211, 238, 0.45)',
   statusNeedsWork: '#ef4444',
   statusNeedsWorkBg: 'rgba(239, 68, 68, 0.15)',
   statusNotStarted: '#94a3b8',

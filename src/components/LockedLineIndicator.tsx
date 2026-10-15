@@ -79,12 +79,12 @@ const styles = StyleSheet.create({
     lineHeight: 60,
   },
   lockBadge: {
-    backgroundColor: colors.statusAroundBg,
+    backgroundColor: colors.lineUpdateBg,
     borderRadius: 4,
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.45)',
+    borderColor: colors.lineUpdateBorder,
     marginBottom: 2,
   },
   lockBadgeCompact: {
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   lockBadgeText: {
-    color: colors.statusAround,
+    color: colors.lineUpdateStrong,
     fontSize: 9,
     fontWeight: '900',
     letterSpacing: 0.4,

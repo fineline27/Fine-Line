@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   ouChipLocked: {
-    borderColor: 'rgba(234, 179, 8, 0.45)',
-    backgroundColor: colors.statusAroundBg,
+    borderColor: colors.lineUpdateBorder,
+    backgroundColor: colors.lineUpdateBg,
   },
   ouAbbr: {
     color: colors.textPrimary,

@@ -112,9 +112,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   secondary: {
-    backgroundColor: colors.statusAroundBg,
+    backgroundColor: colors.lineUpdateBg,
     borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.45)',
+    borderColor: colors.lineUpdateBorder,
   },
   secondaryText: {
     color: colors.textPrimary,

@@ -367,10 +367,10 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   offBoardLockBanner: {
-    backgroundColor: colors.statusAroundBg,
+    backgroundColor: colors.lineUpdateBg,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(234, 179, 8, 0.45)',
+    borderColor: colors.lineUpdateBorder,
     padding: 14,
     marginBottom: 12,
   },
