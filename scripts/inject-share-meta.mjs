@@ -16,6 +16,50 @@ function getSiteUrl() {
   return (fromEnv || DEFAULT_SITE_URL).replace(/\/$/, '');
 }
 
+function getGoogleSiteVerificationToken() {
+  return envFirst(
+    'EXPO_PUBLIC_GOOGLE_SITE_VERIFICATION',
+    'GOOGLE_SITE_VERIFICATION',
+  );
+}
+
+function envFirst(...keys) {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+  return '';
+}
+
+/** Warn if a Search Console HTML file in public/ was edited or misnamed. */
+function checkGoogleVerificationFiles(publicDir, distDir) {
+  if (!fs.existsSync(publicDir)) {
+    return;
+  }
+  for (const name of fs.readdirSync(publicDir)) {
+    if (!/^google[a-z0-9_-]+\.html$/i.test(name)) {
+      continue;
+    }
+    for (const dir of [publicDir, distDir]) {
+      const filePath = path.join(dir, name);
+      if (!fs.existsSync(filePath)) {
+        continue;
+      }
+      const body = fs.readFileSync(filePath, 'utf8').trim();
+      const expected = `google-site-verification: ${name}`;
+      if (body !== expected) {
+        console.warn(
+          `inject-share-meta: ${name} content does not match Google's download. Expected exactly:\n  ${expected}\nRe-download from Search Console and replace public/${name} without editing.`,
+        );
+      } else {
+        console.log(`inject-share-meta: OK ${name} (HTML file verification).`);
+      }
+    }
+  }
+}
+
 function escapeHtml(value) {
   return value
     .replace(/&/g, '&amp;')
@@ -66,6 +110,9 @@ const ogImageUrl = `${siteUrl}/og-image.jpg`;
 
 writeRobotsTxt(distDir, siteUrl);
 writeSitemapXml(distDir, siteUrl);
+checkGoogleVerificationFiles(path.join(process.cwd(), 'public'), distDir);
+
+const googleVerification = getGoogleSiteVerificationToken();
 
 let html = fs.readFileSync(indexPath, 'utf8');
 
@@ -75,6 +122,11 @@ const seoTags = [
   `<meta name="description" content="${escapeHtml(SITE_DESCRIPTION)}" />`,
   `<meta name="robots" content="index, follow" />`,
   `<link rel="canonical" href="${siteUrl}/" />`,
+  ...(googleVerification
+    ? [
+        `<meta name="google-site-verification" content="${escapeHtml(googleVerification)}" />`,
+      ]
+    : []),
   `<meta property="og:type" content="website" />`,
   `<meta property="og:site_name" content="${escapeHtml(SITE_NAME)}" />`,
   `<meta property="og:title" content="${escapeHtml(PAGE_TITLE)}" />`,
@@ -119,6 +171,10 @@ if (html.includes('property="og:image"')) {
   );
   html = html.replace(
     /<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/gi,
+    '',
+  );
+  html = html.replace(
+    /<meta name="google-site-verification"[^>]*\/>\s*/gi,
     '',
   );
 }
