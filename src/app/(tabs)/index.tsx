@@ -229,28 +229,21 @@ export default function StandingsScreen() {
           )}
           ListHeaderComponent={
             <>
-              <OverallFormatsGuide />
-              {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
-                <View style={styles.bonusMissing}>
-                  <Text style={styles.bonusMissingText}>
-                    {bonusSetupRequired
-                      ? bonusError ??
-                        'Bonus tiebreakers need a one-time Supabase setup. Run supabase/05-bonus-questions.sql then supabase/06-mandatory-bonus-questions.sql in the SQL Editor, then pull to refresh. You can still pick O/U and submit without bonus until then.'
-                      : 'Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql in the Supabase SQL Editor, then refresh.'}
-                  </Text>
-                </View>
-              ) : null}
-              {bonusQuestions.length > 0 ? (
-                <BonusPicksSection
-                  questions={bonusQuestions}
-                  answers={bonusAnswers}
-                  teamNames={teams.map((t) => t.name)}
-                  loading={bonusLoading}
-                  locked={seasonLocked}
-                  savingQuestionId={bonusSavingId}
-                  onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
-                />
-              ) : null}
+              <OverallFormatsGuide compact defaultExpanded={false} />
+              <CollapsiblePanel
+                title={seasonLocked ? 'Picks locked for the season' : countdownLabel}
+                hintCollapsed="Tap for how pick locking works"
+                hintExpanded="Tap to hide"
+                defaultExpanded={false}
+                wrapStyle={styles.seasonLockBanner}
+                toggleStyle={styles.seasonLockToggle}
+              >
+                <Text style={styles.seasonLockBody}>
+                  {seasonLocked
+                    ? 'The first NBA games have started. Your O/U and bonus picks can no longer be changed.'
+                    : `One pick card for all your ${sport ?? 'NBA'} leagues. Each pick locks the O/U line at save time — if the line moves later, you keep your locked number until you change the pick (and accept the new line). Classic and Stakes share picks; set a 1–3 stake per team for Stakes. Edit until the first game (${lockAtLabel}).`}
+                </Text>
+              </CollapsiblePanel>
               {lockedOffBoardCount > 0 ? (
                 <CollapsiblePanel
                   title={`${lockedOffBoardCount} pick${lockedOffBoardCount === 1 ? '' : 's'} with a locked line off the board`}
@@ -266,75 +259,86 @@ export default function StandingsScreen() {
                   </Text>
                 </CollapsiblePanel>
               ) : null}
-              <CollapsiblePanel
-                title={seasonLocked ? 'Picks locked for the season' : countdownLabel}
-                hintCollapsed="Tap for how pick locking works"
-                hintExpanded="Tap to hide"
-                defaultExpanded={false}
-                wrapStyle={styles.seasonLockBanner}
-                toggleStyle={styles.seasonLockToggle}
-              >
-                <Text style={styles.seasonLockBody}>
-                  {seasonLocked
-                    ? 'The first NBA games have started. Your O/U and bonus picks can no longer be changed.'
-                    : `One pick card for all your ${sport ?? 'NBA'} leagues. Each pick locks the O/U line at save time — if the line moves later, you keep your locked number until you change the pick (and accept the new line). Classic and Stakes share picks; set a 1–3 stake per team for Stakes. Edit until the first game (${lockAtLabel}).`}
-                </Text>
-              </CollapsiblePanel>
-              {seasonLocked ? (
-                <View style={styles.lockedBanner}>
-                  <Text style={styles.lockedText}>
-                    Season locked · view the League tab for standings
-                  </Text>
-                </View>
-              ) : !picksSubmitted ? (
-                <View style={styles.submitBanner}>
-                  <Text style={styles.submitTitle}>Finish your card</Text>
-                  <Text style={styles.submitBody}>
-                    Pick OVER or UNDER on every team ({pickCount}/{requiredPicks})
-                    {bonusSetupRequired
-                      ? ', then submit to open the league board (bonus tiebreakers unlock after Supabase setup above).'
-                      : ', answer the bonus tiebreakers, then submit to open the league board.'}
-                  </Text>
-                  <Pressable
-                    style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
-                    disabled={!canSubmit || submitting}
-                    onPress={() => void onSubmitPicks()}
-                  >
-                    {submitting ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text
-                        style={[
-                          styles.submitButtonText,
-                          canSubmit && styles.submitButtonTextActive,
-                        ]}
-                      >
-                        {canSubmit
-                          ? 'Submit picks'
-                          : pickCount < requiredPicks
-                            ? `${requiredPicks - pickCount} picks left`
-                            : !bonusAllAnswered
-                              ? 'Answer bonus tiebreakers'
-                              : 'Submit picks'}
-                      </Text>
-                    )}
-                  </Pressable>
-                </View>
-              ) : (
-                <View style={styles.lockedBanner}>
-                  <Text style={styles.lockedText}>
-                    Submitted · you can still edit until the first game ({countdownLabel})
-                  </Text>
-                </View>
-              )}
             </>
           }
           ListFooterComponent={
-            teams.length > 0 ? (
-              <Text style={styles.footerHint}>
-                End of list · {teams.length} teams · pull to refresh scores
-              </Text>
-            ) : null
+            <>
+              <View style={styles.listFooterBlock}>
+                {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
+                  <View style={styles.bonusMissing}>
+                    <Text style={styles.bonusMissingText}>
+                      {bonusSetupRequired
+                        ? bonusError ??
+                          'Bonus tiebreakers need a one-time Supabase setup. Run supabase/05-bonus-questions.sql then supabase/06-mandatory-bonus-questions.sql in the SQL Editor, then pull to refresh. You can still pick O/U and submit without bonus until then.'
+                        : 'Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql in the Supabase SQL Editor, then refresh.'}
+                    </Text>
+                  </View>
+                ) : null}
+                {bonusQuestions.length > 0 ? (
+                  <BonusPicksSection
+                    questions={bonusQuestions}
+                    answers={bonusAnswers}
+                    teamNames={teams.map((t) => t.name)}
+                    loading={bonusLoading}
+                    locked={seasonLocked}
+                    savingQuestionId={bonusSavingId}
+                    onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
+                  />
+                ) : null}
+                {seasonLocked ? (
+                  <View style={styles.lockedBanner}>
+                    <Text style={styles.lockedText}>
+                      Season locked · view the League tab for standings
+                    </Text>
+                  </View>
+                ) : !picksSubmitted ? (
+                  <View style={styles.submitBanner}>
+                    <Text style={styles.submitTitle}>Finish your card</Text>
+                    <Text style={styles.submitBody}>
+                      Pick OVER or UNDER on every team ({pickCount}/{requiredPicks})
+                      {bonusSetupRequired
+                        ? ', then submit to open the league board (bonus tiebreakers unlock after Supabase setup below).'
+                        : ', answer the bonus tiebreakers below, then submit to open the league board.'}
+                    </Text>
+                    <Pressable
+                      style={[styles.submitButton, !canSubmit && styles.submitButtonDisabled]}
+                      disabled={!canSubmit || submitting}
+                      onPress={() => void onSubmitPicks()}
+                    >
+                      {submitting ? (
+                        <ActivityIndicator color="#fff" />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.submitButtonText,
+                            canSubmit && styles.submitButtonTextActive,
+                          ]}
+                        >
+                          {canSubmit
+                            ? 'Submit picks'
+                            : pickCount < requiredPicks
+                              ? `${requiredPicks - pickCount} picks left`
+                              : !bonusAllAnswered
+                                ? 'Answer bonus tiebreakers'
+                                : 'Submit picks'}
+                        </Text>
+                      )}
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View style={styles.lockedBanner}>
+                    <Text style={styles.lockedText}>
+                      Submitted · you can still edit until the first game ({countdownLabel})
+                    </Text>
+                  </View>
+                )}
+              </View>
+              {teams.length > 0 ? (
+                <Text style={styles.footerHint}>
+                  End of list · {teams.length} teams · pull to refresh scores
+                </Text>
+              ) : null}
+            </>
           }
         />
       )}
@@ -360,6 +364,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 32,
+  },
+  listFooterBlock: {
+    marginTop: 8,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   bonusMissing: {
     backgroundColor: colors.statusNeedsWorkBg,

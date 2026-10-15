@@ -54,15 +54,15 @@ export function BonusPicksSection({
     questions.length === 0
       ? 'Tap to view tiebreakers'
       : allAnswered
-        ? `${answeredCount}/${questions.length} answered · tap to review`
-        : `${answeredCount}/${questions.length} answered · tap to finish`;
+        ? `${answeredCount}/${questions.length} answered · tap to open`
+        : `${answeredCount}/${questions.length} answered · tap to open picks`;
 
   return (
     <CollapsiblePanel
       title="Bonus tiebreakers"
       hintCollapsed={summary}
       hintExpanded="Tap to hide bonus picks"
-      defaultExpanded={!allAnswered && !locked}
+      defaultExpanded={false}
     >
       <Text style={styles.hint}>
         Choose from the list — type to search, then tap a name. MVP & ROY use current NBA players;
