@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/((?!_expo/|assets/|favicon.ico).*)",
+      "source": "/((?!_expo/|assets/|favicon.ico|og-image.jpg|robots.txt|sitemap.xml).*)",
       "destination": "/index.html"
     }
   ]
