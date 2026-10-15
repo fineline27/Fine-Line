@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pickRowLockedMe: {
-    backgroundColor: colors.statusAroundBg,
+    backgroundColor: colors.lineUpdateBg,
     marginHorizontal: -8,
     paddingHorizontal: 8,
     borderRadius: 8,
