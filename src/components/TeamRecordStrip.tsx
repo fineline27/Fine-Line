@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { formatRecord, formatWinPace } from '../lib/teamStatus';
 import type { Team } from '../types/team';
@@ -6,15 +6,16 @@ import { colors } from '../theme/colors';
 
 type Props = {
   team: Team;
+  style?: StyleProp<ViewStyle>;
 };
 
-export function TeamRecordStrip({ team }: Props) {
+export function TeamRecordStrip({ team, style }: Props) {
   const gamesPlayed = team.current_wins + team.current_losses;
   const seasonStarted = gamesPlayed > 0;
   const recordLabel = formatRecord(team.current_wins, team.current_losses);
 
   return (
-    <View style={styles.strip} accessibilityRole="summary">
+    <View style={[styles.strip, style]} accessibilityRole="summary">
       <View style={styles.mainBlock}>
         <Text style={styles.label}>Season record</Text>
         {seasonStarted ? (

@@ -324,7 +324,7 @@ export default function StandingsScreen() {
           ListFooterComponent={
             teams.length > 0 ? (
               <Text style={styles.footerHint}>
-                End of list · {teams.length} teams · pull to refresh scores
+                End of list · {teams.length} teams · pull to refresh season records & scores
               </Text>
             ) : null
           }

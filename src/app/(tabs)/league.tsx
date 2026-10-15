@@ -28,6 +28,7 @@ import {
   buildPlayerOuPicks,
 } from '../../lib/playerPickDetails';
 import { LockedLineIndicator } from '../../components/LockedLineIndicator';
+import { TeamRecordStrip } from '../../components/TeamRecordStrip';
 import { canDeleteLeague } from '../../lib/leagues';
 import { effectiveLockedOuLine, marketLineDiffersFromPickLock } from '../../lib/ouLine';
 import { isOpenPoolInviteCode } from '../../lib/openPool';
@@ -203,13 +204,15 @@ export default function LeagueBoardScreen() {
               }
             >
               <Text style={styles.listHint}>
-                Only members who submitted picks are shown. OVER / UNDER per team.
+                Season record and win pace appear on each team. Pull to refresh for latest W-L.
+                Only submitted members are listed below.
               </Text>
               {teamPicks.map(({ team, entries }) => (
                 <View key={team.id} style={styles.teamBlock}>
                   <Text style={styles.teamTitle}>
-                    {team.abbreviation} · Board O/U {team.ou_line.toFixed(1)}
+                    {team.name} · Board O/U {team.ou_line.toFixed(1)}
                   </Text>
+                  <TeamRecordStrip team={team} style={styles.teamRecordStrip} />
                   {entries.length === 0 ? (
                     <Text style={styles.emptyPicks}>No submitted picks yet</Text>
                   ) : (
@@ -442,6 +445,10 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 14,
     marginBottom: 8,
+  },
+  teamRecordStrip: {
+    marginTop: 0,
+    marginBottom: 10,
   },
   emptyPicks: {
     color: colors.textMuted,
