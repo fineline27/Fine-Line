@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { BonusQuestion } from '../types/bonus';
 import { NBA_PLAYER_OPTIONS } from '../lib/nbaPlayerOptions';
 import { colors } from '../theme/colors';
+import { CollapsiblePanel } from './CollapsiblePanel';
 import { SearchableSelect } from './SearchableSelect';
 
 type Props = {
@@ -40,17 +41,29 @@ export function BonusPicksSection({
 }: Props) {
   if (loading) {
     return (
-      <View style={styles.wrap}>
+      <View style={styles.loadingWrap}>
         <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
 
   const sortedTeams = [...teamNames].sort((a, b) => a.localeCompare(b));
+  const answeredCount = questions.filter((q) => (answers[q.id] ?? '').trim().length > 0).length;
+  const allAnswered = answeredCount === questions.length && questions.length > 0;
+  const summary =
+    questions.length === 0
+      ? 'Tap to view tiebreakers'
+      : allAnswered
+        ? `${answeredCount}/${questions.length} answered · tap to review`
+        : `${answeredCount}/${questions.length} answered · tap to finish`;
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.title}>Bonus tiebreakers</Text>
+    <CollapsiblePanel
+      title="Bonus tiebreakers"
+      hintCollapsed={summary}
+      hintExpanded="Tap to hide bonus picks"
+      defaultExpanded={!allAnswered && !locked}
+    >
       <Text style={styles.hint}>
         Choose from the list — type to search, then tap a name. MVP & ROY use current NBA players;
         champion uses all 30 teams. Worth 1 pt each when results are set (tiebreak only).
@@ -72,28 +85,23 @@ export function BonusPicksSection({
           ) : null}
         </View>
       ))}
-    </View>
+    </CollapsiblePanel>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  loadingWrap: {
     backgroundColor: colors.surfaceElevated,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
     marginBottom: 12,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontWeight: '800',
-    fontSize: 16,
+    alignItems: 'center',
   },
   hint: {
     color: colors.textMuted,
     fontSize: 12,
-    marginTop: 6,
     marginBottom: 12,
     lineHeight: 17,
   },

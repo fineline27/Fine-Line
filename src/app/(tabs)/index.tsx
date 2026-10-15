@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BonusPicksSection } from '../../components/BonusPicksSection';
+import { CollapsiblePanel } from '../../components/CollapsiblePanel';
 import { LeagueHeader } from '../../components/LeagueHeader';
 import { OverallFormatsGuide } from '../../components/OverallFormatsGuide';
 import { TeamCard } from '../../components/TeamCard';
@@ -251,27 +252,34 @@ export default function StandingsScreen() {
                 />
               ) : null}
               {lockedOffBoardCount > 0 ? (
-                <View style={styles.offBoardLockBanner}>
-                  <Text style={styles.offBoardLockTitle}>
-                    {lockedOffBoardCount} pick{lockedOffBoardCount === 1 ? '' : 's'} with a locked
-                    line different from the current line
-                  </Text>
+                <CollapsiblePanel
+                  title={`${lockedOffBoardCount} pick${lockedOffBoardCount === 1 ? '' : 's'} with a locked line off the board`}
+                  hintCollapsed="Tap for what the LOCK badge means"
+                  hintExpanded="Tap to hide"
+                  defaultExpanded={false}
+                  wrapStyle={styles.offBoardLockBanner}
+                  toggleStyle={styles.offBoardLockToggle}
+                >
                   <Text style={styles.offBoardLockBody}>
                     Those cards show a LOCK badge — you&apos;re graded at your locked line, not the
                     current line. League and overall views show the same when you expand picks.
                   </Text>
-                </View>
+                </CollapsiblePanel>
               ) : null}
-              <View style={styles.seasonLockBanner}>
-                <Text style={styles.seasonLockTitle}>
-                  {seasonLocked ? 'Picks locked for the season' : countdownLabel}
-                </Text>
+              <CollapsiblePanel
+                title={seasonLocked ? 'Picks locked for the season' : countdownLabel}
+                hintCollapsed="Tap for how pick locking works"
+                hintExpanded="Tap to hide"
+                defaultExpanded={false}
+                wrapStyle={styles.seasonLockBanner}
+                toggleStyle={styles.seasonLockToggle}
+              >
                 <Text style={styles.seasonLockBody}>
                   {seasonLocked
                     ? 'The first NBA games have started. Your O/U and bonus picks can no longer be changed.'
                     : `One pick card for all your ${sport ?? 'NBA'} leagues. Each pick locks the O/U line at save time — if the line moves later, you keep your locked number until you change the pick (and accept the new line). Classic and Stakes share picks; set a 1–3 stake per team for Stakes. Edit until the first game (${lockAtLabel}).`}
                 </Text>
-              </View>
+              </CollapsiblePanel>
               {seasonLocked ? (
                 <View style={styles.lockedBanner}>
                   <Text style={styles.lockedText}>
@@ -368,40 +376,26 @@ const styles = StyleSheet.create({
   },
   offBoardLockBanner: {
     backgroundColor: colors.lineUpdateBg,
-    borderRadius: 14,
-    borderWidth: 1,
     borderColor: colors.lineUpdateBorder,
-    padding: 14,
-    marginBottom: 12,
   },
-  offBoardLockTitle: {
-    color: colors.textPrimary,
-    fontWeight: '800',
-    fontSize: 14,
+  offBoardLockToggle: {
+    paddingVertical: 0,
   },
   offBoardLockBody: {
     color: colors.textSecondary,
     fontSize: 12,
-    marginTop: 6,
     lineHeight: 17,
   },
   seasonLockBanner: {
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    borderWidth: 1,
     borderColor: colors.accent,
-    padding: 14,
-    marginBottom: 12,
   },
-  seasonLockTitle: {
-    color: colors.textPrimary,
-    fontWeight: '800',
-    fontSize: 15,
+  seasonLockToggle: {
+    paddingVertical: 0,
   },
   seasonLockBody: {
     color: colors.textSecondary,
     fontSize: 13,
-    marginTop: 6,
     lineHeight: 18,
   },
   submitBanner: {
