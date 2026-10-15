@@ -12,6 +12,7 @@ type Props = {
   onKeepPick: () => void;
   onChangeKeepLock: () => void;
   onChangeAcceptNewLine: () => void;
+  onIgnoreForNow?: () => void;
 };
 
 export function PickLineChangeModal({
@@ -23,6 +24,7 @@ export function PickLineChangeModal({
   onKeepPick,
   onChangeKeepLock,
   onChangeAcceptNewLine,
+  onIgnoreForNow,
 }: Props) {
   const sideLabel = targetSide.toUpperCase();
 
@@ -51,6 +53,12 @@ export function PickLineChangeModal({
               Switch to {sideLabel} · lock {marketLine.toFixed(1)}
             </Text>
           </Pressable>
+
+          {onIgnoreForNow ? (
+            <Pressable style={[styles.button, styles.ignore]} onPress={onIgnoreForNow}>
+              <Text style={styles.ignoreText}>Keep my lock — ignore for now</Text>
+            </Pressable>
+          ) : null}
 
           <Pressable style={styles.cancel} onPress={onKeepPick}>
             <Text style={styles.cancelText}>Keep my current pick</Text>
@@ -110,6 +118,17 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     color: colors.textPrimary,
+    fontWeight: '700',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  ignore: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ignoreText: {
+    color: colors.textSecondary,
     fontWeight: '700',
     fontSize: 14,
     textAlign: 'center',

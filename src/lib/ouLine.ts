@@ -50,6 +50,22 @@ export function marketLineDiffersFromPickLock(
   return !ouLinesEqual(pickLock, team.ou_line);
 }
 
+/** Show the highlighted line-change offer (until user ignores this market line or acts). */
+export function shouldShowLineChangeOffer(
+  locked: number | null | undefined,
+  team: Team,
+  hasPick: boolean,
+  ignoredMarketLine: number | undefined,
+): boolean {
+  if (!marketLineDiffersFromPickLock(locked, team, hasPick)) {
+    return false;
+  }
+  if (ignoredMarketLine == null) {
+    return true;
+  }
+  return !ouLinesEqual(ignoredMarketLine, team.ou_line);
+}
+
 /** Team record with the O/U line used to grade this pick. */
 export function teamForPickLine(team: Team, lockedOuLine: number | null | undefined): Team {
   const line = effectiveLockedOuLine(lockedOuLine, team);

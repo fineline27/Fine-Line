@@ -28,6 +28,9 @@ type Props = {
     options?: { acceptNewLine?: boolean; retainLockedLine?: boolean },
   ) => Promise<TogglePickResult> | TogglePickResult;
   onConfidenceChange?: (teamId: string, points: ConfidencePoints) => void;
+  lineChangeOfferVisible?: boolean;
+  onDismissLineChangeOffer?: () => void;
+  onReopenLineChangeOffer?: () => void;
 };
 
 export function TeamCard({
@@ -39,7 +42,11 @@ export function TeamCard({
   picksLocked,
   onPickChange,
   onConfidenceChange,
+  lineChangeOfferVisible = false,
+  onDismissLineChangeOffer,
+  onReopenLineChangeOffer,
 }: Props) {
+  const [lineOptionsExpanded, setLineOptionsExpanded] = useState(false);
   const [lineChangePrompt, setLineChangePrompt] = useState<{
     side: PickSide;
     lockedLine: number;
@@ -53,6 +60,7 @@ export function TeamCard({
   const lineMoved = pick != null && marketLineDiffersFromPickLock(lockedOuLine, team, true);
   const gradedLine = pick != null ? effectiveLockedOuLine(lockedOuLine, team) : team.ou_line;
   const boardLine = team.ou_line;
+  const showLineChangeOffer = lineMoved && (lineChangeOfferVisible || lineOptionsExpanded);
 
   async function requestPick(side: PickSide) {
     if (picksLocked) {
@@ -88,6 +96,11 @@ export function TeamCard({
           setLineChangePrompt(null);
           void onPickChange(team.id, side, { acceptNewLine: true });
         }}
+        onIgnoreForNow={() => {
+          setLineChangePrompt(null);
+          setLineOptionsExpanded(false);
+          onDismissLineChangeOffer?.();
+        }}
       />
 
       <View style={styles.headerRow}>
@@ -105,10 +118,10 @@ export function TeamCard({
         </View>
       </View>
 
-      <View style={[styles.ouCenter, pick && lineMoved && styles.ouCenterLocked]}>
-        {lineMoved ? (
+      <View style={[styles.ouCenter, pick && showLineChangeOffer && styles.ouCenterLocked]}>
+        {showLineChangeOffer ? (
           <View style={styles.lockBadgeRow}>
-            <Text style={styles.lockBadgeText}>LOCK</Text>
+            <Text style={styles.lockBadgeText}>NEW LINE</Text>
           </View>
         ) : null}
         <View style={styles.dualLineRow}>
@@ -143,9 +156,13 @@ export function TeamCard({
           </View>
         </View>
         {pick ? (
-          lineMoved ? (
+          showLineChangeOffer ? (
             <Text style={styles.ouMoved}>
               Switch sides only after choosing to keep your locked line or accept the current line
+            </Text>
+          ) : lineMoved ? (
+            <Text style={styles.ouDismissedHint}>
+              Keeping your {gradedLine.toFixed(1)} lock — current line is {boardLine.toFixed(1)}.
             </Text>
           ) : (
             <Text style={styles.ouLockedHint}>
@@ -155,15 +172,41 @@ export function TeamCard({
         ) : null}
       </View>
 
-      {lineMoved ? (
+      {showLineChangeOffer ? (
+        <View style={styles.lineOfferActions}>
+          <Pressable
+            style={styles.acceptLineButton}
+            disabled={picksLocked || saving}
+            onPress={() => {
+              setLineOptionsExpanded(false);
+              void onPickChange(team.id, pick!, { acceptNewLine: true });
+            }}
+          >
+            <Text style={styles.acceptLineText}>
+              Accept current line ({team.ou_line.toFixed(1)}) — keep {pick?.toUpperCase()}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={styles.ignoreLineButton}
+            disabled={picksLocked || saving}
+            onPress={() => {
+              setLineOptionsExpanded(false);
+              onDismissLineChangeOffer?.();
+            }}
+          >
+            <Text style={styles.ignoreLineText}>Keep my lock — ignore for now</Text>
+          </Pressable>
+        </View>
+      ) : lineMoved ? (
         <Pressable
-          style={styles.acceptLineButton}
+          style={styles.reopenLineButton}
           disabled={picksLocked || saving}
-          onPress={() => void onPickChange(team.id, pick!, { acceptNewLine: true })}
+          onPress={() => {
+            setLineOptionsExpanded(true);
+            void onReopenLineChangeOffer?.();
+          }}
         >
-          <Text style={styles.acceptLineText}>
-            Accept new line ({team.ou_line.toFixed(1)}) — keep {pick?.toUpperCase()}
-          </Text>
+          <Text style={styles.reopenLineText}>Line update options</Text>
         </Pressable>
       ) : null}
 
@@ -346,8 +389,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     fontWeight: '600',
   },
-  acceptLineButton: {
+  ouDismissedHint: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 17,
+    paddingHorizontal: 8,
+  },
+  lineOfferActions: {
+    gap: 8,
     marginBottom: 10,
+  },
+  acceptLineButton: {
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 10,
@@ -360,6 +414,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  ignoreLineButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  ignoreLineText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  reopenLineButton: {
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  reopenLineText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '700',
   },
   badgeRow: {
     flexDirection: 'row',

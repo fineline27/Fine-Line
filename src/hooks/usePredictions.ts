@@ -3,11 +3,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSport } from '../contexts/SportContext';
 import type { SportId } from '../contexts/SportContext';
 import {
+  clearIgnoredMarketLine,
   clearStoredLockedOuLine,
+  loadIgnoredMarketLinesForTeams,
   mergeLockedOuLinesFromDevice,
+  writeIgnoredMarketLine,
   writeStoredLockedOuLine,
 } from '../lib/lockedOuLineStorage';
-import { marketLineDiffersFromPickLock } from '../lib/ouLine';
+import { marketLineDiffersFromPickLock, shouldShowLineChangeOffer } from '../lib/ouLine';
 import {
   deletePredictionForSport,
   fetchPredictionsForSport,
@@ -39,6 +42,7 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
   const [picks, setPicks] = useState<Record<string, PickSide>>({});
   const [confidence, setConfidence] = useState<Record<string, ConfidencePoints>>({});
   const [lockedOuLines, setLockedOuLines] = useState<Record<string, number>>({});
+  const [ignoredMarketLines, setIgnoredMarketLines] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [savingTeamId, setSavingTeamId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +62,7 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
       setPicks({});
       setConfidence({});
       setLockedOuLines({});
+      setIgnoredMarketLines({});
       setLoading(false);
       return;
     }
@@ -74,6 +79,8 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
       setPicks(data.picks);
       setConfidence(data.confidence);
       setLockedOuLines(mergedLocks);
+      const ignored = await loadIgnoredMarketLinesForTeams(sportId, Object.keys(data.picks));
+      setIgnoredMarketLines(ignored);
       await syncPredictionsToAllSportLeagues(
         sportId,
         data.picks,
@@ -85,6 +92,7 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
       setPicks({});
       setConfidence({});
       setLockedOuLines({});
+      setIgnoredMarketLines({});
     } finally {
       setLoading(false);
     }
@@ -138,12 +146,19 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
             lockedOuLine: team.ou_line,
           });
           await persistLock(teamId, team.ou_line);
+          await clearIgnoredMarketLine(sportId, teamId);
+          setIgnoredMarketLines((prev) => {
+            const next = { ...prev };
+            delete next[teamId];
+            return next;
+          });
           return { needsLineAcceptance: false };
         }
 
         if (current === side) {
           await deletePredictionForSport(sportId, teamId);
           await clearStoredLockedOuLine(sportId, teamId);
+          await clearIgnoredMarketLine(sportId, teamId);
           setPicks((prev) => {
             const next = { ...prev };
             delete next[teamId];
@@ -155,6 +170,11 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
             return next;
           });
           setLockedOuLines((prev) => {
+            const next = { ...prev };
+            delete next[teamId];
+            return next;
+          });
+          setIgnoredMarketLines((prev) => {
             const next = { ...prev };
             delete next[teamId];
             return next;
@@ -177,6 +197,14 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
             lockedOuLine: nextLock,
           });
           await persistLock(teamId, nextLock);
+          if (options?.acceptNewLine) {
+            await clearIgnoredMarketLine(sportId, teamId);
+            setIgnoredMarketLines((prev) => {
+              const next = { ...prev };
+              delete next[teamId];
+              return next;
+            });
+          }
           setPicks((prev) => ({ ...prev, [teamId]: side }));
           setConfidence((prev) => ({ ...prev, [teamId]: pts }));
         }
@@ -223,12 +251,55 @@ export function usePredictions(picksLocked: boolean, teams: Team[] = []) {
     [sport, sportId, picks, lockedOuLines, picksLocked, teamById],
   );
 
+  const isLineChangeOfferVisible = useCallback(
+    (teamId: string) => {
+      const team = teamById().get(teamId);
+      if (!team || !picks[teamId]) {
+        return false;
+      }
+      return shouldShowLineChangeOffer(
+        lockedOuLines[teamId],
+        team,
+        true,
+        ignoredMarketLines[teamId],
+      );
+    },
+    [teamById, picks, lockedOuLines, ignoredMarketLines],
+  );
+
+  const dismissLineChangeOffer = useCallback(
+    async (teamId: string) => {
+      const team = teamById().get(teamId);
+      if (!team) {
+        return;
+      }
+      await writeIgnoredMarketLine(sportId, teamId, team.ou_line);
+      setIgnoredMarketLines((prev) => ({ ...prev, [teamId]: team.ou_line }));
+    },
+    [sportId, teamById],
+  );
+
+  const reopenLineChangeOffer = useCallback(
+    async (teamId: string) => {
+      await clearIgnoredMarketLine(sportId, teamId);
+      setIgnoredMarketLines((prev) => {
+        const next = { ...prev };
+        delete next[teamId];
+        return next;
+      });
+    },
+    [sportId],
+  );
+
   return {
     picks,
     confidence,
     lockedOuLines,
     togglePick,
     setTeamConfidence,
+    isLineChangeOfferVisible,
+    dismissLineChangeOffer,
+    reopenLineChangeOffer,
     loading,
     savingTeamId,
     error,

@@ -24,7 +24,6 @@ import { useOverallConfidenceRank } from '../../hooks/useOverallConfidenceRank';
 import { useOverallRank } from '../../hooks/useOverallRank';
 import { usePredictions } from '../../hooks/usePredictions';
 import { useSeasonLock } from '../../hooks/useSeasonLock';
-import { marketLineDiffersFromPickLock } from '../../lib/ouLine';
 import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
 import type { Team } from '../../types/team';
 import { colors } from '../../theme/colors';
@@ -41,6 +40,9 @@ export default function StandingsScreen() {
     lockedOuLines,
     togglePick,
     setTeamConfidence,
+    isLineChangeOfferVisible,
+    dismissLineChangeOffer,
+    reopenLineChangeOffer,
     loading: picksLoading,
     savingTeamId,
     error: picksError,
@@ -77,11 +79,7 @@ export default function StandingsScreen() {
     requiredPicks > 0 &&
     pickCount >= requiredPicks &&
     bonusAllAnswered;
-  const lockedOffBoardCount = teams.filter(
-    (t) =>
-      picks[t.id] != null &&
-      marketLineDiffersFromPickLock(lockedOuLines[t.id], t, true),
-  ).length;
+  const lockedOffBoardCount = teams.filter((t) => isLineChangeOfferVisible(t.id)).length;
   const showListLoader = loading || picksLoading || leagueLoading;
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
@@ -223,6 +221,9 @@ export default function StandingsScreen() {
               picksLocked={seasonLocked}
               onPickChange={(teamId, side, options) => togglePick(teamId, side, options)}
               onConfidenceChange={(teamId, pts) => void setTeamConfidence(teamId, pts)}
+              lineChangeOfferVisible={isLineChangeOfferVisible(item.id)}
+              onDismissLineChangeOffer={() => void dismissLineChangeOffer(item.id)}
+              onReopenLineChangeOffer={() => void reopenLineChangeOffer(item.id)}
             />
           )}
           ListHeaderComponent={
