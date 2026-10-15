@@ -14,6 +14,8 @@ type Props = {
   locked: boolean;
   savingQuestionId: string | null;
   onChangeAnswer: (questionId: string, value: string) => void;
+  /** Tighter layout when pinned to the bottom of the screen */
+  docked?: boolean;
 };
 
 function optionsForQuestion(q: BonusQuestion, teamNames: string[]): string[] {
@@ -38,6 +40,7 @@ export function BonusPicksSection({
   locked,
   savingQuestionId,
   onChangeAnswer,
+  docked = false,
 }: Props) {
   if (loading) {
     return (
@@ -63,6 +66,8 @@ export function BonusPicksSection({
       hintCollapsed={summary}
       hintExpanded="Tap to hide bonus picks"
       defaultExpanded={false}
+      wrapStyle={docked ? styles.dockedWrap : undefined}
+      expandedBodyMaxHeight={docked ? 320 : undefined}
     >
       <Text style={styles.hint}>
         Choose from the list — type to search, then tap a name. MVP & ROY use current NBA players;
@@ -90,6 +95,9 @@ export function BonusPicksSection({
 }
 
 const styles = StyleSheet.create({
+  dockedWrap: {
+    marginBottom: 0,
+  },
   loadingWrap: {
     backgroundColor: colors.surfaceElevated,
     borderRadius: 14,

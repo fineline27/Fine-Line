@@ -1,5 +1,13 @@
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { colors } from '../theme/colors';
 
@@ -11,6 +19,8 @@ type Props = {
   children: ReactNode;
   wrapStyle?: StyleProp<ViewStyle>;
   toggleStyle?: StyleProp<ViewStyle>;
+  /** When set, expanded content scrolls inside this max height (for bottom docks). */
+  expandedBodyMaxHeight?: number;
 };
 
 export function CollapsiblePanel({
@@ -21,6 +31,7 @@ export function CollapsiblePanel({
   children,
   wrapStyle,
   toggleStyle,
+  expandedBodyMaxHeight,
 }: Props) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
@@ -38,7 +49,20 @@ export function CollapsiblePanel({
         </View>
         <Text style={styles.chevron}>{expanded ? '▾' : '▸'}</Text>
       </Pressable>
-      {expanded ? <View style={styles.body}>{children}</View> : null}
+      {expanded ? (
+        expandedBodyMaxHeight != null ? (
+          <ScrollView
+            style={{ maxHeight: expandedBodyMaxHeight }}
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator
+          >
+            <View style={styles.body}>{children}</View>
+          </ScrollView>
+        ) : (
+          <View style={styles.body}>{children}</View>
+        )
+      ) : null}
     </View>
   );
 }
