@@ -55,5 +55,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     legalContactEmail: envFirst('EXPO_PUBLIC_LEGAL_CONTACT_EMAIL', 'LEGAL_CONTACT_EMAIL'),
     siteUrl: envFirst('EXPO_PUBLIC_SITE_URL', 'SITE_URL'),
     nbaSeasonLockIso: envFirst('EXPO_PUBLIC_NBA_SEASON_LOCK_ISO', 'NBA_SEASON_LOCK_ISO'),
+    maintenanceMode: envFirst('EXPO_PUBLIC_MAINTENANCE_MODE', 'MAINTENANCE_MODE'),
+    maintenanceMessage: envFirst('EXPO_PUBLIC_MAINTENANCE_MESSAGE', 'MAINTENANCE_MESSAGE'),
   },
 });
