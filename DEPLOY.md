@@ -131,7 +131,7 @@ In the same screen (or **Settings** → **Environment Variables**), add for **Pr
 |------|------------------|
 | `EXPO_PUBLIC_SUPABASE_URL` | `https://zayzjewfbcoovhtpdtgo.supabase.co` |
 | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` from Supabase API settings |
-| `EXPO_PUBLIC_LEGAL_CONTACT_EMAIL` | `you@yourdomain.com` (shown on Privacy/Terms; privacy requests) |
+| `EXPO_PUBLIC_LEGAL_CONTACT_EMAIL` | `finelinesport@gmail.com` (shown on Privacy/Terms; privacy requests; optional — app defaults to this) |
 
 Optional duplicates (same values; `app.config.ts` reads these too):
 
@@ -251,7 +251,7 @@ Web go-live does **not** require mobile stores. For native apps later, use [EAS 
 ```env
 EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-EXPO_PUBLIC_LEGAL_CONTACT_EMAIL=you@example.com
+EXPO_PUBLIC_LEGAL_CONTACT_EMAIL=finelinesport@gmail.com
 ```
 
 Local `.env` uses the same names; restart Expo after changes. Vercel uses them at deploy/build time only.
