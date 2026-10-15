@@ -38,7 +38,7 @@ export function AuthLandingHero() {
             <View style={styles.demoOuCircle}>
               <Text style={styles.demoOuCircleText}>O/U</Text>
             </View>
-            <Text style={styles.demoOuValue}>62.5</Text>
+            <Text style={styles.demoOuValue}>61.5</Text>
           </View>
         </View>
         <View style={styles.demoPills}>
