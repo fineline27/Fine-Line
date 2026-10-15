@@ -252,13 +252,12 @@ export default function StandingsScreen() {
               {lockedOffBoardCount > 0 ? (
                 <View style={styles.offBoardLockBanner}>
                   <Text style={styles.offBoardLockTitle}>
-                    {lockedOffBoardCount} pick{lockedOffBoardCount === 1 ? '' : 's'} locked off the
-                    current board line
+                    {lockedOffBoardCount} pick{lockedOffBoardCount === 1 ? '' : 's'} with a locked
+                    line different from the current line
                   </Text>
                   <Text style={styles.offBoardLockBody}>
-                    Those teams show a LOCK badge on your card — you&apos;re graded at your saved line,
-                    not today&apos;s board number. League and overall views show the same when you
-                    expand picks.
+                    Those cards show a LOCK badge — you&apos;re graded at your locked line, not the
+                    current line. League and overall views show the same when you expand picks.
                   </Text>
                 </View>
               ) : null}

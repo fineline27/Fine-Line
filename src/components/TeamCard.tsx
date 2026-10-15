@@ -112,10 +112,14 @@ export function TeamCard({
           </View>
         ) : null}
         <View style={styles.dualLineRow}>
-          <View style={styles.lineCol}>
-            <Text style={styles.lineColLabel}>Your lock</Text>
+          <View style={[styles.lineCol, styles.lineColLocked]}>
+            <Text style={[styles.lineColLabel, styles.lineColLabelLocked]}>
+              Your locked line
+            </Text>
             {pick ? (
-              <Text style={styles.lineColValue}>{gradedLine.toFixed(1)}</Text>
+              <Text style={[styles.lineColValue, styles.lineColValueLocked]}>
+                {gradedLine.toFixed(1)}
+              </Text>
             ) : (
               <Text style={styles.lineColEmpty}>—</Text>
             )}
@@ -123,24 +127,30 @@ export function TeamCard({
               {pick ? 'Used for scoring' : 'Pick OVER or UNDER to lock'}
             </Text>
           </View>
-          <View style={styles.lineColDivider} />
-          <View style={styles.lineCol}>
-            <Text style={styles.lineColLabel}>Current board</Text>
+          <View style={styles.lineColGap} />
+          <View style={[styles.lineCol, styles.lineColCurrent]}>
+            <Text style={[styles.lineColLabel, styles.lineColLabelCurrent]}>Current line</Text>
             <Text
-              style={[styles.lineColValue, pick && lineMoved && styles.lineColValueBoardMoved]}
+              style={[
+                styles.lineColValue,
+                styles.lineColValueCurrent,
+                pick && lineMoved && styles.lineColValueCurrentMoved,
+              ]}
             >
               {boardLine.toFixed(1)}
             </Text>
-            <Text style={styles.lineColHint}>Today&apos;s O/U</Text>
+            <Text style={styles.lineColHint}>Live season O/U</Text>
           </View>
         </View>
         {pick ? (
           lineMoved ? (
             <Text style={styles.ouMoved}>
-              Switch sides only after choosing to keep your lock or accept the board line
+              Switch sides only after choosing to keep your locked line or accept the current line
             </Text>
           ) : (
-            <Text style={styles.ouLockedHint}>Your lock matches the current board line</Text>
+            <Text style={styles.ouLockedHint}>
+              Your locked line matches the current line
+            </Text>
           )
         ) : null}
       </View>
@@ -248,29 +258,47 @@ const styles = StyleSheet.create({
   lineCol: {
     flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  lineColDivider: {
-    width: 1,
-    backgroundColor: colors.border,
-    marginVertical: 4,
+  lineColLocked: {
+    backgroundColor: 'rgba(59, 130, 246, 0.14)',
+    borderColor: 'rgba(96, 165, 250, 0.45)',
+  },
+  lineColCurrent: {
+    backgroundColor: 'rgba(148, 163, 184, 0.12)',
+    borderColor: 'rgba(148, 163, 184, 0.35)',
+  },
+  lineColGap: {
+    width: 10,
   },
   lineColLabel: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  lineColLabelLocked: {
+    color: '#93c5fd',
+  },
+  lineColLabelCurrent: {
+    color: '#cbd5e1',
   },
   lineColValue: {
-    color: colors.textPrimary,
     fontSize: 44,
     fontWeight: '800',
     letterSpacing: -1,
     lineHeight: 48,
     marginTop: 6,
   },
-  lineColValueBoardMoved: {
+  lineColValueLocked: {
+    color: '#60a5fa',
+  },
+  lineColValueCurrent: {
+    color: '#f1f5f9',
+  },
+  lineColValueCurrentMoved: {
     color: colors.statusAround,
   },
   lineColEmpty: {

@@ -53,7 +53,7 @@ export function LockedLineIndicator({
           prominent && styles.marketLineProminent,
         ]}
       >
-        Board {marketLine.toFixed(1)}
+        Current {marketLine.toFixed(1)}
       </Text>
     </View>
   );
