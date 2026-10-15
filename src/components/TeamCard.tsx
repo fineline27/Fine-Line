@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { effectiveLockedOuLine, marketLineDiffersFromPickLock } from '../lib/ouLine';
 import { evaluatePick } from '../lib/pickScoring';
-import { formatRecord, formatWinPace, getTeamStatus } from '../lib/teamStatus';
+import { getTeamStatus } from '../lib/teamStatus';
 import type { PickSide, Team } from '../types/team';
 import { colors } from '../theme/colors';
 import type { ConfidencePoints } from '../types/confidence';
@@ -14,6 +14,7 @@ import { PickStatusBadge } from './PickStatusBadge';
 import { PickToggle } from './PickToggle';
 import { StatusBadge } from './StatusBadge';
 import { TeamColorBadge } from './TeamColorBadge';
+import { TeamRecordStrip } from './TeamRecordStrip';
 
 type Props = {
   team: Team;
@@ -55,8 +56,6 @@ export function TeamCard({
 
   const status = getTeamStatus(team);
   const pickEval = pick ? evaluatePick(team, pick, lockedOuLine) : null;
-  const record = formatRecord(team.current_wins, team.current_losses);
-  const gamesPlayed = team.current_wins + team.current_losses;
   const lineMoved = pick != null && marketLineDiffersFromPickLock(lockedOuLine, team, true);
   const gradedLine = pick != null ? effectiveLockedOuLine(lockedOuLine, team) : team.ou_line;
   const boardLine = team.ou_line;
@@ -107,16 +106,10 @@ export function TeamCard({
         <TeamColorBadge abbreviation={team.abbreviation} primaryColor={team.primary_color} />
         <View style={styles.nameBlock}>
           <Text style={styles.name}>{team.name}</Text>
-          <Text style={styles.record}>
-            {record}
-            {gamesPlayed > 0 ? (
-              <Text style={styles.recordMeta}> · Win pace {formatWinPace(team)}</Text>
-            ) : (
-              <Text style={styles.recordMeta}> · Season not started</Text>
-            )}
-          </Text>
         </View>
       </View>
+
+      <TeamRecordStrip team={team} />
 
       <View style={[styles.ouCenter, pick && showLineChangeOffer && styles.ouCenterLocked]}>
         {showLineChangeOffer ? (
@@ -251,16 +244,6 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 17,
     fontWeight: '700',
-  },
-  record: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  recordMeta: {
-    color: colors.textMuted,
-    fontWeight: '500',
   },
   ouCenter: {
     alignItems: 'center',
