@@ -36,6 +36,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     favicon: './assets/favicon.png',
     bundler: 'metro',
+    description:
+      'Season-long NBA win-total picks. Free to play — predict OVER/UNDER for all 30 teams and compete with mates.',
+    themeColor: '#0b0f14',
+    backgroundColor: '#0b0f14',
   },
   plugins: ['expo-router'],
   experiments: {
