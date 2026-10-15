@@ -76,6 +76,8 @@ Do **not** put the **service role** or **secret** key in the web app or Vercel �
 
 3. **Email confirmation landing page:** In Vercel env, set **`EXPO_PUBLIC_SITE_URL`** to `https://YOUR-PRODUCTION-DOMAIN.vercel.app` (no trailing slash). Redeploy. New sign-ups then get a link to **`/auth/callback`** with a green “Email confirmed” screen.
 
+4. **Link previews (iMessage, Slack, etc.):** Sharing the site uses **Open Graph** metadata baked into `dist/index.html` at build time, plus **`public/og-image.jpg`**. This is **not** tied to having a custom domain — a `*.vercel.app` URL works the same. If previews still show an old blurry icon after deploy, wait a few minutes or paste the link again (apps cache previews). Set **`EXPO_PUBLIC_SITE_URL`** to your live hostname so `og:image` uses the correct absolute URL. Replace **`public/og-image.jpg`** anytime you want a new share card image (recommended size **1200×630**).
+
    Replace `YOUR-PRODUCTION-DOMAIN` with your actual Vercel project hostname. The wildcard line helps **preview deployments**.
 
 If login works on localhost but **not** on Vercel, 99% of the time this list is wrong or missing the exact hostname.
