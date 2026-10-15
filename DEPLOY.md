@@ -248,6 +248,23 @@ Web go-live does **not** require mobile stores. For native apps later, use [EAS 
 
 ---
 
+## Part J — Google Search (findable on Google)
+
+The web build adds **`robots.txt`**, **`sitemap.xml`**, and SEO meta tags (title, description, canonical, JSON-LD) via `npm run build:web` → `scripts/inject-share-meta.mjs`. Set **`EXPO_PUBLIC_SITE_URL`** to your live origin (e.g. `https://finelinesports.vercel.app`) before deploy so the sitemap and canonical URLs match.
+
+**You still need to request indexing** — Google does not list new sites automatically.
+
+1. **Deploy** the latest code to Vercel (so `/robots.txt` and `/sitemap.xml` return text/XML, not the app shell).
+2. Open [Google Search Console](https://search.google.com/search-console) → **Add property** → **URL prefix** → `https://finelinesports.vercel.app`.
+3. **Verify ownership** — easiest is **DNS** (if you add a custom domain) or **HTML tag** / **Google Analytics**; for Vercel-only URLs, use the **HTML file** or **meta tag** method Search Console offers (add the tag in `inject-share-meta.mjs` or a one-off Vercel redirect if needed).
+4. **Sitemaps** → submit `https://finelinesports.vercel.app/sitemap.xml`.
+5. **URL inspection** → paste `https://finelinesports.vercel.app/` → **Request indexing** (do the same for `/login` if you want).
+6. Wait **days to a few weeks** for first results. Ranking for competitive terms (e.g. “NBA picks”) takes content and links; you will show up sooner for **“Fine Line” + your domain** once indexed.
+
+**Help ranking:** link to the site from social bios, Reddit posts, league group chats; keep **`/privacy`** and **`/terms`** live (trust signals). Optional later: a custom domain and a short “About” blurb on the login page with plain HTML text (Google reads JS, but clear copy still helps).
+
+---
+
 ## Quick reference — env vars
 
 ```env
