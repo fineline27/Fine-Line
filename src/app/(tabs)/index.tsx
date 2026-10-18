@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -10,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BonusPicksSection } from '../../components/BonusPicksSection';
+import { BonusPickCard } from '../../components/BonusPickCard';
 import { CollapsiblePanel } from '../../components/CollapsiblePanel';
 import { LeagueHeader } from '../../components/LeagueHeader';
 import { OverallFormatsGuide } from '../../components/OverallFormatsGuide';
@@ -26,8 +27,15 @@ import { useOverallRank } from '../../hooks/useOverallRank';
 import { usePredictions } from '../../hooks/usePredictions';
 import { useSeasonLock } from '../../hooks/useSeasonLock';
 import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
+import type { BonusQuestion } from '../../types/bonus';
 import type { Team } from '../../types/team';
 import { colors } from '../../theme/colors';
+
+type PicksListRow =
+  | { key: string; type: 'team'; team: Team }
+  | { key: string; type: 'bonus-label' }
+  | { key: string; type: 'bonus-loading' }
+  | { key: string; type: 'bonus'; question: BonusQuestion };
 
 export default function StandingsScreen() {
   const { session, isLoading: authLoading } = useAuth();
@@ -82,6 +90,24 @@ export default function StandingsScreen() {
     bonusAllAnswered;
   const lockedOffBoardCount = teams.filter((t) => isLineChangeOfferVisible(t.id)).length;
   const showListLoader = loading || picksLoading || leagueLoading;
+  const pickRows = useMemo((): PicksListRow[] => {
+    const rows: PicksListRow[] = teams.map((team) => ({
+      key: team.id,
+      type: 'team',
+      team,
+    }));
+    if (bonusLoading && teams.length > 0) {
+      rows.push({ key: 'bonus-loading', type: 'bonus-loading' });
+      return rows;
+    }
+    if (bonusQuestions.length > 0) {
+      rows.push({ key: 'bonus-label', type: 'bonus-label' });
+      for (const question of bonusQuestions) {
+        rows.push({ key: question.id, type: 'bonus', question });
+      }
+    }
+    return rows;
+  }, [teams, bonusQuestions, bonusLoading]);
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
   }
@@ -199,10 +225,10 @@ export default function StandingsScreen() {
           </Text>
         </View>
       ) : (
-        <FlatList<Team>
+        <FlatList<PicksListRow>
           style={styles.list}
-          data={teams}
-          keyExtractor={(item) => item.id}
+          data={pickRows}
+          keyExtractor={(item) => item.key}
           contentContainerStyle={styles.listContent}
           initialNumToRender={30}
           keyboardShouldPersistTaps="handled"
@@ -213,21 +239,46 @@ export default function StandingsScreen() {
               tintColor={colors.accent}
             />
           }
-          renderItem={({ item }) => (
-            <TeamCard
-              team={item}
-              pick={picks[item.id]}
-              confidence={confidence[item.id] ?? 1}
-              lockedOuLine={lockedOuLines[item.id]}
-              saving={savingTeamId === item.id}
-              picksLocked={seasonLocked}
-              onPickChange={(teamId, side, options) => togglePick(teamId, side, options)}
-              onConfidenceChange={(teamId, pts) => void setTeamConfidence(teamId, pts)}
-              lineChangeOfferVisible={isLineChangeOfferVisible(item.id)}
-              onDismissLineChangeOffer={() => void dismissLineChangeOffer(item.id)}
-              onReopenLineChangeOffer={() => void reopenLineChangeOffer(item.id)}
-            />
-          )}
+          renderItem={({ item }) => {
+            if (item.type === 'team') {
+              const team = item.team;
+              return (
+                <TeamCard
+                  team={team}
+                  pick={picks[team.id]}
+                  confidence={confidence[team.id] ?? 1}
+                  lockedOuLine={lockedOuLines[team.id]}
+                  saving={savingTeamId === team.id}
+                  picksLocked={seasonLocked}
+                  onPickChange={(teamId, side, options) => togglePick(teamId, side, options)}
+                  onConfidenceChange={(teamId, pts) => void setTeamConfidence(teamId, pts)}
+                  lineChangeOfferVisible={isLineChangeOfferVisible(team.id)}
+                  onDismissLineChangeOffer={() => void dismissLineChangeOffer(team.id)}
+                  onReopenLineChangeOffer={() => void reopenLineChangeOffer(team.id)}
+                />
+              );
+            }
+            if (item.type === 'bonus-label') {
+              return <Text style={styles.bonusSectionLabel}>Bonus tiebreakers</Text>;
+            }
+            if (item.type === 'bonus-loading') {
+              return (
+                <View style={styles.bonusLoading}>
+                  <ActivityIndicator color={colors.accent} />
+                </View>
+              );
+            }
+            return (
+              <BonusPickCard
+                question={item.question}
+                answer={bonusAnswers[item.question.id] ?? ''}
+                teams={teams}
+                locked={seasonLocked}
+                saving={bonusSavingId === item.question.id}
+                onChangeAnswer={(value) => void setBonusAnswer(item.question.id, value)}
+              />
+            );
+          }}
           ListHeaderComponent={
             <>
               <OverallFormatsGuide compact defaultExpanded={false} />
@@ -264,28 +315,17 @@ export default function StandingsScreen() {
           }
           ListFooterComponent={
             <>
+              {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
+                <View style={styles.bonusMissing}>
+                  <Text style={styles.bonusMissingText}>
+                    {bonusSetupRequired
+                      ? bonusError ??
+                        'Bonus tiebreakers need a one-time Supabase setup. Run supabase/05-bonus-questions.sql then supabase/06-mandatory-bonus-questions.sql in the SQL Editor, then pull to refresh. You can still pick O/U and submit without bonus until then.'
+                      : 'Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql in the Supabase SQL Editor, then refresh.'}
+                  </Text>
+                </View>
+              ) : null}
               <View style={styles.afterTeamsBlock}>
-                {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
-                  <View style={styles.bonusMissing}>
-                    <Text style={styles.bonusMissingText}>
-                      {bonusSetupRequired
-                        ? bonusError ??
-                          'Bonus tiebreakers need a one-time Supabase setup. Run supabase/05-bonus-questions.sql then supabase/06-mandatory-bonus-questions.sql in the SQL Editor, then pull to refresh. You can still pick O/U and submit without bonus until then.'
-                        : 'Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql in the Supabase SQL Editor, then refresh.'}
-                    </Text>
-                  </View>
-                ) : null}
-                {bonusQuestions.length > 0 ? (
-                  <BonusPicksSection
-                    questions={bonusQuestions}
-                    answers={bonusAnswers}
-                    teamNames={teams.map((t) => t.name)}
-                    loading={bonusLoading}
-                    locked={seasonLocked}
-                    savingQuestionId={bonusSavingId}
-                    onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
-                  />
-                ) : null}
                 {seasonLocked ? (
                   <View style={styles.lockedBanner}>
                     <Text style={styles.lockedText}>
@@ -365,6 +405,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 32,
+  },
+  bonusSectionLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  bonusLoading: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   afterTeamsBlock: {
     marginTop: 8,
