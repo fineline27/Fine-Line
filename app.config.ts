@@ -52,7 +52,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'SUPABASE_ANON_KEY',
       'EXPO_PUBLIC_SUPABASE_ANON_KEY',
     ),
-    legalContactEmail: envFirst('EXPO_PUBLIC_LEGAL_CONTACT_EMAIL', 'LEGAL_CONTACT_EMAIL'),
+    legalContactEmail:
+      envFirst('EXPO_PUBLIC_LEGAL_CONTACT_EMAIL', 'LEGAL_CONTACT_EMAIL') ||
+      'finelinesport@gmail.com',
     siteUrl: envFirst('EXPO_PUBLIC_SITE_URL', 'SITE_URL'),
     nbaSeasonLockIso: envFirst('EXPO_PUBLIC_NBA_SEASON_LOCK_ISO', 'NBA_SEASON_LOCK_ISO'),
   },
