@@ -276,6 +276,9 @@ The web build adds **`robots.txt`**, **`sitemap.xml`**, and SEO meta tags (title
 EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 EXPO_PUBLIC_LEGAL_CONTACT_EMAIL=you@example.com
+EXPO_PUBLIC_SITE_URL=yourdomain.com
 ```
+
+For **`EXPO_PUBLIC_SITE_URL`**, use **Settings → Environment Variables** (not **Domains**). Value can be `https://yourdomain.com` or just `yourdomain.com` (no trailing slash). **Domains** only accepts the hostname, never `https://`.
 
 Local `.env` uses the same names; restart Expo after changes. Vercel uses them at deploy/build time only.
