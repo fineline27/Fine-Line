@@ -12,3 +12,9 @@ Google Search Console — HTML file verification
 6. Click Verify in Search Console.
 
 Alternative: use the HTML meta tag method with EXPO_PUBLIC_GOOGLE_SITE_VERIFICATION on Vercel.
+
+If Search Console says "HTML" / wrong content / sitemap is HTML:
+- Open the URL in a browser BEFORE clicking Verify.
+- Verification file must show ONE plain line, not the Fine Line app.
+- sitemap.xml must show XML starting with <?xml, not HTML.
+- Fix: redeploy latest main; set EXPO_PUBLIC_SITE_URL to your custom domain; or use meta tag verify instead.

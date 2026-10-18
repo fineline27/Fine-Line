@@ -12,6 +12,18 @@ function envFirst(...keys: string[]): string {
   return '';
 }
 
+/** Accept `https://domain.com` or `domain.com` for Vercel env vars. */
+function normalizeSiteUrl(raw: string): string {
+  let url = raw.trim().replace(/\/$/, '');
+  if (!url) {
+    return '';
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
+  return url;
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: 'Fine Line',
@@ -53,7 +65,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'EXPO_PUBLIC_SUPABASE_ANON_KEY',
     ),
     legalContactEmail: envFirst('EXPO_PUBLIC_LEGAL_CONTACT_EMAIL', 'LEGAL_CONTACT_EMAIL'),
-    siteUrl: envFirst('EXPO_PUBLIC_SITE_URL', 'SITE_URL'),
+    siteUrl: normalizeSiteUrl(envFirst('EXPO_PUBLIC_SITE_URL', 'SITE_URL')),
     nbaSeasonLockIso: envFirst('EXPO_PUBLIC_NBA_SEASON_LOCK_ISO', 'NBA_SEASON_LOCK_ISO'),
   },
 });

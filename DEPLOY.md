@@ -230,7 +230,8 @@ Open the URL printed (often `http://localhost:3000`). Click `/login`, `/privacy`
 | Blank page after deploy | Build failed | Vercel → Deployment → **Build logs** |
 | Old UI after push | Cache | Hard refresh; check latest deployment is **Production** |
 | Bonus / submit broken | Migrations | Run `05` and `06` SQL |
-| Search Console: verification file “wrong content” | SPA rewrite or edited file | Put Google's **downloaded** file in **`public/`** unchanged; deploy with latest `vercel.json` (serves `google*.html` as static). In browser, URL must show one verification line—not the app. Or use **HTML tag** + `EXPO_PUBLIC_GOOGLE_SITE_VERIFICATION` instead. |
+| Search Console: verification file “wrong content” / **HTML error** | SPA rewrite or edited file | Put Google's **downloaded** file in **`public/`** unchanged; deploy with latest `vercel.json` (paths with a **file extension** like `.html` / `.xml` are not rewritten to the app). In browser, verification URL must show **one plain line**—not the Fine Line UI. Or use **HTML tag** + `EXPO_PUBLIC_GOOGLE_SITE_VERIFICATION` instead. |
+| Search Console: **Sitemap is HTML** | `/sitemap.xml` served as app shell | Redeploy; open `/sitemap.xml` in browser—must be XML. Set **`EXPO_PUBLIC_SITE_URL`** to your custom domain so `<loc>` URLs match the Search Console property. |
 
 ---
 
@@ -275,6 +276,9 @@ The web build adds **`robots.txt`**, **`sitemap.xml`**, and SEO meta tags (title
 EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 EXPO_PUBLIC_LEGAL_CONTACT_EMAIL=you@example.com
+EXPO_PUBLIC_SITE_URL=yourdomain.com
 ```
+
+For **`EXPO_PUBLIC_SITE_URL`**, use **Settings → Environment Variables** (not **Domains**). Value can be `https://yourdomain.com` or just `yourdomain.com` (no trailing slash). **Domains** only accepts the hostname, never `https://`.
 
 Local `.env` uses the same names; restart Expo after changes. Vercel uses them at deploy/build time only.

@@ -10,10 +10,22 @@ const SITE_DESCRIPTION =
 /** Public routes worth indexing (SPA; each serves index.html). */
 const SITEMAP_PATHS = ['/', '/login', '/sign-up', '/privacy', '/terms'];
 
+/** Accept `https://domain.com` or `domain.com` (Vercel UI sometimes omits the scheme). */
+function normalizeSiteUrl(raw) {
+  let url = raw.trim().replace(/\/$/, '');
+  if (!url) {
+    return '';
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
+  return url;
+}
+
 function getSiteUrl() {
   const fromEnv =
     process.env.EXPO_PUBLIC_SITE_URL?.trim() || process.env.SITE_URL?.trim();
-  return (fromEnv || DEFAULT_SITE_URL).replace(/\/$/, '');
+  return normalizeSiteUrl(fromEnv || DEFAULT_SITE_URL);
 }
 
 function getGoogleSiteVerificationToken() {
@@ -31,6 +43,20 @@ function envFirst(...keys) {
     }
   }
   return '';
+}
+
+/** Ensure Google HTML verification files from public/ exist in dist/ after export. */
+function copyGoogleVerificationFiles(publicDir, distDir) {
+  if (!fs.existsSync(publicDir)) {
+    return;
+  }
+  for (const name of fs.readdirSync(publicDir)) {
+    if (!/^google[a-z0-9_-]+\.html$/i.test(name)) {
+      continue;
+    }
+    fs.copyFileSync(path.join(publicDir, name), path.join(distDir, name));
+    console.log(`inject-share-meta: copied public/${name} → dist/${name}`);
+  }
 }
 
 /** Warn if a Search Console HTML file in public/ was edited or misnamed. */
@@ -108,9 +134,12 @@ if (!fs.existsSync(indexPath)) {
 const siteUrl = getSiteUrl();
 const ogImageUrl = `${siteUrl}/og-image.jpg`;
 
+const publicDir = path.join(process.cwd(), 'public');
+
 writeRobotsTxt(distDir, siteUrl);
 writeSitemapXml(distDir, siteUrl);
-checkGoogleVerificationFiles(path.join(process.cwd(), 'public'), distDir);
+copyGoogleVerificationFiles(publicDir, distDir);
+checkGoogleVerificationFiles(publicDir, distDir);
 
 const googleVerification = getGoogleSiteVerificationToken();
 
