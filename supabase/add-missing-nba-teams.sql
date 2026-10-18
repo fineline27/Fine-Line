@@ -22,18 +22,18 @@ select v.* from (values
   ('NBA', 'Washington Wizards', 'WAS', '#002B5C', '#E31837', 82, 34.5, 0, 0),
   ('NBA', 'Dallas Mavericks', 'DAL', '#00538C', '#002B5E', 82, 33.5, 0, 0),
   ('NBA', 'Denver Nuggets', 'DEN', '#0E2240', '#FEC524', 82, 48.5, 0, 0),
-  ('NBA', 'Golden State Warriors', 'GSW', '#1D428A', '#FFC72C', 82, 40.5, 0, 0),
+  ('NBA', 'Golden State Warriors', 'GSW', '#1D428A', '#FFC72C', 82, 36.5, 0, 0),
   ('NBA', 'Houston Rockets', 'HOU', '#CE1141', '#000000', 82, 48.5, 0, 0),
   ('NBA', 'Los Angeles Clippers', 'LAC', '#C8102E', '#1D428A', 82, 27.5, 0, 0),
   ('NBA', 'Los Angeles Lakers', 'LAL', '#552583', '#FDB927', 82, 45.5, 0, 0),
   ('NBA', 'Memphis Grizzlies', 'MEM', '#5D76A9', '#12173F', 82, 30.5, 0, 0),
   ('NBA', 'Minnesota Timberwolves', 'MIN', '#0C2340', '#236192', 82, 47.5, 0, 0),
   ('NBA', 'New Orleans Pelicans', 'NOP', '#0C2340', '#C8102E', 82, 28.5, 0, 0),
-  ('NBA', 'Oklahoma City Thunder', 'OKC', '#007AC1', '#EF3B24', 82, 62.5, 0, 0),
-  ('NBA', 'Phoenix Suns', 'PHX', '#1D1160', '#E56020', 82, 40.5, 0, 0),
+  ('NBA', 'Oklahoma City Thunder', 'OKC', '#007AC1', '#EF3B24', 82, 61.5, 0, 0),
+  ('NBA', 'Phoenix Suns', 'PHX', '#1D1160', '#E56020', 82, 38.5, 0, 0),
   ('NBA', 'Portland Trail Blazers', 'POR', '#E03A3E', '#000000', 82, 41.5, 0, 0),
   ('NBA', 'Sacramento Kings', 'SAC', '#5A2D81', '#63727A', 82, 20.5, 0, 0),
-  ('NBA', 'San Antonio Spurs', 'SAS', '#C4CED4', '#000000', 82, 59.5, 0, 0),
+  ('NBA', 'San Antonio Spurs', 'SAS', '#C4CED4', '#000000', 82, 60.5, 0, 0),
   ('NBA', 'Utah Jazz', 'UTA', '#002B5C', '#F9A01B', 82, 37.5, 0, 0)
 ) as v(sport, name, abbreviation, primary_color, secondary_color, total_season_games, ou_line, current_wins, current_losses)
 where not exists (
