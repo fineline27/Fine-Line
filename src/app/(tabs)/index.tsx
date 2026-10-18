@@ -264,28 +264,28 @@ export default function StandingsScreen() {
           }
           ListFooterComponent={
             <>
+              {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
+                <View style={styles.bonusMissing}>
+                  <Text style={styles.bonusMissingText}>
+                    {bonusSetupRequired
+                      ? bonusError ??
+                        'Bonus tiebreakers need a one-time Supabase setup. Run supabase/05-bonus-questions.sql then supabase/06-mandatory-bonus-questions.sql in the SQL Editor, then pull to refresh. You can still pick O/U and submit without bonus until then.'
+                      : 'Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql in the Supabase SQL Editor, then refresh.'}
+                  </Text>
+                </View>
+              ) : null}
+              {bonusQuestions.length > 0 ? (
+                <BonusPicksSection
+                  questions={bonusQuestions}
+                  answers={bonusAnswers}
+                  teamNames={teams.map((t) => t.name)}
+                  loading={bonusLoading}
+                  locked={seasonLocked}
+                  savingQuestionId={bonusSavingId}
+                  onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
+                />
+              ) : null}
               <View style={styles.afterTeamsBlock}>
-                {!bonusLoading && (bonusSetupRequired || bonusQuestions.length === 0) ? (
-                  <View style={styles.bonusMissing}>
-                    <Text style={styles.bonusMissingText}>
-                      {bonusSetupRequired
-                        ? bonusError ??
-                          'Bonus tiebreakers need a one-time Supabase setup. Run supabase/05-bonus-questions.sql then supabase/06-mandatory-bonus-questions.sql in the SQL Editor, then pull to refresh. You can still pick O/U and submit without bonus until then.'
-                        : 'Bonus questions are missing for this league. Run supabase/06-mandatory-bonus-questions.sql in the Supabase SQL Editor, then refresh.'}
-                    </Text>
-                  </View>
-                ) : null}
-                {bonusQuestions.length > 0 ? (
-                  <BonusPicksSection
-                    questions={bonusQuestions}
-                    answers={bonusAnswers}
-                    teamNames={teams.map((t) => t.name)}
-                    loading={bonusLoading}
-                    locked={seasonLocked}
-                    savingQuestionId={bonusSavingId}
-                    onChangeAnswer={(id, value) => void setBonusAnswer(id, value)}
-                  />
-                ) : null}
                 {seasonLocked ? (
                   <View style={styles.lockedBanner}>
                     <Text style={styles.lockedText}>

@@ -3,7 +3,6 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import type { BonusQuestion } from '../types/bonus';
 import { NBA_PLAYER_OPTIONS } from '../lib/nbaPlayerOptions';
 import { colors } from '../theme/colors';
-import { CollapsiblePanel } from './CollapsiblePanel';
 import { SearchableSelect } from './SearchableSelect';
 
 type Props = {
@@ -14,8 +13,6 @@ type Props = {
   locked: boolean;
   savingQuestionId: string | null;
   onChangeAnswer: (questionId: string, value: string) => void;
-  /** Tighter layout when pinned to the bottom of the screen */
-  docked?: boolean;
 };
 
 function optionsForQuestion(q: BonusQuestion, teamNames: string[]): string[] {
@@ -40,7 +37,6 @@ export function BonusPicksSection({
   locked,
   savingQuestionId,
   onChangeAnswer,
-  docked = false,
 }: Props) {
   if (loading) {
     return (
@@ -51,30 +47,19 @@ export function BonusPicksSection({
   }
 
   const sortedTeams = [...teamNames].sort((a, b) => a.localeCompare(b));
-  const answeredCount = questions.filter((q) => (answers[q.id] ?? '').trim().length > 0).length;
-  const allAnswered = answeredCount === questions.length && questions.length > 0;
-  const summary =
-    questions.length === 0
-      ? 'Tap to view tiebreakers'
-      : allAnswered
-        ? `${answeredCount}/${questions.length} answered · tap to open`
-        : `${answeredCount}/${questions.length} answered · tap to open picks`;
 
   return (
-    <CollapsiblePanel
-      title="Bonus tiebreakers"
-      hintCollapsed={summary}
-      hintExpanded="Tap to hide bonus picks"
-      defaultExpanded={false}
-      wrapStyle={docked ? styles.dockedWrap : undefined}
-      expandedBodyMaxHeight={docked ? 320 : undefined}
-    >
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Bonus tiebreakers</Text>
       <Text style={styles.hint}>
         Choose from the list — type to search, then tap a name. MVP & ROY use current NBA players;
         champion uses all 30 teams. Worth 1 pt each when results are set (tiebreak only).
       </Text>
       {questions.map((q, index) => (
-        <View key={q.id} style={[styles.row, { zIndex: questions.length - index }]}>
+        <View
+          key={q.id}
+          style={[styles.card, { zIndex: questions.length - index }]}
+        >
           <Text style={styles.label}>{q.question_text}</Text>
           <SearchableSelect
             options={optionsForQuestion(q, sortedTeams)}
@@ -90,17 +75,25 @@ export function BonusPicksSection({
           ) : null}
         </View>
       ))}
-    </CollapsiblePanel>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  dockedWrap: {
-    marginBottom: 0,
+  section: {
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
   },
   loadingWrap: {
     backgroundColor: colors.surfaceElevated,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
@@ -113,14 +106,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     lineHeight: 17,
   },
-  row: {
-    marginBottom: 16,
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 12,
   },
   label: {
-    color: colors.textSecondary,
+    color: colors.textPrimary,
     fontWeight: '700',
-    fontSize: 14,
-    marginBottom: 6,
+    fontSize: 17,
+    marginBottom: 10,
   },
   saving: {
     color: colors.textMuted,
