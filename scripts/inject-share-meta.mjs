@@ -33,6 +33,20 @@ function envFirst(...keys) {
   return '';
 }
 
+/** Ensure Google HTML verification files from public/ exist in dist/ after export. */
+function copyGoogleVerificationFiles(publicDir, distDir) {
+  if (!fs.existsSync(publicDir)) {
+    return;
+  }
+  for (const name of fs.readdirSync(publicDir)) {
+    if (!/^google[a-z0-9_-]+\.html$/i.test(name)) {
+      continue;
+    }
+    fs.copyFileSync(path.join(publicDir, name), path.join(distDir, name));
+    console.log(`inject-share-meta: copied public/${name} → dist/${name}`);
+  }
+}
+
 /** Warn if a Search Console HTML file in public/ was edited or misnamed. */
 function checkGoogleVerificationFiles(publicDir, distDir) {
   if (!fs.existsSync(publicDir)) {
@@ -108,9 +122,12 @@ if (!fs.existsSync(indexPath)) {
 const siteUrl = getSiteUrl();
 const ogImageUrl = `${siteUrl}/og-image.jpg`;
 
+const publicDir = path.join(process.cwd(), 'public');
+
 writeRobotsTxt(distDir, siteUrl);
 writeSitemapXml(distDir, siteUrl);
-checkGoogleVerificationFiles(path.join(process.cwd(), 'public'), distDir);
+copyGoogleVerificationFiles(publicDir, distDir);
+checkGoogleVerificationFiles(publicDir, distDir);
 
 const googleVerification = getGoogleSiteVerificationToken();
 
