@@ -4,11 +4,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/:path((?!.*\\..*$).*)",
+      "source": "/((?!_expo/|assets/|favicon.ico|og-image.jpg|robots.txt|sitemap.xml|google[^/]*\\.html)(?!.*\\.[^/]+$).*)",
       "destination": "/index.html"
     }
   ]
