@@ -1,5 +1,6 @@
 -- 2026-27 NBA regular-season win totals (O/U lines). Updates ou_line only; keeps records.
 -- Source: market consensus ~Oct 2026 (BetMGM / major books).
+-- Recent four-team moves (see update-ou-lines-phi-por-gsw-phx-oct-2026.sql): PHI 49.5→50.5, POR 41.5→42.5, GSW 40.5→35.5, PHX 40.5→39.5.
 
 update public.teams set ou_line = 43.5 where abbreviation = 'ATL';
 update public.teams set ou_line = 51.5 where abbreviation = 'BOS';
@@ -10,7 +11,7 @@ update public.teams set ou_line = 47.5 where abbreviation = 'CLE';
 update public.teams set ou_line = 34.5 where abbreviation = 'DAL';
 update public.teams set ou_line = 49.5 where abbreviation = 'DEN';
 update public.teams set ou_line = 49.5 where abbreviation = 'DET';
-update public.teams set ou_line = 40.5 where abbreviation = 'GSW';
+update public.teams set ou_line = 35.5 where abbreviation = 'GSW';
 update public.teams set ou_line = 48.5 where abbreviation = 'HOU';
 update public.teams set ou_line = 43.5 where abbreviation = 'IND';
 update public.teams set ou_line = 28.5 where abbreviation = 'LAC';
@@ -24,7 +25,7 @@ update public.teams set ou_line = 52.5 where abbreviation = 'NYK';
 update public.teams set ou_line = 62.5 where abbreviation = 'OKC';
 update public.teams set ou_line = 43.5 where abbreviation = 'ORL';
 update public.teams set ou_line = 50.5 where abbreviation = 'PHI';
-update public.teams set ou_line = 40.5 where abbreviation = 'PHX';
+update public.teams set ou_line = 39.5 where abbreviation = 'PHX';
 update public.teams set ou_line = 42.5 where abbreviation = 'POR';
 update public.teams set ou_line = 59.5 where abbreviation = 'SAS';
 update public.teams set ou_line = 21.5 where abbreviation = 'SAC';

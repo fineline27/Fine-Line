@@ -1,6 +1,7 @@
 -- Run this in SQL Editor when tables already exist (you already ran 00-schema.sql).
 -- Gives the app read access, then loads all 30 NBA teams.
 -- O/U lines: 2026-27 season win totals (see update-ou-lines-2026-27.sql to refresh live DB only).
+-- PHI/POR/GSW/PHX moves: update-ou-lines-phi-por-gsw-phx-oct-2026.sql (49.5→50.5, 41.5→42.5, 40.5→35.5, 40.5→39.5).
 
 grant select on public.teams to anon, authenticated;
 
@@ -43,7 +44,7 @@ insert into public.teams (
 ('NBA', 'Washington Wizards', 'WAS', '#002B5C', '#E31837', 82, 34.5, 0, 0),
 ('NBA', 'Dallas Mavericks', 'DAL', '#00538C', '#002B5E', 82, 34.5, 0, 0),
 ('NBA', 'Denver Nuggets', 'DEN', '#0E2240', '#FEC524', 82, 49.5, 0, 0),
-('NBA', 'Golden State Warriors', 'GSW', '#1D428A', '#FFC72C', 82, 40.5, 0, 0),
+('NBA', 'Golden State Warriors', 'GSW', '#1D428A', '#FFC72C', 82, 35.5, 0, 0),
 ('NBA', 'Houston Rockets', 'HOU', '#CE1141', '#000000', 82, 48.5, 0, 0),
 ('NBA', 'Los Angeles Clippers', 'LAC', '#C8102E', '#1D428A', 82, 28.5, 0, 0),
 ('NBA', 'Los Angeles Lakers', 'LAL', '#552583', '#FDB927', 82, 46.5, 0, 0),
@@ -51,7 +52,7 @@ insert into public.teams (
 ('NBA', 'Minnesota Timberwolves', 'MIN', '#0C2340', '#236192', 82, 48.5, 0, 0),
 ('NBA', 'New Orleans Pelicans', 'NOP', '#0C2340', '#C8102E', 82, 27.5, 0, 0),
 ('NBA', 'Oklahoma City Thunder', 'OKC', '#007AC1', '#EF3B24', 82, 62.5, 0, 0),
-('NBA', 'Phoenix Suns', 'PHX', '#1D1160', '#E56020', 82, 40.5, 0, 0),
+('NBA', 'Phoenix Suns', 'PHX', '#1D1160', '#E56020', 82, 39.5, 0, 0),
 ('NBA', 'Portland Trail Blazers', 'POR', '#E03A3E', '#000000', 82, 42.5, 0, 0),
 ('NBA', 'Sacramento Kings', 'SAC', '#5A2D81', '#63727A', 82, 21.5, 0, 0),
 ('NBA', 'San Antonio Spurs', 'SAS', '#C4CED4', '#000000', 82, 59.5, 0, 0),
