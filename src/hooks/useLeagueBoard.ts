@@ -10,6 +10,8 @@ import {
 import { fetchLeagueMembers } from '../lib/leagueMembers';
 import { fetchAllPredictionsInLeague } from '../lib/predictions';
 import { computeLeaderboard, type LeaderboardEntry } from '../lib/rankings';
+import { isRankedParticipant } from '../lib/leaderboardEligibility';
+import { nbaSeasonLockContext } from '../lib/seasonLockContext';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { LeagueMember } from '../types/leagueMember';
 import type { PickSide, Team } from '../types/team';
@@ -76,8 +78,9 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
 
     try {
       const members = await fetchLeagueMembers(activeLeague.id);
+      const season = nbaSeasonLockContext();
       const submittedIds = new Set(
-        members.filter((m) => m.picks_submitted_at).map((m) => m.user_id),
+        members.filter((m) => isRankedParticipant(m, season)).map((m) => m.user_id),
       );
       const nameByUser = new Map(
         members.map((m) => [m.user_id, m.display_name?.trim() || 'Player']),
@@ -110,7 +113,14 @@ export function useLeagueBoard(teams: Team[], picksSubmitted: boolean) {
       const bonusBundle =
         bonusQuestions.length > 0 ? { questions: bonusQuestions, answers: bonusAnswers } : undefined;
 
-      const leaderboard = computeLeaderboard(user.id, predictions, teams, members, bonusBundle);
+      const leaderboard = computeLeaderboard(
+        user.id,
+        predictions,
+        teams,
+        members,
+        bonusBundle,
+        season,
+      );
 
       const picksByTeam = new Map<string, TeamGroupPick['entries']>();
       if (picksSubmitted) {
