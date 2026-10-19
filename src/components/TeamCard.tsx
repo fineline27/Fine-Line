@@ -111,19 +111,19 @@ export function TeamCard({
 
       <TeamRecordStrip team={team} />
 
-      <View style={[styles.ouCenter, pick && showLineChangeOffer && styles.ouCenterLocked]}>
+      <View style={styles.ouCenter}>
         {showLineChangeOffer ? (
           <View style={styles.lockBadgeRow}>
             <Text style={styles.lockBadgeText}>NEW LINE</Text>
           </View>
         ) : null}
         <View style={styles.dualLineRow}>
-          <View style={[styles.lineCol, styles.lineColLocked]}>
-            <Text style={[styles.lineColLabel, styles.lineColLabelLocked]}>
+          <View style={[styles.lineCol, styles.lineColNeutral]}>
+            <Text style={[styles.lineColLabel, styles.lineColLabelNeutral]}>
               Your locked line
             </Text>
             {pick ? (
-              <Text style={[styles.lineColValue, styles.lineColValueLocked]}>
+              <Text style={[styles.lineColValue, styles.lineColValueNeutral]}>
                 {gradedLine.toFixed(1)}
               </Text>
             ) : (
@@ -134,13 +134,25 @@ export function TeamCard({
             </Text>
           </View>
           <View style={styles.lineColGap} />
-          <View style={[styles.lineCol, styles.lineColCurrent]}>
-            <Text style={[styles.lineColLabel, styles.lineColLabelCurrent]}>Current line</Text>
+          <View
+            style={[
+              styles.lineCol,
+              styles.lineColNeutral,
+              showLineChangeOffer && styles.lineColCurrentOffer,
+            ]}
+          >
+            <Text
+              style={[
+                styles.lineColLabel,
+                showLineChangeOffer ? styles.lineColLabelOffer : styles.lineColLabelNeutral,
+              ]}
+            >
+              Current line
+            </Text>
             <Text
               style={[
                 styles.lineColValue,
-                styles.lineColValueCurrent,
-                pick && lineMoved && styles.lineColValueCurrentMoved,
+                showLineChangeOffer ? styles.lineColValueOffer : styles.lineColValueNeutral,
               ]}
             >
               {boardLine.toFixed(1)}
@@ -257,10 +269,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  ouCenterLocked: {
-    backgroundColor: colors.lineUpdateBg,
-    borderColor: colors.lineUpdateBorder,
-  },
   lockBadgeRow: {
     backgroundColor: colors.lineUpdateBg,
     borderRadius: 6,
@@ -289,13 +297,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
   },
-  lineColLocked: {
-    backgroundColor: 'rgba(59, 130, 246, 0.14)',
-    borderColor: 'rgba(96, 165, 250, 0.45)',
-  },
-  lineColCurrent: {
+  lineColNeutral: {
     backgroundColor: 'rgba(148, 163, 184, 0.12)',
     borderColor: 'rgba(148, 163, 184, 0.35)',
+  },
+  lineColCurrentOffer: {
+    backgroundColor: 'rgba(59, 130, 246, 0.14)',
+    borderColor: 'rgba(96, 165, 250, 0.45)',
   },
   lineColGap: {
     width: 10,
@@ -305,11 +313,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  lineColLabelLocked: {
-    color: '#93c5fd',
-  },
-  lineColLabelCurrent: {
+  lineColLabelNeutral: {
     color: '#cbd5e1',
+  },
+  lineColLabelOffer: {
+    color: '#93c5fd',
   },
   lineColValue: {
     fontSize: 44,
@@ -318,14 +326,11 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     marginTop: 6,
   },
-  lineColValueLocked: {
-    color: '#60a5fa',
-  },
-  lineColValueCurrent: {
+  lineColValueNeutral: {
     color: '#f1f5f9',
   },
-  lineColValueCurrentMoved: {
-    color: colors.lineUpdate,
+  lineColValueOffer: {
+    color: '#60a5fa',
   },
   lineColEmpty: {
     color: colors.textMuted,
