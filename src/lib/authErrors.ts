@@ -5,6 +5,11 @@ import { USERNAME_TAKEN_MESSAGE } from './usernames';
 
 /** Maps Supabase Auth sign-up failures to clearer copy (trigger errors are often generic). */
 export function mapSignUpError(err: unknown): string {
+  const captcha = mapCaptchaAuthError(err);
+  if (captcha) {
+    return captcha;
+  }
+
   const message = getErrorMessage(err, 'Sign up failed');
   const lower = message.toLowerCase();
 
@@ -21,4 +26,21 @@ export function mapSignUpError(err: unknown): string {
   }
 
   return message;
+}
+
+export function mapSignInError(err: unknown): string {
+  return mapCaptchaAuthError(err) ?? getErrorMessage(err, 'Sign in failed');
+}
+
+function mapCaptchaAuthError(err: unknown): string | null {
+  const message = getErrorMessage(err, '');
+  const lower = message.toLowerCase();
+  if (
+    lower.includes('captcha') ||
+    lower.includes('turnstile') ||
+    (err instanceof AuthError && err.status === 422 && lower.includes('verification'))
+  ) {
+    return 'Security check failed or expired. Complete the Cloudflare verification below, then try again.';
+  }
+  return null;
 }

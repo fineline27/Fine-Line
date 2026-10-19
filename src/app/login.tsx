@@ -1,5 +1,5 @@
 import { Link, Redirect, router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,9 +13,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AuthCaptcha, type AuthCaptchaHandle } from '../components/AuthCaptcha';
 import { AuthLandingHero } from '../components/AuthLandingHero';
 import { LegalFooterLinks } from '../components/LegalFooterLinks';
 import { useAuth } from '../contexts/AuthContext';
+import { mapSignInError } from '../lib/authErrors';
+import { isCaptchaConfigured } from '../lib/captcha';
 import { colors } from '../theme/colors';
 
 export default function LoginScreen() {
@@ -24,19 +27,34 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<AuthCaptchaHandle>(null);
+  const captchaRequired = isCaptchaConfigured();
+  const captchaReady = !captchaRequired || Boolean(captchaToken);
+  const nativeCaptchaBlock = captchaRequired && Platform.OS !== 'web';
 
   if (!isLoading && session) {
     return <Redirect href="/" />;
   }
 
   async function onSubmit() {
+    if (nativeCaptchaBlock) {
+      setError('Use the Fine Line website in your browser to sign in (Cloudflare verification).');
+      return;
+    }
+    if (captchaRequired && !captchaToken) {
+      setError('Complete the security check below, then try again.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
-      await signIn(email.trim(), password);
+      await signIn(email.trim(), password, captchaToken);
       router.replace('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed');
+      setError(mapSignInError(err));
+      captchaRef.current?.reset();
     } finally {
       setSubmitting(false);
     }
@@ -77,12 +95,17 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
             />
+            <AuthCaptcha ref={captchaRef} onToken={setCaptchaToken} />
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              style={({ pressed }) => [
+                styles.button,
+                pressed && styles.buttonPressed,
+                (!captchaReady || nativeCaptchaBlock) && styles.buttonDisabled,
+              ]}
               onPress={() => void onSubmit()}
-              disabled={submitting}
+              disabled={submitting || !captchaReady || nativeCaptchaBlock}
             >
               {submitting ? (
                 <ActivityIndicator color="#fff" />
@@ -163,6 +186,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.9,
+  },
+  buttonDisabled: {
+    opacity: 0.45,
   },
   buttonText: {
     color: '#fff',

@@ -134,6 +134,7 @@ In the same screen (or **Settings** → **Environment Variables**), add for **Pr
 | `EXPO_PUBLIC_SUPABASE_URL` | `https://zayzjewfbcoovhtpdtgo.supabase.co` |
 | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` from Supabase API settings |
 | `EXPO_PUBLIC_LEGAL_CONTACT_EMAIL` | `you@yourdomain.com` (shown on Privacy/Terms; privacy requests) |
+| `EXPO_PUBLIC_CAPTCHA_SITE_KEY` | Cloudflare Turnstile **site key** (required if Supabase **Auth CAPTCHA** is on) |
 
 Optional duplicates (same values; `app.config.ts` reads these too):
 

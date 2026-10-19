@@ -54,6 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ),
     legalContactEmail: envFirst('EXPO_PUBLIC_LEGAL_CONTACT_EMAIL', 'LEGAL_CONTACT_EMAIL'),
     siteUrl: envFirst('EXPO_PUBLIC_SITE_URL', 'SITE_URL'),
+    captchaSiteKey: envFirst('EXPO_PUBLIC_CAPTCHA_SITE_KEY', 'CAPTCHA_SITE_KEY'),
     nbaSeasonLockIso: envFirst('EXPO_PUBLIC_NBA_SEASON_LOCK_ISO', 'NBA_SEASON_LOCK_ISO'),
   },
 });

@@ -2,9 +2,10 @@ import { Link, Redirect, router, type Href } from 'expo-router';
 
 const TERMS_HREF = '/terms' as Href;
 const PRIVACY_HREF = '/privacy' as Href;
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,8 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AuthCaptcha, type AuthCaptchaHandle } from '../components/AuthCaptcha';
 import { LegalFooterLinks } from '../components/LegalFooterLinks';
 import { useAuth } from '../contexts/AuthContext';
+import { isCaptchaConfigured } from '../lib/captcha';
 import { mapSignUpError } from '../lib/authErrors';
 import { validateUsername } from '../lib/displayName';
 import { colors } from '../theme/colors';
@@ -28,6 +31,11 @@ export default function SignUpScreen() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<AuthCaptchaHandle>(null);
+  const captchaRequired = isCaptchaConfigured();
+  const captchaReady = !captchaRequired || Boolean(captchaToken);
+  const nativeCaptchaBlock = captchaRequired && Platform.OS !== 'web';
 
   if (!isLoading && session) {
     return <Redirect href="/" />;
@@ -44,17 +52,25 @@ export default function SignUpScreen() {
       return;
     }
 
+    if (nativeCaptchaBlock) {
+      setError('Create your account on the Fine Line website in your browser (Cloudflare verification).');
+      return;
+    }
+    if (captchaRequired && !captchaToken) {
+      setError('Complete the security check below, then try again.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     setMessage(null);
     try {
-      await signUp(email.trim(), password, username.trim());
-      setMessage(
-        'Account created. Check your inbox for the confirmation link — it opens a “Email confirmed” page, then sign in.',
-      );
+      await signUp(email.trim(), password, username.trim(), captchaToken);
+      setMessage('Account created. You can sign in and start picking.');
       router.replace('/login');
     } catch (err) {
       setError(mapSignUpError(err));
+      captchaRef.current?.reset();
     } finally {
       setSubmitting(false);
     }
@@ -91,6 +107,7 @@ export default function SignUpScreen() {
           value={password}
           onChangeText={setPassword}
         />
+        <AuthCaptcha ref={captchaRef} onToken={setCaptchaToken} />
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {message ? <Text style={styles.message}>{message}</Text> : null}
         <Pressable
@@ -115,9 +132,12 @@ export default function SignUpScreen() {
           </View>
         </Pressable>
         <Pressable
-          style={[styles.button, !acceptedLegal && styles.buttonDisabled]}
+          style={[
+            styles.button,
+            (!acceptedLegal || !captchaReady || nativeCaptchaBlock) && styles.buttonDisabled,
+          ]}
           onPress={() => void onSubmit()}
-          disabled={submitting || !acceptedLegal}
+          disabled={submitting || !acceptedLegal || !captchaReady || nativeCaptchaBlock}
         >
           {submitting ? (
             <ActivityIndicator color="#fff" />
