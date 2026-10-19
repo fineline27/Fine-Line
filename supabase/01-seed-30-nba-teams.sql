@@ -1,6 +1,7 @@
 -- Run this in SQL Editor when tables already exist (you already ran 00-schema.sql).
 -- Gives the app read access, then loads all 30 NBA teams.
 -- O/U lines: 2026-27 season win totals (see update-ou-lines-2026-27.sql to refresh live DB only).
+-- PHI/POR/GSW/PHX moves: update-ou-lines-phi-por-gsw-phx-oct-2026.sql (45.5→50.5, 34.5→42.5, 40.5→35.5, 40.5→39.5).
 
 grant select on public.teams to anon, authenticated;
 
