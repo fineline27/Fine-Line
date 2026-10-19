@@ -1,6 +1,6 @@
 -- 2026-27 NBA regular-season win totals (O/U lines). Updates ou_line only; keeps records.
 -- Source: market consensus ~Oct 2026 (BetMGM / major books).
--- Recent four-team moves (see update-ou-lines-phi-por-gsw-phx-oct-2026.sql): PHI 45.5→50.5, POR 34.5→42.5, GSW 40.5→35.5, PHX 40.5→39.5.
+-- Recent four-team moves (see update-ou-lines-phi-por-gsw-phx-oct-2026.sql): PHI 49.5→50.5, POR 41.5→42.5, GSW 40.5→35.5, PHX 40.5→39.5.
 
 update public.teams set ou_line = 43.5 where abbreviation = 'ATL';
 update public.teams set ou_line = 51.5 where abbreviation = 'BOS';
