@@ -10,8 +10,13 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, username: string) => Promise<void>;
+  signIn: (email: string, password: string, captchaToken?: string | null) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    username: string,
+    captchaToken?: string | null,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -49,36 +54,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const { data, error } = await getSupabaseClient().auth.signInWithPassword({ email, password });
+  const signIn = useCallback(async (email: string, password: string, captchaToken?: string | null) => {
+    const { data, error } = await getSupabaseClient().auth.signInWithPassword({
+      email,
+      password,
+      options: captchaToken ? { captchaToken } : undefined,
+    });
     if (error) {
       throw error;
     }
     await ensureUsernameClaimedFromMetadata(data.user);
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, username: string) => {
-    const emailRedirectTo = getEmailConfirmRedirectUrl();
-    const displayName = normalizeUsername(username);
-    await assertUsernameAvailable(displayName);
-    const { data, error } = await getSupabaseClient().auth.signUp({
-      email,
-      password,
-      options: {
-        ...(emailRedirectTo ? { emailRedirectTo } : {}),
-        data: {
-          username: displayName,
-          display_name: displayName,
+  const signUp = useCallback(
+    async (email: string, password: string, username: string, captchaToken?: string | null) => {
+      const emailRedirectTo = getEmailConfirmRedirectUrl();
+      const displayName = normalizeUsername(username);
+      await assertUsernameAvailable(displayName);
+      const { data, error } = await getSupabaseClient().auth.signUp({
+        email,
+        password,
+        options: {
+          ...(emailRedirectTo ? { emailRedirectTo } : {}),
+          ...(captchaToken ? { captchaToken } : {}),
+          data: {
+            username: displayName,
+            display_name: displayName,
+          },
         },
-      },
-    });
-    if (error) {
-      throw error;
-    }
-    if (data.user) {
-      await ensureUsernameClaimedFromMetadata(data.user);
-    }
-  }, []);
+      });
+      if (error) {
+        throw error;
+      }
+      if (data.user) {
+        await ensureUsernameClaimedFromMetadata(data.user);
+      }
+    },
+    [],
+  );
 
   const signOut = useCallback(async () => {
     await getSupabaseClient().auth.signOut();
