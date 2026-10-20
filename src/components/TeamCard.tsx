@@ -13,6 +13,7 @@ import { PickLineChangeModal } from './PickLineChangeModal';
 import { PickStatusBadge } from './PickStatusBadge';
 import { PickToggle } from './PickToggle';
 import { StatusBadge } from './StatusBadge';
+import { TeamCardSeasonStarted } from './TeamCardSeasonStarted';
 import { TeamColorBadge } from './TeamColorBadge';
 import { TeamRecordStrip } from './TeamRecordStrip';
 
@@ -61,11 +62,18 @@ export function TeamCard({
   const boardLine = team.ou_line;
   const showLineChangeOffer = lineMoved && (lineChangeOfferVisible || lineOptionsExpanded);
 
-  async function requestPick(side: PickSide) {
-    if (picksLocked) {
-      return;
-    }
+  if (picksLocked) {
+    return (
+      <TeamCardSeasonStarted
+        team={team}
+        pick={pick}
+        confidence={confidence}
+        lockedOuLine={lockedOuLine}
+      />
+    );
+  }
 
+  async function requestPick(side: PickSide) {
     const result = await onPickChange(team.id, side);
     if (result.needsLineAcceptance) {
       setLineChangePrompt({
@@ -169,7 +177,7 @@ export function TeamCard({
         <View style={styles.lineOfferActions}>
           <Pressable
             style={styles.acceptLineButton}
-            disabled={picksLocked || saving}
+            disabled={saving}
             onPress={() => {
               setLineOptionsExpanded(false);
               void onPickChange(team.id, pick!, { acceptNewLine: true });
@@ -181,7 +189,7 @@ export function TeamCard({
           </Pressable>
           <Pressable
             style={styles.ignoreLineButton}
-            disabled={picksLocked || saving}
+            disabled={saving}
             onPress={() => {
               setLineOptionsExpanded(false);
               onDismissLineChangeOffer?.();
@@ -193,7 +201,7 @@ export function TeamCard({
       ) : lineMoved ? (
         <Pressable
           style={styles.reopenLineButton}
-          disabled={picksLocked || saving}
+          disabled={saving}
           onPress={() => {
             setLineOptionsExpanded(true);
             void onReopenLineChangeOffer?.();
@@ -208,11 +216,11 @@ export function TeamCard({
         {pickEval ? <PickStatusBadge evaluation={pickEval} /> : null}
       </View>
 
-      <PickToggle selected={pick} disabled={picksLocked} onSelect={(side) => void requestPick(side)} />
+      <PickToggle selected={pick} onSelect={(side) => void requestPick(side)} />
       {pick && onConfidenceChange ? (
         <ConfidenceSelector
           value={confidence}
-          disabled={picksLocked || saving}
+          disabled={saving}
           onChange={(pts) => onConfidenceChange(team.id, pts)}
         />
       ) : null}
