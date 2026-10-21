@@ -72,9 +72,7 @@ export function LeaderboardPlayerRow({
             </View>
           ) : null}
           <Text style={styles.detailTitle}>O/U picks</Text>
-          <Text style={styles.trackLegend}>
-            Green = on track · Yellow = unsure · Red = off track
-          </Text>
+          <Text style={styles.trackLegend}>Green = on track · Red = off track</Text>
           {seasonLocked && ouPicks.some((p) => p.lockedLineDiffers) ? (
             <Text style={styles.lockHint}>
               LOCK badge = pick saved at a line different from the final board (graded at your
@@ -120,7 +118,7 @@ function trackChipStyle(band: PickTrackBand) {
     case 'on-track':
       return styles.ouChipOnTrack;
     case 'unsure':
-      return styles.ouChipUnsure;
+      return styles.ouChipNeutral;
     case 'off-track':
       return styles.ouChipOffTrack;
   }
@@ -241,19 +239,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderRadius: 8,
-    borderWidth: 2,
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
+  ouChipNeutral: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   ouChipOnTrack: {
+    borderWidth: 2,
     borderColor: colors.statusOnTrack,
     backgroundColor: 'rgba(34, 197, 94, 0.28)',
   },
-  ouChipUnsure: {
-    borderColor: colors.statusAround,
-    backgroundColor: 'rgba(234, 179, 8, 0.28)',
-  },
   ouChipOffTrack: {
+    borderWidth: 2,
     borderColor: colors.statusNeedsWork,
     backgroundColor: 'rgba(239, 68, 68, 0.28)',
   },
