@@ -27,6 +27,26 @@ export function BonusPickCard({
   const isChampion = question.question_key === 'nba_champion';
   const sortedTeams = [...teams].sort((a, b) => a.name.localeCompare(b.name));
 
+  if (locked) {
+    return (
+      <View style={styles.card}>
+        <Text style={styles.question}>{question.question_text}</Text>
+        <Text style={styles.subtitle}>Tiebreaker · locked for the season</Text>
+        {answer ? (
+          <View style={styles.lockedAnswerRow}>
+            <Text style={styles.lockedAnswerLabel}>Your pick</Text>
+            <Text style={styles.lockedAnswerValue}>{answer}</Text>
+          </View>
+        ) : (
+          <Text style={styles.lockedAnswerEmpty}>No answer saved</Text>
+        )}
+        {question.winning_answer ? (
+          <Text style={styles.metaResult}>Result · {question.winning_answer}</Text>
+        ) : null}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.card}>
       <Text style={styles.question}>{question.question_text}</Text>
@@ -154,5 +174,32 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 8,
     fontWeight: '600',
+  },
+  lockedAnswerRow: {
+    marginTop: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  lockedAnswerLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  lockedAnswerValue: {
+    color: colors.textPrimary,
+    fontSize: 17,
+    fontWeight: '800',
+    marginTop: 6,
+  },
+  lockedAnswerEmpty: {
+    color: colors.textMuted,
+    fontSize: 13,
+    marginTop: 4,
   },
 });

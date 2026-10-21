@@ -70,15 +70,15 @@ export function evaluatePick(
 export function pickEvaluationLabel(state: PickEvaluation): string {
   switch (state) {
     case 'ahead':
-      return 'Your pick: ahead';
+      return 'On track';
     case 'behind':
-      return 'Your pick: behind';
+      return 'Off track';
     case 'won':
-      return 'Your pick: won';
+      return 'Pick won';
     case 'lost':
-      return 'Your pick: lost';
+      return 'Pick lost';
     case 'pending':
-      return 'Your pick: pending';
+      return 'Pending';
   }
 }
 
