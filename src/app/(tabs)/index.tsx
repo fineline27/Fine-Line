@@ -296,7 +296,7 @@ export default function StandingsScreen() {
                     : `One pick card for all your ${sport ?? 'NBA'} leagues. Each pick locks the O/U line at save time — if the line moves later, you keep your locked number until you change the pick (and accept the new line). Classic and Stakes share picks; set a 1–3 stake per team for Stakes. Edit until the first game (${lockAtLabel}).`}
                 </Text>
               </CollapsiblePanel>
-              {lockedOffBoardCount > 0 ? (
+              {!seasonLocked && lockedOffBoardCount > 0 ? (
                 <CollapsiblePanel
                   title={`${lockedOffBoardCount} pick${lockedOffBoardCount === 1 ? '' : 's'} with a locked line off the board`}
                   hintCollapsed="Tap for what the LOCK badge means"

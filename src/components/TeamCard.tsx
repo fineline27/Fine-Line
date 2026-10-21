@@ -60,6 +60,48 @@ export function TeamCard({
   const gradedLine = pick != null ? effectiveLockedOuLine(lockedOuLine, team) : team.ou_line;
   const boardLine = team.ou_line;
   const showLineChangeOffer = lineMoved && (lineChangeOfferVisible || lineOptionsExpanded);
+  const stakeLabel =
+    confidence === 1 ? '1 pt stake' : `${confidence} pt stake`;
+
+  if (picksLocked) {
+    return (
+      <View style={styles.card}>
+        <View style={styles.headerRow}>
+          <TeamColorBadge abbreviation={team.abbreviation} primaryColor={team.primary_color} />
+          <View style={styles.nameBlock}>
+            <Text style={styles.name}>{team.name}</Text>
+          </View>
+        </View>
+
+        <TeamRecordStrip team={team} />
+
+        {pick ? (
+          <View style={styles.seasonLockedPanel}>
+            <Text style={styles.seasonLockedLineLabel}>Locked line</Text>
+            <Text style={styles.seasonLockedLineValue}>{gradedLine.toFixed(1)}</Text>
+            <View style={styles.seasonLockedMetaRow}>
+              <Text
+                style={[
+                  styles.seasonLockedSide,
+                  pick === 'over' ? styles.seasonLockedOver : styles.seasonLockedUnder,
+                ]}
+              >
+                {pick === 'over' ? 'OVER' : 'UNDER'}
+              </Text>
+              <Text style={styles.seasonLockedStake}>{stakeLabel}</Text>
+            </View>
+            {pickEval ? (
+              <View style={styles.seasonLockedStatusRow}>
+                <PickStatusBadge evaluation={pickEval} style={styles.seasonLockedStatusBadge} />
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <Text style={styles.seasonLockedMissing}>No pick saved for this team</Text>
+        )}
+      </View>
+    );
+  }
 
   async function requestPick(side: PickSide) {
     if (picksLocked) {
@@ -435,5 +477,69 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 8,
     textAlign: 'center',
+  },
+  seasonLockedPanel: {
+    alignItems: 'center',
+    marginTop: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  seasonLockedLineLabel: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  seasonLockedLineValue: {
+    color: '#60a5fa',
+    fontSize: 48,
+    fontWeight: '800',
+    letterSpacing: -1,
+    lineHeight: 52,
+    marginTop: 4,
+  },
+  seasonLockedMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 10,
+  },
+  seasonLockedSide: {
+    fontWeight: '900',
+    fontSize: 15,
+    letterSpacing: 0.6,
+  },
+  seasonLockedOver: {
+    color: '#4ade80',
+  },
+  seasonLockedUnder: {
+    color: '#f87171',
+  },
+  seasonLockedStake: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  seasonLockedStatusRow: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  seasonLockedStatusBadge: {
+    marginTop: 0,
+    alignSelf: 'center',
+  },
+  seasonLockedMissing: {
+    color: colors.textMuted,
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 12,
+    paddingVertical: 12,
   },
 });

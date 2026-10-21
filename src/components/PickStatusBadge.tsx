@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import type { PickEvaluation } from '../lib/pickScoring';
 import { pickEvaluationLabel } from '../lib/pickScoring';
@@ -6,6 +6,7 @@ import { colors } from '../theme/colors';
 
 type Props = {
   evaluation: PickEvaluation;
+  style?: StyleProp<ViewStyle>;
 };
 
 function palette(state: PickEvaluation) {
@@ -21,11 +22,11 @@ function palette(state: PickEvaluation) {
   }
 }
 
-export function PickStatusBadge({ evaluation }: Props) {
+export function PickStatusBadge({ evaluation, style }: Props) {
   const { bg, fg } = palette(evaluation);
 
   return (
-    <View style={[styles.badge, { backgroundColor: bg, borderColor: fg }]}>
+    <View style={[styles.badge, { backgroundColor: bg, borderColor: fg }, style]}>
       <Text style={[styles.text, { color: fg }]}>{pickEvaluationLabel(evaluation)}</Text>
     </View>
   );
