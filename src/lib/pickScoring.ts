@@ -95,6 +95,21 @@ export function pickIsClinched(evaluation: PickEvaluation): boolean {
   return evaluation === 'won';
 }
 
+export type PickTrackBand = 'on-track' | 'unsure' | 'off-track';
+
+export function pickTrackBand(evaluation: PickEvaluation): PickTrackBand {
+  switch (evaluation) {
+    case 'ahead':
+    case 'won':
+      return 'on-track';
+    case 'pending':
+      return 'unsure';
+    case 'behind':
+    case 'lost':
+      return 'off-track';
+  }
+}
+
 export function pickEvaluationLabel(state: PickEvaluation): string {
   switch (state) {
     case 'ahead':
