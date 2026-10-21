@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { PlayerBonusPick, PlayerOuPick } from '../lib/playerPickDetails';
 import { LockedLineIndicator } from './LockedLineIndicator';
 import { formatColors } from '../content/overallFormats';
+import { useSeasonLock } from '../hooks/useSeasonLock';
 import type { LeaderboardEntry } from '../lib/rankings';
 import { colors } from '../theme/colors';
 
@@ -25,6 +26,8 @@ export function LeaderboardPlayerRow({
   showBonus,
   canExpand,
 }: Props) {
+  const { locked: seasonLocked } = useSeasonLock();
+
   return (
     <View style={[styles.wrap, entry.isMe && styles.wrapMe]}>
       <Pressable
@@ -68,7 +71,13 @@ export function LeaderboardPlayerRow({
             </View>
           ) : null}
           <Text style={styles.detailTitle}>O/U picks</Text>
-          {ouPicks.some((p) => p.lockedLineDiffers) ? (
+          {seasonLocked && ouPicks.some((p) => p.lockedLineDiffers) ? (
+            <Text style={styles.lockHint}>
+              Highlighted picks were saved at a line different from the final board number (LOCK =
+              graded at your saved line).
+            </Text>
+          ) : null}
+          {!seasonLocked && ouPicks.some((p) => p.lockedLineDiffers) ? (
             <Text style={styles.lockHint}>
               LOCK = graded at your saved line when it differs from today&apos;s board number.
             </Text>
@@ -90,6 +99,8 @@ export function LeaderboardPlayerRow({
                   lockedLine={p.ouLine}
                   marketLine={p.marketLine}
                   compact
+                  variant={seasonLocked ? 'board-reference' : 'pick-lock'}
+                  boardLineLabel={seasonLocked ? 'Final' : 'Current'}
                 />
               </View>
             ))}

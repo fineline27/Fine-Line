@@ -21,6 +21,7 @@ import { useLeague } from '../../contexts/LeagueContext';
 import { useSport } from '../../contexts/SportContext';
 import { useLeagueBoard } from '../../hooks/useLeagueBoard';
 import { useLeagueMembership } from '../../hooks/useLeagueMembership';
+import { useSeasonLock } from '../../hooks/useSeasonLock';
 import { useTeams } from '../../hooks/useTeams';
 import {
   buildLeagueBonusByQuestion,
@@ -42,6 +43,7 @@ export default function LeagueBoardScreen() {
   const { activeLeague, isLoading: leagueLoading, refreshLeagues } = useLeague();
   const [deleteBusy, setDeleteBusy] = useState(false);
   const { teams, loading: teamsLoading, refresh: refreshTeams } = useTeams();
+  const { locked: seasonLocked } = useSeasonLock();
   const { picksSubmitted, loading: membershipLoading, refresh: refreshMembership } =
     useLeagueMembership(0, teams.length);
   const {
@@ -239,9 +241,13 @@ export default function LeagueBoardScreen() {
                                 lockedLine={gradedLine}
                                 marketLine={team.ou_line}
                                 compact
+                                variant={seasonLocked ? 'board-reference' : 'pick-lock'}
+                                boardLineLabel={seasonLocked ? 'Final' : 'Current'}
                               />
                             ) : (
-                              <Text style={styles.pickLineMuted}>Line {gradedLine.toFixed(1)}</Text>
+                              <Text style={styles.pickLineMuted}>
+                                {seasonLocked ? 'Final' : 'Line'} {gradedLine.toFixed(1)}
+                              </Text>
                             )}
                           </View>
                           <Text
