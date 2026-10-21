@@ -1,8 +1,29 @@
 import { bonusPointsForUser } from './bonusScoring';
+import {
+  isRankedParticipant,
+  listedLeaderboardMembers,
+  type LeaderboardMemberMeta,
+  type SeasonLockContext,
+} from './leaderboardEligibility';
 import { scoreConfidencePick, scorePick } from './pickScoring';
 import { clampConfidence } from '../types/confidence';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { Team } from '../types/team';
+
+export type { LeaderboardMemberMeta, SeasonLockContext };
+
+const OPEN_SEASON: SeasonLockContext = { picksWindowClosed: false, lockAt: new Date(0) };
+
+function filterPredictionsForRanked(
+  predictions: PredictionRow[],
+  members: LeaderboardMemberMeta[],
+  season: SeasonLockContext,
+): PredictionRow[] {
+  const ranked = new Set(
+    members.filter((m) => isRankedParticipant(m, season)).map((m) => m.user_id),
+  );
+  return predictions.filter((p) => ranked.has(p.user_id));
+}
 
 export type PredictionRow = {
   user_id: string;
@@ -58,9 +79,15 @@ export function computeStandings(
   predictions: PredictionRow[],
   teams: Team[],
   bonus?: { questions: BonusQuestion[]; answers: BonusAnswerRow[] },
+  members: LeaderboardMemberMeta[] = [],
+  season: SeasonLockContext = OPEN_SEASON,
 ): StandingsResult {
+  const pool =
+    members.length > 0
+      ? filterPredictionsForRanked(predictions, members, season)
+      : predictions;
   const teamById = new Map(teams.map((t) => [t.id, t]));
-  const picksByUser = indexPredictions(predictions);
+  const picksByUser = indexPredictions(pool);
 
   const scores = new Map<string, number>();
   const clinched = new Map<string, number>();
@@ -99,15 +126,17 @@ export function computeStandings(
       (bonusByUser.get(b[0]) ?? 0) - (bonusByUser.get(a[0]) ?? 0) ||
       (clinched.get(b[0]) ?? 0) - (clinched.get(a[0]) ?? 0),
   );
+  const userRanked =
+    members.length === 0 || members.some((m) => m.user_id === userId && isRankedParticipant(m, season));
   const rankIndex = sorted.findIndex(([id]) => id === userId);
-  const rank = rankIndex >= 0 ? rankIndex + 1 : null;
+  const rank = userRanked && rankIndex >= 0 ? rankIndex + 1 : null;
 
   return {
     rank,
     totalPlayers: sorted.length,
-    myScore,
-    clinched: myClinched,
-    bonusScore: myBonus,
+    myScore: userRanked ? myScore : 0,
+    clinched: userRanked ? myClinched : 0,
+    bonusScore: userRanked ? myBonus : 0,
   };
 }
 
@@ -115,9 +144,15 @@ export function computeConfidenceStandings(
   userId: string,
   predictions: PredictionRow[],
   teams: Team[],
+  members: LeaderboardMemberMeta[] = [],
+  season: SeasonLockContext = OPEN_SEASON,
 ): Omit<StandingsResult, 'bonusScore'> & { bonusScore: 0 } {
+  const pool =
+    members.length > 0
+      ? filterPredictionsForRanked(predictions, members, season)
+      : predictions;
   const teamById = new Map(teams.map((t) => [t.id, t]));
-  const picksByUser = indexPredictions(predictions);
+  const picksByUser = indexPredictions(pool);
   const scores = new Map<string, number>();
   const clinched = new Map<string, number>();
 
@@ -144,14 +179,16 @@ export function computeConfidenceStandings(
   const sorted = [...scores.entries()].sort(
     (a, b) => b[1] - a[1] || (clinched.get(b[0]) ?? 0) - (clinched.get(a[0]) ?? 0),
   );
+  const userRanked =
+    members.length === 0 || members.some((m) => m.user_id === userId && isRankedParticipant(m, season));
   const rankIndex = sorted.findIndex(([id]) => id === userId);
-  const rank = rankIndex >= 0 ? rankIndex + 1 : null;
+  const rank = userRanked && rankIndex >= 0 ? rankIndex + 1 : null;
 
   return {
     rank,
     totalPlayers: sorted.length,
-    myScore,
-    clinched: myClinched,
+    myScore: userRanked ? myScore : 0,
+    clinched: userRanked ? myClinched : 0,
     bonusScore: 0,
   };
 }
@@ -160,17 +197,19 @@ export function computeLeaderboard(
   currentUserId: string,
   predictions: PredictionRow[],
   teams: Team[],
-  members: Array<{ user_id: string; display_name: string | null; picks_submitted_at: string | null }>,
+  members: LeaderboardMemberMeta[],
   bonus?: { questions: BonusQuestion[]; answers: BonusAnswerRow[] },
+  season: SeasonLockContext = OPEN_SEASON,
 ): LeaderboardEntry[] {
-  const submittedMemberIds = new Set(
-    members.filter((m) => m.picks_submitted_at).map((m) => m.user_id),
+  const visibleMembers = listedLeaderboardMembers(members, season);
+  const rankedMemberIds = new Set(
+    visibleMembers.filter((m) => isRankedParticipant(m, season)).map((m) => m.user_id),
   );
-  const filteredPredictions = predictions.filter((p) => submittedMemberIds.has(p.user_id));
+  const filteredPredictions = predictions.filter((p) => rankedMemberIds.has(p.user_id));
   const teamById = new Map(teams.map((t) => [t.id, t]));
   const picksByUser = indexPredictions(filteredPredictions);
 
-  const scored = members.map((member) => {
+  const scored = visibleMembers.map((member) => {
     const teamPicks = picksByUser.get(member.user_id);
     let score = 0;
     let clinched = 0;
@@ -249,16 +288,18 @@ export function computeConfidenceLeaderboard(
   currentUserId: string,
   predictions: PredictionRow[],
   teams: Team[],
-  members: Array<{ user_id: string; display_name: string | null; picks_submitted_at: string | null }>,
+  members: LeaderboardMemberMeta[],
+  season: SeasonLockContext = OPEN_SEASON,
 ): LeaderboardEntry[] {
-  const submittedMemberIds = new Set(
-    members.filter((m) => m.picks_submitted_at).map((m) => m.user_id),
+  const visibleMembers = listedLeaderboardMembers(members, season);
+  const rankedMemberIds = new Set(
+    visibleMembers.filter((m) => isRankedParticipant(m, season)).map((m) => m.user_id),
   );
-  const filteredPredictions = predictions.filter((p) => submittedMemberIds.has(p.user_id));
+  const filteredPredictions = predictions.filter((p) => rankedMemberIds.has(p.user_id));
   const teamById = new Map(teams.map((t) => [t.id, t]));
   const picksByUser = indexPredictions(filteredPredictions);
 
-  const scored = members.map((member) => {
+  const scored = visibleMembers.map((member) => {
     const teamPicks = picksByUser.get(member.user_id);
     let score = 0;
     let clinched = 0;

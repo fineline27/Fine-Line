@@ -2,8 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useSport } from '../contexts/SportContext';
+import { rankedParticipantIds } from '../lib/leaderboardEligibility';
 import { computeConfidenceStandings } from '../lib/rankings';
 import { fetchAllPredictionsForSport } from '../lib/predictions';
+import { fetchSportPlayerMeta } from '../lib/sportLeaderboard';
+import { nbaSeasonLockContext } from '../lib/seasonLockContext';
 import type { Team } from '../types/team';
 
 type RankState = {
@@ -40,11 +43,22 @@ export function useOverallConfidenceRank(teams: Team[]): RankState {
     setState((s) => ({ ...s, loading: true }));
 
     try {
-      const predictions = await fetchAllPredictionsForSport(sport);
-      const result = computeConfidenceStandings(user.id, predictions, teams);
+      const season = nbaSeasonLockContext();
+      const [predictions, playerMeta] = await Promise.all([
+        fetchAllPredictionsForSport(sport),
+        fetchSportPlayerMeta(sport),
+      ]);
+      const members = playerMeta.map((m) => ({
+        user_id: m.user_id,
+        display_name: m.display_name,
+        picks_submitted_at: m.picks_submitted_at,
+        joined_at: m.joined_at,
+      }));
+      const result = computeConfidenceStandings(user.id, predictions, teams, members, season);
+      const rankedCount = rankedParticipantIds(members, season).size;
       setState({
         rank: result.rank,
-        totalPlayers: result.totalPlayers,
+        totalPlayers: rankedCount > 0 ? rankedCount : result.totalPlayers,
         myScore: result.myScore,
         clinched: result.clinched,
         loading: false,

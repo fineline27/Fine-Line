@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useSport } from '../contexts/SportContext';
-import { fetchBonusBundleForSport } from '../lib/sportLeaderboard';
+import { fetchBonusBundleForSport, fetchSportPlayerMeta } from '../lib/sportLeaderboard';
 import { computeStandings } from '../lib/rankings';
 import { fetchAllPredictionsForSport } from '../lib/predictions';
+import { nbaSeasonLockContext } from '../lib/seasonLockContext';
 import type { Team } from '../types/team';
 
 type RankState = {
@@ -44,15 +45,23 @@ export function useOverallRank(teams: Team[]): RankState {
     setState((s) => ({ ...s, loading: true }));
 
     try {
-      const [predictions, bonusBundle] = await Promise.all([
+      const season = nbaSeasonLockContext();
+      const [predictions, bonusBundle, playerMeta] = await Promise.all([
         fetchAllPredictionsForSport(sport),
         fetchBonusBundleForSport(sport),
+        fetchSportPlayerMeta(sport),
       ]);
+      const members = playerMeta.map((m) => ({
+        user_id: m.user_id,
+        display_name: m.display_name,
+        picks_submitted_at: m.picks_submitted_at,
+        joined_at: m.joined_at,
+      }));
       const bonus =
         bonusBundle.questions.length > 0
           ? { questions: bonusBundle.questions, answers: bonusBundle.answers }
           : undefined;
-      const result = computeStandings(user.id, predictions, teams, bonus);
+      const result = computeStandings(user.id, predictions, teams, bonus, members, season);
       setState({ ...result, loading: false });
     } catch {
       setState({

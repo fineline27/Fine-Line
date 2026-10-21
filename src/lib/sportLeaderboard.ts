@@ -6,6 +6,7 @@ export type SportPlayerMeta = {
   user_id: string;
   display_name: string;
   picks_submitted_at: string | null;
+  joined_at: string | null;
 };
 
 export async function fetchSportPlayerMeta(sport: string): Promise<SportPlayerMeta[]> {
@@ -26,7 +27,7 @@ export async function fetchSportPlayerMeta(sport: string): Promise<SportPlayerMe
 
   const { data, error } = await supabase
     .from('league_members')
-    .select('user_id, display_name, picks_submitted_at')
+    .select('user_id, display_name, picks_submitted_at, joined_at')
     .in('league_id', leagueIds);
 
   if (error) {
@@ -42,6 +43,7 @@ export async function fetchSportPlayerMeta(sport: string): Promise<SportPlayerMe
         user_id: row.user_id,
         display_name: name,
         picks_submitted_at: row.picks_submitted_at,
+        joined_at: row.joined_at ?? null,
       });
       continue;
     }
@@ -50,6 +52,15 @@ export async function fetchSportPlayerMeta(sport: string): Promise<SportPlayerMe
     }
     if (row.picks_submitted_at) {
       existing.picks_submitted_at = row.picks_submitted_at;
+    }
+    const joinedMs = row.joined_at ? new Date(row.joined_at).getTime() : null;
+    const existingJoinedMs = existing.joined_at ? new Date(existing.joined_at).getTime() : null;
+    if (
+      joinedMs != null &&
+      Number.isFinite(joinedMs) &&
+      (existingJoinedMs == null || !Number.isFinite(existingJoinedMs) || joinedMs < existingJoinedMs)
+    ) {
+      existing.joined_at = row.joined_at ?? null;
     }
   }
 

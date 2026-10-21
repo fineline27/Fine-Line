@@ -7,8 +7,10 @@ import {
   fetchBonusQuestionsForLeague,
 } from '../lib/bonusQuestions';
 import { fetchLeagueMembers } from '../lib/leagueMembers';
+import { isRankedParticipant, rankedParticipantIds } from '../lib/leaderboardEligibility';
 import { computeStandings } from '../lib/rankings';
 import { fetchAllPredictionsInLeague } from '../lib/predictions';
+import { nbaSeasonLockContext } from '../lib/seasonLockContext';
 import type { Team } from '../types/team';
 
 type RankState = {
@@ -49,7 +51,8 @@ export function useLeagueRank(teams: Team[], picksSubmitted: boolean): RankState
 
     try {
       const members = await fetchLeagueMembers(activeLeague.id);
-      const submittedCount = members.filter((m) => m.picks_submitted_at).length;
+      const season = nbaSeasonLockContext();
+      const submittedCount = rankedParticipantIds(members, season).size;
       let bonusBundle: { questions: Awaited<ReturnType<typeof fetchBonusQuestionsForLeague>>; answers: Awaited<ReturnType<typeof fetchBonusAnswersForLeague>> } | undefined;
       try {
         bonusBundle = {
@@ -63,20 +66,23 @@ export function useLeagueRank(teams: Team[], picksSubmitted: boolean): RankState
       if (!picksSubmitted) {
         const ownPredictions = await fetchAllPredictionsInLeague(activeLeague.id);
         const mineOnly = ownPredictions.filter((p) => p.user_id === user.id);
-        const result = computeStandings(user.id, mineOnly, teams, bonusBundle);
+        const result = computeStandings(user.id, mineOnly, teams, bonusBundle, members, season);
+        const meRanked = members.some(
+          (m) => m.user_id === user.id && isRankedParticipant(m, season),
+        );
         setState({
           rank: null,
           totalPlayers: submittedCount,
-          myScore: result.myScore,
-          clinched: result.clinched,
-          bonusScore: result.bonusScore,
+          myScore: meRanked ? result.myScore : 0,
+          clinched: meRanked ? result.clinched : 0,
+          bonusScore: meRanked ? result.bonusScore : 0,
           loading: false,
         });
         return;
       }
 
       const predictions = await fetchAllPredictionsInLeague(activeLeague.id);
-      const result = computeStandings(user.id, predictions, teams, bonusBundle);
+      const result = computeStandings(user.id, predictions, teams, bonusBundle, members, season);
       setState({
         ...result,
         totalPlayers: submittedCount || result.totalPlayers,

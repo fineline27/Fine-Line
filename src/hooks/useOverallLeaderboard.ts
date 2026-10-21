@@ -9,6 +9,7 @@ import {
   computeLeaderboard,
   type LeaderboardEntry,
 } from '../lib/rankings';
+import { nbaSeasonLockContext } from '../lib/seasonLockContext';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { Team } from '../types/team';
 
@@ -60,27 +61,34 @@ export function useOverallLeaderboard(teams: Team[]) {
         fetchBonusBundleForSport(sport),
       ]);
 
-      const userIds = new Set(predictions.map((p) => p.user_id));
-      const members = [...userIds].map((uid) => {
-        const meta = playerMeta.find((m) => m.user_id === uid);
-        return {
-          user_id: uid,
-          display_name: meta?.display_name ?? 'Player',
-          picks_submitted_at: meta?.picks_submitted_at ?? null,
-        };
-      });
+      const members = playerMeta.map((m) => ({
+        user_id: m.user_id,
+        display_name: m.display_name,
+        picks_submitted_at: m.picks_submitted_at,
+        joined_at: m.joined_at,
+      }));
+
+      const season = nbaSeasonLockContext();
 
       const bonus =
         bonusBundle.questions.length > 0
           ? { questions: bonusBundle.questions, answers: bonusBundle.answers }
           : undefined;
 
-      const classicLeaderboard = computeLeaderboard(user.id, predictions, teams, members, bonus);
+      const classicLeaderboard = computeLeaderboard(
+        user.id,
+        predictions,
+        teams,
+        members,
+        bonus,
+        season,
+      );
       const stakesLeaderboard = computeConfidenceLeaderboard(
         user.id,
         predictions,
         teams,
         members,
+        season,
       );
 
       setState({
