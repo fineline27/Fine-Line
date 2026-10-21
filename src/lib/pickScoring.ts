@@ -1,5 +1,5 @@
 import { teamForPickLine } from './ouLine';
-import { calculateWinPace } from './teamStatus';
+import { calculateWinPace, WIN_PACE_STATUS_MARGIN } from './teamStatus';
 import type { PickSide, Team } from '../types/team';
 
 export type PickEvaluation = 'ahead' | 'behind' | 'won' | 'lost' | 'pending';
@@ -27,6 +27,26 @@ export function underWinsAtEnd(wins: number, line: number): boolean {
   return wins < winsNeededForOver(line);
 }
 
+function paceEvaluationForPick(pick: PickSide, pace: number, line: number): PickEvaluation {
+  const margin = WIN_PACE_STATUS_MARGIN;
+  if (pick === 'over') {
+    if (pace >= line + margin) {
+      return 'ahead';
+    }
+    if (pace <= line - margin) {
+      return 'behind';
+    }
+    return 'pending';
+  }
+  if (pace <= line - margin) {
+    return 'ahead';
+  }
+  if (pace >= line + margin) {
+    return 'behind';
+  }
+  return 'pending';
+}
+
 export function evaluatePick(
   team: Team,
   pick: PickSide,
@@ -36,6 +56,7 @@ export function evaluatePick(
   const line = gradedTeam.ou_line;
   const { current_wins: wins } = gradedTeam;
   const overNeed = winsNeededForOver(line);
+  const gamesPlayed = gradedTeam.current_wins + gradedTeam.current_losses;
 
   if (pick === 'over') {
     if (seasonComplete(gradedTeam)) {
@@ -47,11 +68,11 @@ export function evaluatePick(
     if (maxPossibleWins(gradedTeam) < overNeed) {
       return 'lost';
     }
-    if (maxPossibleWins(gradedTeam) < overNeed) {
-      return 'lost';
+    if (gamesPlayed === 0) {
+      return 'pending';
     }
     const pace = calculateWinPace(gradedTeam);
-    return pace >= line ? 'ahead' : 'behind';
+    return paceEvaluationForPick('over', pace, line);
   }
 
   if (seasonComplete(gradedTeam)) {
@@ -63,8 +84,15 @@ export function evaluatePick(
   if (wins >= overNeed) {
     return 'lost';
   }
+  if (gamesPlayed === 0) {
+    return 'pending';
+  }
   const pace = calculateWinPace(gradedTeam);
-  return pace <= line ? 'ahead' : 'behind';
+  return paceEvaluationForPick('under', pace, line);
+}
+
+export function pickIsClinched(evaluation: PickEvaluation): boolean {
+  return evaluation === 'won';
 }
 
 export function pickEvaluationLabel(state: PickEvaluation): string {
@@ -78,35 +106,45 @@ export function pickEvaluationLabel(state: PickEvaluation): string {
     case 'lost':
       return 'Pick lost';
     case 'pending':
-      return 'Pending';
+      return 'Unsure';
   }
 }
 
-export function scorePick(team: Team, pick: PickSide, lockedOuLine?: number | null): number {
-  const result = evaluatePick(team, pick, lockedOuLine);
-  if (result === 'won') {
+export function classicPointsForEvaluation(evaluation: PickEvaluation): number {
+  if (evaluation === 'won' || evaluation === 'ahead') {
     return 1;
-  }
-  if (result === 'lost') {
-    return 0;
   }
   return 0;
 }
 
-/** Stakes format: +stake if pick won, −stake if lost, 0 while still live. */
+export function stakesPointsForEvaluation(
+  evaluation: PickEvaluation,
+  confidence: number,
+): number {
+  const pts = Math.min(3, Math.max(1, Math.round(confidence)));
+  if (evaluation === 'won' || evaluation === 'ahead') {
+    return pts;
+  }
+  if (evaluation === 'lost' || evaluation === 'behind') {
+    return -pts;
+  }
+  return 0;
+}
+
+/** Classic: +1 on track or pick won; 0 if unsure, off track, or pick lost. */
+export function scorePick(team: Team, pick: PickSide, lockedOuLine?: number | null): number {
+  return classicPointsForEvaluation(evaluatePick(team, pick, lockedOuLine));
+}
+
+/** Stakes: +stake on track or won; −stake off track or lost; 0 while unsure. */
 export function scoreConfidencePick(
   team: Team,
   pick: PickSide,
   confidence: number,
   lockedOuLine?: number | null,
 ): number {
-  const pts = Math.min(3, Math.max(1, Math.round(confidence)));
-  const result = evaluatePick(team, pick, lockedOuLine);
-  if (result === 'won') {
-    return pts;
-  }
-  if (result === 'lost') {
-    return -pts;
-  }
-  return 0;
+  return stakesPointsForEvaluation(
+    evaluatePick(team, pick, lockedOuLine),
+    confidence,
+  );
 }

@@ -1,6 +1,7 @@
 import type { Team, TeamStatus } from '../types/team';
 
-const STATUS_MARGIN = 1.5;
+/** Win-pace buffer (wins) vs O/U line for on-track / off-track / around-mark. */
+export const WIN_PACE_STATUS_MARGIN = 1.5;
 
 export function calculateWinPace(team: Team): number {
   const gamesPlayed = team.current_wins + team.current_losses;
@@ -19,10 +20,10 @@ export function getTeamStatus(team: Team): TeamStatus {
   const winPace = calculateWinPace(team);
   const { ou_line: line } = team;
 
-  if (winPace >= line + STATUS_MARGIN) {
+  if (winPace >= line + WIN_PACE_STATUS_MARGIN) {
     return 'ON TRACK';
   }
-  if (winPace <= line - STATUS_MARGIN) {
+  if (winPace <= line - WIN_PACE_STATUS_MARGIN) {
     return 'NEEDS WORK';
   }
   return 'AROUND MARK';

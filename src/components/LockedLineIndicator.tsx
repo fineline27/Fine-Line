@@ -10,6 +10,12 @@ type Props = {
   compact?: boolean;
   /** Large display for pick cards on My picks */
   prominent?: boolean;
+  /**
+   * pick-lock: graded line is primary; board line labeled when it differs (My picks, pre-lock board).
+   * board-reference: board (final) line is primary; show saved line when it differs (leaderboard in season).
+   */
+  variant?: 'pick-lock' | 'board-reference';
+  boardLineLabel?: 'Current' | 'Final';
 };
 
 export function LockedLineIndicator({
@@ -17,7 +23,55 @@ export function LockedLineIndicator({
   marketLine,
   compact = false,
   prominent = false,
+  variant = 'pick-lock',
+  boardLineLabel = 'Current',
 }: Props) {
+  const boardPrefix = `${boardLineLabel} `;
+
+  if (variant === 'board-reference') {
+    if (ouLinesEqual(lockedLine, marketLine)) {
+      return (
+        <Text
+          style={[
+            styles.line,
+            compact && styles.lineCompact,
+            prominent && styles.lineProminent,
+          ]}
+        >
+          {boardPrefix}
+          {marketLine.toFixed(1)}
+        </Text>
+      );
+    }
+
+    return (
+      <View style={styles.wrap}>
+        <View style={[styles.lockBadge, compact && styles.lockBadgeCompact]}>
+          <Text style={[styles.lockBadgeText, compact && styles.lockBadgeTextCompact]}>LOCK</Text>
+        </View>
+        <Text
+          style={[
+            styles.lockedLine,
+            compact && styles.lockedLineCompact,
+            prominent && styles.lockedLineProminent,
+          ]}
+        >
+          {lockedLine.toFixed(1)}
+        </Text>
+        <Text
+          style={[
+            styles.marketLine,
+            compact && styles.marketLineCompact,
+            prominent && styles.marketLineProminent,
+          ]}
+        >
+          {boardPrefix}
+          {marketLine.toFixed(1)}
+        </Text>
+      </View>
+    );
+  }
+
   if (ouLinesEqual(lockedLine, marketLine)) {
     return (
       <Text
@@ -53,7 +107,8 @@ export function LockedLineIndicator({
           prominent && styles.marketLineProminent,
         ]}
       >
-        Current {marketLine.toFixed(1)}
+        {boardPrefix}
+        {marketLine.toFixed(1)}
       </Text>
     </View>
   );
