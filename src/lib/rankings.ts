@@ -1,5 +1,10 @@
 import { bonusPointsForUser } from './bonusScoring';
-import { scoreConfidencePick, scorePick } from './pickScoring';
+import {
+  classicPointsForEvaluation,
+  evaluatePick,
+  pickIsClinched,
+  stakesPointsForEvaluation,
+} from './pickScoring';
 import { clampConfidence } from '../types/confidence';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import type { Team } from '../types/team';
@@ -73,9 +78,9 @@ export function computeStandings(
       if (!team) {
         continue;
       }
-      const pts = scorePick(team, side, lockedOuLine);
-      total += pts;
-      if (pts === 1) {
+      const evaluation = evaluatePick(team, side, lockedOuLine);
+      total += classicPointsForEvaluation(evaluation);
+      if (pickIsClinched(evaluation)) {
         clinchedCount += 1;
       }
     }
@@ -129,9 +134,9 @@ export function computeConfidenceStandings(
       if (!team) {
         continue;
       }
-      const pts = scoreConfidencePick(team, side, clampConfidence(confidence), lockedOuLine);
-      total += pts;
-      if (pts > 0) {
+      const evaluation = evaluatePick(team, side, lockedOuLine);
+      total += stakesPointsForEvaluation(evaluation, clampConfidence(confidence));
+      if (pickIsClinched(evaluation)) {
         clinchedCount += 1;
       }
     }
@@ -180,9 +185,9 @@ export function computeLeaderboard(
         if (!team) {
           continue;
         }
-        const pts = scorePick(team, side, lockedOuLine);
-        score += pts;
-        if (pts === 1) {
+        const evaluation = evaluatePick(team, side, lockedOuLine);
+        score += classicPointsForEvaluation(evaluation);
+        if (pickIsClinched(evaluation)) {
           clinched += 1;
         }
       }
@@ -268,9 +273,9 @@ export function computeConfidenceLeaderboard(
         if (!team) {
           continue;
         }
-        const pts = scoreConfidencePick(team, side, clampConfidence(confidence), lockedOuLine);
-        score += pts;
-        if (pts > 0) {
+        const evaluation = evaluatePick(team, side, lockedOuLine);
+        score += stakesPointsForEvaluation(evaluation, clampConfidence(confidence));
+        if (pickIsClinched(evaluation)) {
           clinched += 1;
         }
       }
