@@ -77,8 +77,8 @@ export function LeaderboardPlayerRow({
           </Text>
           {seasonLocked && ouPicks.some((p) => p.lockedLineDiffers) ? (
             <Text style={styles.lockHint}>
-              Highlighted picks were saved at a line different from the final board number (LOCK =
-              graded at your saved line).
+              LOCK badge = pick saved at a line different from the final board (graded at your
+              locked number).
             </Text>
           ) : null}
           {!seasonLocked && ouPicks.some((p) => p.lockedLineDiffers) ? (
@@ -241,21 +241,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 2,
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
   ouChipOnTrack: {
     borderColor: colors.statusOnTrack,
-    backgroundColor: colors.statusOnTrackBg,
+    backgroundColor: 'rgba(34, 197, 94, 0.28)',
   },
   ouChipUnsure: {
     borderColor: colors.statusAround,
-    backgroundColor: colors.statusAroundBg,
+    backgroundColor: 'rgba(234, 179, 8, 0.28)',
   },
   ouChipOffTrack: {
     borderColor: colors.statusNeedsWork,
-    backgroundColor: colors.statusNeedsWorkBg,
+    backgroundColor: 'rgba(239, 68, 68, 0.28)',
   },
   ouAbbr: {
     color: colors.textPrimary,
