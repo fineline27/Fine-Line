@@ -2,6 +2,7 @@ import { dedupeBonusQuestions, findBonusAnswerForUser } from './bonusDedupe';
 import type { SportPredictionRow } from './predictions';
 import type { BonusAnswerRow, BonusQuestion } from '../types/bonus';
 import { clampConfidence } from '../types/confidence';
+import { evaluatePick, type PickEvaluation } from './pickScoring';
 import { effectiveLockedOuLine, marketLineDiffersFromPickLock } from './ouLine';
 import type { PickSide, Team } from '../types/team';
 
@@ -14,6 +15,7 @@ export type PlayerOuPick = {
   lockedLineDiffers: boolean;
   pick: PickSide;
   confidence?: number;
+  evaluation: PickEvaluation;
 };
 
 export type PlayerBonusPick = {
@@ -64,6 +66,7 @@ export function buildPlayerOuPicks(
         lockedLineDiffers: marketLineDiffersFromPickLock(entry.lockedOuLine, team, true),
         pick: entry.pick,
         confidence: includeConfidence ? (entry.confidence ?? 1) : undefined,
+        evaluation: evaluatePick(team, entry.pick, entry.lockedOuLine),
       };
     });
 }

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { PlayerBonusPick, PlayerOuPick } from '../lib/playerPickDetails';
+import { pickTrackBand, type PickTrackBand } from '../lib/pickScoring';
 import { LockedLineIndicator } from './LockedLineIndicator';
 import { formatColors } from '../content/overallFormats';
 import { useSeasonLock } from '../hooks/useSeasonLock';
@@ -71,6 +72,9 @@ export function LeaderboardPlayerRow({
             </View>
           ) : null}
           <Text style={styles.detailTitle}>O/U picks</Text>
+          <Text style={styles.trackLegend}>
+            Green = on track · Yellow = unsure · Red = off track
+          </Text>
           {seasonLocked && ouPicks.some((p) => p.lockedLineDiffers) ? (
             <Text style={styles.lockHint}>
               Highlighted picks were saved at a line different from the final board number (LOCK =
@@ -86,7 +90,7 @@ export function LeaderboardPlayerRow({
             {ouPicks.map((p) => (
               <View
                 key={p.abbreviation}
-                style={[styles.ouChip, p.lockedLineDiffers && styles.ouChipLocked]}
+                style={[styles.ouChip, trackChipStyle(pickTrackBand(p.evaluation))]}
               >
                 <Text style={styles.ouAbbr}>{p.abbreviation}</Text>
                 <Text style={[styles.ouSide, p.pick === 'over' ? styles.over : styles.under]}>
@@ -109,6 +113,17 @@ export function LeaderboardPlayerRow({
       ) : null}
     </View>
   );
+}
+
+function trackChipStyle(band: PickTrackBand) {
+  switch (band) {
+    case 'on-track':
+      return styles.ouChipOnTrack;
+    case 'unsure':
+      return styles.ouChipUnsure;
+    case 'off-track':
+      return styles.ouChipOffTrack;
+  }
 }
 
 const styles = StyleSheet.create({
@@ -215,20 +230,32 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginBottom: 8,
   },
+  trackLegend: {
+    color: colors.textMuted,
+    fontSize: 11,
+    lineHeight: 16,
+    marginBottom: 8,
+  },
   ouChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: 6,
     paddingHorizontal: 8,
   },
-  ouChipLocked: {
-    borderColor: colors.lineUpdateBorder,
-    backgroundColor: colors.lineUpdateBg,
+  ouChipOnTrack: {
+    borderColor: colors.statusOnTrack,
+    backgroundColor: colors.statusOnTrackBg,
+  },
+  ouChipUnsure: {
+    borderColor: colors.statusAround,
+    backgroundColor: colors.statusAroundBg,
+  },
+  ouChipOffTrack: {
+    borderColor: colors.statusNeedsWork,
+    backgroundColor: colors.statusNeedsWorkBg,
   },
   ouAbbr: {
     color: colors.textPrimary,
