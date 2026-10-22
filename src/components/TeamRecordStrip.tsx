@@ -20,9 +20,9 @@ export function TeamRecordStrip({ team, style }: Props) {
         <Text style={styles.label}>Season record</Text>
         {seasonStarted ? (
           <View style={styles.recordRow} accessibilityLabel={`Record ${recordLabel}`}>
-            <Text style={styles.wins}>{team.current_wins}</Text>
+            <Text style={styles.recordNumber}>{team.current_wins}</Text>
             <Text style={styles.recordDash}>–</Text>
-            <Text style={styles.losses}>{team.current_losses}</Text>
+            <Text style={styles.recordNumber}>{team.current_losses}</Text>
           </View>
         ) : (
           <Text style={styles.notStartedRecord}>0–0</Text>
@@ -71,8 +71,8 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     marginTop: 4,
   },
-  wins: {
-    color: colors.statusOnTrack,
+  recordNumber: {
+    color: colors.textPrimary,
     fontSize: 28,
     fontWeight: '900',
     letterSpacing: -0.5,
@@ -83,13 +83,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     marginHorizontal: 4,
-    lineHeight: 32,
-  },
-  losses: {
-    color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '900',
-    letterSpacing: -0.5,
     lineHeight: 32,
   },
   notStartedRecord: {
