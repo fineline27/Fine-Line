@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   wins: {
-    color: colors.statusOnTrack,
+    color: colors.textPrimary,
     fontSize: 28,
     fontWeight: '900',
     letterSpacing: -0.5,
