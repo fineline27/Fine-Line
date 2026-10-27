@@ -86,7 +86,7 @@ If login works on localhost but **not** on Vercel, 99% of the time this list is 
 
 The app does **not** auto-sync NBA scores. After games:
 
-- Run [`supabase/update-season-records-oct-25-2026.sql`](supabase/update-season-records-oct-25-2026.sql) (or the latest dated file in `supabase/`) in the **SQL Editor**, **or**
+- Run [`supabase/update-season-records-oct-27-2026.sql`](supabase/update-season-records-oct-27-2026.sql) (or the latest dated `update-season-records-*.sql` in `supabase/`) in the **SQL Editor**, **or**
 - On your machine: `npm run refresh:nba-records` (prints SQL from ESPN) or `npm run refresh:nba-records -- --apply` with `SUPABASE_SERVICE_ROLE_KEY` in `.env`, **or**
 - **Table Editor** → `teams` → edit `current_wins` / `current_losses`, **or**
 - SQL: `update public.teams set current_wins = 10, current_losses = 5 where abbreviation = 'BOS';`
