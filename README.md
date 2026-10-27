@@ -26,6 +26,8 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`01-seed-30-nba-teams.sql`](supabase/01-seed-30-nba-teams.sql) | When you need all 30 NBA teams + RLS read access |
 | [`update-ou-lines-2026-27.sql`](supabase/update-ou-lines-2026-27.sql) | Update **2026–27** win-total O/U lines only (keeps records and picks) |
 | [`update-ou-lines-phi-por-gsw-phx-oct-2026.sql`](supabase/update-ou-lines-phi-por-gsw-phx-oct-2026.sql) | **Line moves:** PHI 49.5→50.5, POR 41.5→42.5, GSW 40.5→35.5, PHX 40.5→39.5 |
+| [`update-season-records-oct-27-2026.sql`](supabase/update-season-records-oct-27-2026.sql) | **Season W-L** for all 30 teams (late Oct 2026 snapshot) |
+| [`update-season-records-oct-25-2026.sql`](supabase/update-season-records-oct-25-2026.sql) | Prior W-L snapshot (early Oct 2026) |
 | [`04-league-submit-and-roster.sql`](supabase/04-league-submit-and-roster.sql) | Submit picks, league roster, gated visibility of others’ picks |
 | [`05-bonus-questions.sql`](supabase/05-bonus-questions.sql) | Bonus tiebreakers (MVP, champion, ROY) |
 | [`06-mandatory-bonus-questions.sql`](supabase/06-mandatory-bonus-questions.sql) | Enable bonus on **all** leagues and backfill questions |
@@ -42,7 +44,7 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`15-unblock-signup-drop-username-trigger.sql`](supabase/15-unblock-signup-drop-username-trigger.sql) | **Fastest fix** — only removes the blocking auth trigger (2 lines) |
 | [`fix-play-solo-and-leagues.sql`](supabase/fix-play-solo-and-leagues.sql) | Same fixes (included in RUN-THIS file) |
 
-After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points. Use exact team or player names as stored in picks. Refresh the player list with `npm run refresh:nba-players` (ESPN rosters → `src/data/nba-players.json`).
+After the season, set `winning_answer` on rows in **`bonus_questions`** (Table Editor) to score bonus points. Use exact team or player names as stored in picks. Refresh the player list with `npm run refresh:nba-players` (ESPN rosters → `src/data/nba-players.json`). During the season, sync team records with `npm run refresh:nba-records` (prints SQL from ESPN) or run the dated `update-season-records-*.sql` file in the SQL Editor; use `npm run refresh:nba-records -- --apply` when `SUPABASE_SERVICE_ROLE_KEY` is in `.env`.
 
 **Do not** mix schema + sample 3-team inserts + delete/insert in one paste from chat. Tables already exist → run **`01-seed-30-nba-teams.sql` only** (copy from the repo file in Cursor).
 
