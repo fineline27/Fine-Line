@@ -49,7 +49,9 @@ export function useLeagueRank(teams: Team[], picksSubmitted: boolean): RankState
 
     try {
       const members = await fetchLeagueMembers(activeLeague.id);
-      const submittedCount = members.filter((m) => m.picks_submitted_at).length;
+      const submittedMembers = members.filter((m) => m.picks_submitted_at);
+      const submittedCount = submittedMembers.length;
+      const submittedUserIds = new Set(submittedMembers.map((m) => m.user_id));
       let bonusBundle: { questions: Awaited<ReturnType<typeof fetchBonusQuestionsForLeague>>; answers: Awaited<ReturnType<typeof fetchBonusAnswersForLeague>> } | undefined;
       try {
         bonusBundle = {
@@ -76,10 +78,11 @@ export function useLeagueRank(teams: Team[], picksSubmitted: boolean): RankState
       }
 
       const predictions = await fetchAllPredictionsInLeague(activeLeague.id);
-      const result = computeStandings(user.id, predictions, teams, bonusBundle);
+      const submittedPredictions = predictions.filter((p) => submittedUserIds.has(p.user_id));
+      const result = computeStandings(user.id, submittedPredictions, teams, bonusBundle);
       setState({
         ...result,
-        totalPlayers: submittedCount || result.totalPlayers,
+        totalPlayers: submittedCount,
         loading: false,
       });
     } catch {

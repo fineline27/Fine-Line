@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useAuth } from '../contexts/AuthContext';
 import { useSport } from '../contexts/SportContext';
-import { fetchBonusBundleForSport } from '../lib/sportLeaderboard';
+import { fetchBonusBundleForSport, fetchSportPlayerMeta } from '../lib/sportLeaderboard';
 import { computeStandings } from '../lib/rankings';
 import { fetchAllPredictionsForSport } from '../lib/predictions';
 import type { Team } from '../types/team';
@@ -44,15 +44,20 @@ export function useOverallRank(teams: Team[]): RankState {
     setState((s) => ({ ...s, loading: true }));
 
     try {
-      const [predictions, bonusBundle] = await Promise.all([
+      const [predictions, bonusBundle, playerMeta] = await Promise.all([
         fetchAllPredictionsForSport(sport),
         fetchBonusBundleForSport(sport),
+        fetchSportPlayerMeta(sport),
       ]);
+      const submittedUserIds = new Set(
+        playerMeta.filter((m) => m.picks_submitted_at).map((m) => m.user_id),
+      );
+      const submittedPredictions = predictions.filter((p) => submittedUserIds.has(p.user_id));
       const bonus =
         bonusBundle.questions.length > 0
           ? { questions: bonusBundle.questions, answers: bonusBundle.answers }
           : undefined;
-      const result = computeStandings(user.id, predictions, teams, bonus);
+      const result = computeStandings(user.id, submittedPredictions, teams, bonus);
       setState({ ...result, loading: false });
     } catch {
       setState({
