@@ -63,9 +63,13 @@ export function computeStandings(
   predictions: PredictionRow[],
   teams: Team[],
   bonus?: { questions: BonusQuestion[]; answers: BonusAnswerRow[] },
+  onlyUserIds?: ReadonlySet<string>,
 ): StandingsResult {
+  const scopedPredictions = onlyUserIds
+    ? predictions.filter((row) => onlyUserIds.has(row.user_id))
+    : predictions;
   const teamById = new Map(teams.map((t) => [t.id, t]));
-  const picksByUser = indexPredictions(predictions);
+  const picksByUser = indexPredictions(scopedPredictions);
 
   const scores = new Map<string, number>();
   const clinched = new Map<string, number>();
@@ -120,9 +124,13 @@ export function computeConfidenceStandings(
   userId: string,
   predictions: PredictionRow[],
   teams: Team[],
+  onlyUserIds?: ReadonlySet<string>,
 ): Omit<StandingsResult, 'bonusScore'> & { bonusScore: 0 } {
+  const scopedPredictions = onlyUserIds
+    ? predictions.filter((row) => onlyUserIds.has(row.user_id))
+    : predictions;
   const teamById = new Map(teams.map((t) => [t.id, t]));
-  const picksByUser = indexPredictions(predictions);
+  const picksByUser = indexPredictions(scopedPredictions);
   const scores = new Map<string, number>();
   const clinched = new Map<string, number>();
 

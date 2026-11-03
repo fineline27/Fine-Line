@@ -27,6 +27,7 @@ import { useOverallRank } from '../../hooks/useOverallRank';
 import { usePredictions } from '../../hooks/usePredictions';
 import { useSeasonLock } from '../../hooks/useSeasonLock';
 import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
+import { isOpenPoolInviteCode } from '../../lib/openPool';
 import type { BonusQuestion } from '../../types/bonus';
 import type { Team } from '../../types/team';
 import { colors } from '../../theme/colors';
@@ -57,7 +58,11 @@ export default function StandingsScreen() {
     error: picksError,
     refresh: refreshPicks,
   } = usePredictions(seasonLocked, teams);
-  const pickCount = Object.keys(picks).length;
+  const teamIds = useMemo(() => new Set(teams.map((t) => t.id)), [teams]);
+  const pickCount = useMemo(
+    () => Object.keys(picks).filter((teamId) => teamIds.has(teamId)).length,
+    [picks, teamIds],
+  );
   const requiredPicks = teams.length;
   const {
     picksSubmitted,
@@ -169,6 +174,7 @@ export default function StandingsScreen() {
         picksSubmitted={picksSubmitted}
         bonusScore={leagueRank.bonusScore}
         overallBonusScore={overallRank.bonusScore}
+        isOpenPool={isOpenPoolInviteCode(activeLeague?.invite_code)}
       />
 
       {picksError ? <Text style={styles.pickError}>{picksError}</Text> : null}

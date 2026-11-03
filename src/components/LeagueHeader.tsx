@@ -26,6 +26,8 @@ type Props = {
   picksSubmitted: boolean;
   bonusScore?: number;
   overallBonusScore?: number;
+  /** True when the active league is the sport-wide open pool, not a private friends league. */
+  isOpenPool?: boolean;
 };
 
 function formatRank({ rank, totalPlayers, loading }: RankBlock): string {
@@ -52,8 +54,10 @@ export function LeagueHeader({
   teamCount,
   picksSubmitted,
   bonusScore = 0,
+  isOpenPool = false,
 }: Props) {
   const leagueRankText = !picksSubmitted ? 'Locked' : formatRank(league);
+  const leagueColumnLabel = isOpenPool ? 'Overall pool' : 'Your league';
 
   return (
     <View style={styles.container}>
@@ -93,7 +97,7 @@ export function LeagueHeader({
             </Pressable>
 
             <View style={styles.statCellLeague}>
-              <Text style={styles.statLabelLeague}>Your league</Text>
+              <Text style={styles.statLabelLeague}>{leagueColumnLabel}</Text>
               {league.loading ? (
                 <ActivityIndicator color={colors.accent} size="small" />
               ) : (

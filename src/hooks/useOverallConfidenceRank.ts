@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSport } from '../contexts/SportContext';
 import { computeConfidenceStandings } from '../lib/rankings';
 import { fetchAllPredictionsForSport } from '../lib/predictions';
+import { fetchSportPlayerMeta } from '../lib/sportLeaderboard';
 import type { Team } from '../types/team';
 
 type RankState = {
@@ -40,8 +41,15 @@ export function useOverallConfidenceRank(teams: Team[]): RankState {
     setState((s) => ({ ...s, loading: true }));
 
     try {
-      const predictions = await fetchAllPredictionsForSport(sport);
-      const result = computeConfidenceStandings(user.id, predictions, teams);
+      const [predictions, playerMeta] = await Promise.all([
+        fetchAllPredictionsForSport(sport),
+        fetchSportPlayerMeta(sport),
+      ]);
+      const submittedUserIds = new Set(
+        playerMeta.filter((m) => m.picks_submitted_at).map((m) => m.user_id),
+      );
+      const submittedPredictions = predictions.filter((p) => submittedUserIds.has(p.user_id));
+      const result = computeConfidenceStandings(user.id, submittedPredictions, teams);
       setState({
         rank: result.rank,
         totalPlayers: result.totalPlayers,
