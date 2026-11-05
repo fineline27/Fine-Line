@@ -1,5 +1,6 @@
 -- Four-team O/U line moves (2026–27 win totals). Updates ou_line only; keeps records and picks.
--- Run in Supabase SQL Editor when the board should reflect this batch (safe to re-run).
+-- *** RUN THIS ON LIVE SUPABASE *** (SQL Editor → New query → paste → Run). Safe to re-run.
+-- Or: npm run apply:ou-four-teams (service role in .env). Git alone does not update production.
 
 -- Philadelphia 76ers: 49.5 → 50.5
 update public.teams set ou_line = 50.5 where abbreviation = 'PHI';
