@@ -26,7 +26,8 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`01-seed-30-nba-teams.sql`](supabase/01-seed-30-nba-teams.sql) | When you need all 30 NBA teams + RLS read access |
 | [`update-ou-lines-2026-27.sql`](supabase/update-ou-lines-2026-27.sql) | Update **2026–27** win-total O/U lines only (keeps records and picks) |
 | [`update-ou-lines-phi-por-gsw-phx-oct-2026.sql`](supabase/update-ou-lines-phi-por-gsw-phx-oct-2026.sql) | **Line moves:** PHI 49.5→50.5, POR 41.5→42.5, GSW 40.5→35.5, PHX 40.5→39.5 |
-| [`update-team-records-nov-6-2026.sql`](supabase/update-team-records-nov-6-2026.sql) | **Season records:** all 30 teams W-L through ~6 Nov 2026 |
+| [`update-team-records-nov-9-2026.sql`](supabase/update-team-records-nov-9-2026.sql) | **Season records:** all 30 teams W-L through ~9 Nov 2026 |
+| [`update-team-records-nov-6-2026.sql`](supabase/update-team-records-nov-6-2026.sql) | Prior snapshot (~6 Nov 2026) |
 | [`update-team-records-nov-4-2026.sql`](supabase/update-team-records-nov-4-2026.sql) | Prior snapshot (~4 Nov 2026) |
 | [`update-team-records-nov-2-2026.sql`](supabase/update-team-records-nov-2-2026.sql) | Prior snapshot (~2 Nov 2026) |
 | [`update-team-records-oct-31-2026.sql`](supabase/update-team-records-oct-31-2026.sql) | Prior snapshot (~31 Oct 2026) |
