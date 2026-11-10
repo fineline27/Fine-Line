@@ -26,6 +26,8 @@ Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or legacy `SUPABASE_ANON_KEY`
 | [`01-seed-30-nba-teams.sql`](supabase/01-seed-30-nba-teams.sql) | When you need all 30 NBA teams + RLS read access |
 | [`update-ou-lines-2026-27.sql`](supabase/update-ou-lines-2026-27.sql) | Update **2026–27** win-total O/U lines only (keeps records and picks) |
 | [`update-ou-lines-phi-por-gsw-phx-oct-2026.sql`](supabase/update-ou-lines-phi-por-gsw-phx-oct-2026.sql) | **Line moves:** PHI 49.5→50.5, POR 41.5→42.5, GSW 40.5→35.5, PHX 40.5→39.5 |
+
+**Important:** Git updates do **not** change the live board. The app reads `teams.ou_line` from Supabase. After pulling these SQL files, either paste [`update-ou-lines-phi-por-gsw-phx-oct-2026.sql`](supabase/update-ou-lines-phi-por-gsw-phx-oct-2026.sql) into the **Supabase SQL Editor**, or run `npm run apply:ou-four-teams` with `SUPABASE_SERVICE_ROLE_KEY` in `.env` (see [`.env.example`](.env.example)).
 | [`04-league-submit-and-roster.sql`](supabase/04-league-submit-and-roster.sql) | Submit picks, league roster, gated visibility of others’ picks |
 | [`05-bonus-questions.sql`](supabase/05-bonus-questions.sql) | Bonus tiebreakers (MVP, champion, ROY) |
 | [`06-mandatory-bonus-questions.sql`](supabase/06-mandatory-bonus-questions.sql) | Enable bonus on **all** leagues and backfill questions |

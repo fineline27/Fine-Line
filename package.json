@@ -34,6 +34,7 @@
     "ios": "expo start --ios",
     "web": "node scripts/print-web-url.mjs 8081 && expo start --web --port 8081",
     "check:teams": "node scripts/check-teams.mjs",
+    "apply:ou-four-teams": "node scripts/apply-four-team-ou-lines.mjs",
     "refresh:nba-players": "node scripts/refresh-nba-players.mjs",
     "build:web": "expo export --platform web && node scripts/inject-share-meta.mjs"
   },
