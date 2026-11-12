@@ -89,9 +89,8 @@ Press `w` for web, `i` for iOS simulator, or scan the QR code in Expo Go.
 ## Win pace status
 
 - **Win pace** = `(current_wins / games_played) × total_season_games` (0 if no games yet)
-- **ON TRACK** (green): win pace ≥ `ou_line + 1.5`
-- **AROUND MARK** (yellow): between the red and green thresholds
-- **NEEDS WORK** (red): win pace ≤ `ou_line - 1.5`
+- **ON TRACK** (green): win pace ≥ `ou_line`
+- **NEEDS WORK** (red): win pace < `ou_line`
 
 ## Go live (production web)
 

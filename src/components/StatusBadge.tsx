@@ -20,8 +20,6 @@ function statusColors(status: TeamStatus) {
       return { bg: colors.statusNotStartedBg, fg: colors.statusNotStarted };
     case 'ON TRACK':
       return { bg: colors.statusOnTrackBg, fg: colors.statusOnTrack };
-    case 'AROUND MARK':
-      return { bg: colors.statusAroundBg, fg: colors.statusAround };
     case 'NEEDS WORK':
       return { bg: colors.statusNeedsWorkBg, fg: colors.statusNeedsWork };
   }

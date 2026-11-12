@@ -1,5 +1,5 @@
 import { teamForPickLine } from './ouLine';
-import { calculateWinPace, WIN_PACE_STATUS_MARGIN } from './teamStatus';
+import { calculateWinPace } from './teamStatus';
 import type { PickSide, Team } from '../types/team';
 
 export type PickEvaluation = 'ahead' | 'behind' | 'won' | 'lost' | 'pending';
@@ -28,23 +28,10 @@ export function underWinsAtEnd(wins: number, line: number): boolean {
 }
 
 function paceEvaluationForPick(pick: PickSide, pace: number, line: number): PickEvaluation {
-  const margin = WIN_PACE_STATUS_MARGIN;
   if (pick === 'over') {
-    if (pace >= line + margin) {
-      return 'ahead';
-    }
-    if (pace <= line - margin) {
-      return 'behind';
-    }
-    return 'pending';
+    return pace >= line ? 'ahead' : 'behind';
   }
-  if (pace <= line - margin) {
-    return 'ahead';
-  }
-  if (pace >= line + margin) {
-    return 'behind';
-  }
-  return 'pending';
+  return pace < line ? 'ahead' : 'behind';
 }
 
 export function evaluatePick(
@@ -95,18 +82,18 @@ export function pickIsClinched(evaluation: PickEvaluation): boolean {
   return evaluation === 'won';
 }
 
-export type PickTrackBand = 'on-track' | 'unsure' | 'off-track';
+export type PickTrackBand = 'on-track' | 'off-track';
 
-export function pickTrackBand(evaluation: PickEvaluation): PickTrackBand {
+export function pickTrackBand(evaluation: PickEvaluation): PickTrackBand | null {
   switch (evaluation) {
     case 'ahead':
     case 'won':
       return 'on-track';
-    case 'pending':
-      return 'unsure';
     case 'behind':
     case 'lost':
       return 'off-track';
+    case 'pending':
+      return null;
   }
 }
 
@@ -121,7 +108,7 @@ export function pickEvaluationLabel(state: PickEvaluation): string {
     case 'lost':
       return 'Pick lost';
     case 'pending':
-      return 'Unsure';
+      return 'Pending';
   }
 }
 
@@ -146,12 +133,12 @@ export function stakesPointsForEvaluation(
   return 0;
 }
 
-/** Classic: +1 on track or pick won; 0 if unsure, off track, or pick lost. */
+/** Classic: +1 on track or pick won; 0 if off track, pending, or pick lost. */
 export function scorePick(team: Team, pick: PickSide, lockedOuLine?: number | null): number {
   return classicPointsForEvaluation(evaluatePick(team, pick, lockedOuLine));
 }
 
-/** Stakes: +stake on track or won; −stake off track or lost; 0 while unsure. */
+/** Stakes: +stake on track or won; −stake off track or lost; 0 while pending. */
 export function scoreConfidencePick(
   team: Team,
   pick: PickSide,
