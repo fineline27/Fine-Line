@@ -116,14 +116,12 @@ export function LeaderboardPlayerRow({
   );
 }
 
-function trackChipStyle(band: PickTrackBand | null) {
+function trackChipStyle(band: PickTrackBand) {
   switch (band) {
     case 'on-track':
       return styles.ouChipOnTrack;
     case 'off-track':
       return styles.ouChipOffTrack;
-    case null:
-      return styles.ouChipNeutral;
   }
 }
 

@@ -17,8 +17,6 @@ function palette(state: PickEvaluation) {
     case 'lost':
     case 'behind':
       return { bg: colors.statusNeedsWorkBg, fg: colors.statusNeedsWork };
-    case 'pending':
-      return { bg: colors.statusNotStartedBg, fg: colors.statusNotStarted };
   }
 }
 

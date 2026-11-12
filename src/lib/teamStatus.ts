@@ -9,11 +9,6 @@ export function calculateWinPace(team: Team): number {
 }
 
 export function getTeamStatus(team: Team): TeamStatus {
-  const gamesPlayed = team.current_wins + team.current_losses;
-  if (gamesPlayed === 0) {
-    return 'NOT STARTED';
-  }
-
   const winPace = calculateWinPace(team);
   const { ou_line: line } = team;
 
