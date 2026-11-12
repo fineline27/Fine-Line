@@ -88,7 +88,10 @@ export function LeaderboardPlayerRow({
             {ouPicks.map((p) => (
               <View
                 key={p.abbreviation}
-                style={[styles.ouChip, trackChipStyle(pickTrackBand(p.evaluation))]}
+                style={[
+                  styles.ouChip,
+                  trackChipStyle(pickTrackBand(p.evaluation)),
+                ]}
               >
                 <Text style={styles.ouAbbr}>{p.abbreviation}</Text>
                 <Text style={[styles.ouSide, p.pick === 'over' ? styles.over : styles.under]}>
@@ -117,8 +120,6 @@ function trackChipStyle(band: PickTrackBand) {
   switch (band) {
     case 'on-track':
       return styles.ouChipOnTrack;
-    case 'unsure':
-      return styles.ouChipNeutral;
     case 'off-track':
       return styles.ouChipOffTrack;
   }

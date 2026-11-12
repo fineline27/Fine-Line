@@ -7,21 +7,10 @@ type Props = {
   status: TeamStatus;
 };
 
-function statusLabel(status: TeamStatus): string {
-  if (status === 'NOT STARTED') {
-    return 'Not started';
-  }
-  return status;
-}
-
 function statusColors(status: TeamStatus) {
   switch (status) {
-    case 'NOT STARTED':
-      return { bg: colors.statusNotStartedBg, fg: colors.statusNotStarted };
     case 'ON TRACK':
       return { bg: colors.statusOnTrackBg, fg: colors.statusOnTrack };
-    case 'AROUND MARK':
-      return { bg: colors.statusAroundBg, fg: colors.statusAround };
     case 'NEEDS WORK':
       return { bg: colors.statusNeedsWorkBg, fg: colors.statusNeedsWork };
   }
@@ -33,7 +22,7 @@ export function StatusBadge({ status }: Props) {
   return (
     <View style={[styles.badge, { backgroundColor: palette.bg, borderColor: palette.fg }]}>
       <View style={[styles.dot, { backgroundColor: palette.fg }]} />
-      <Text style={[styles.label, { color: palette.fg }]}>{statusLabel(status)}</Text>
+      <Text style={[styles.label, { color: palette.fg }]}>{status}</Text>
     </View>
   );
 }

@@ -1,8 +1,8 @@
 import { teamForPickLine } from './ouLine';
-import { calculateWinPace, WIN_PACE_STATUS_MARGIN } from './teamStatus';
+import { calculateWinPace } from './teamStatus';
 import type { PickSide, Team } from '../types/team';
 
-export type PickEvaluation = 'ahead' | 'behind' | 'won' | 'lost' | 'pending';
+export type PickEvaluation = 'ahead' | 'behind' | 'won' | 'lost';
 
 /** Integer wins needed for OVER to win vs a .5 line (e.g. 54.5 → 55). */
 export function winsNeededForOver(line: number): number {
@@ -28,23 +28,10 @@ export function underWinsAtEnd(wins: number, line: number): boolean {
 }
 
 function paceEvaluationForPick(pick: PickSide, pace: number, line: number): PickEvaluation {
-  const margin = WIN_PACE_STATUS_MARGIN;
   if (pick === 'over') {
-    if (pace >= line + margin) {
-      return 'ahead';
-    }
-    if (pace <= line - margin) {
-      return 'behind';
-    }
-    return 'pending';
+    return pace >= line ? 'ahead' : 'behind';
   }
-  if (pace <= line - margin) {
-    return 'ahead';
-  }
-  if (pace >= line + margin) {
-    return 'behind';
-  }
-  return 'pending';
+  return pace < line ? 'ahead' : 'behind';
 }
 
 export function evaluatePick(
@@ -56,7 +43,6 @@ export function evaluatePick(
   const line = gradedTeam.ou_line;
   const { current_wins: wins } = gradedTeam;
   const overNeed = winsNeededForOver(line);
-  const gamesPlayed = gradedTeam.current_wins + gradedTeam.current_losses;
 
   if (pick === 'over') {
     if (seasonComplete(gradedTeam)) {
@@ -67,9 +53,6 @@ export function evaluatePick(
     }
     if (maxPossibleWins(gradedTeam) < overNeed) {
       return 'lost';
-    }
-    if (gamesPlayed === 0) {
-      return 'pending';
     }
     const pace = calculateWinPace(gradedTeam);
     return paceEvaluationForPick('over', pace, line);
@@ -84,9 +67,6 @@ export function evaluatePick(
   if (wins >= overNeed) {
     return 'lost';
   }
-  if (gamesPlayed === 0) {
-    return 'pending';
-  }
   const pace = calculateWinPace(gradedTeam);
   return paceEvaluationForPick('under', pace, line);
 }
@@ -95,15 +75,13 @@ export function pickIsClinched(evaluation: PickEvaluation): boolean {
   return evaluation === 'won';
 }
 
-export type PickTrackBand = 'on-track' | 'unsure' | 'off-track';
+export type PickTrackBand = 'on-track' | 'off-track';
 
 export function pickTrackBand(evaluation: PickEvaluation): PickTrackBand {
   switch (evaluation) {
     case 'ahead':
     case 'won':
       return 'on-track';
-    case 'pending':
-      return 'unsure';
     case 'behind':
     case 'lost':
       return 'off-track';
@@ -120,8 +98,6 @@ export function pickEvaluationLabel(state: PickEvaluation): string {
       return 'Pick won';
     case 'lost':
       return 'Pick lost';
-    case 'pending':
-      return 'Unsure';
   }
 }
 
@@ -140,18 +116,15 @@ export function stakesPointsForEvaluation(
   if (evaluation === 'won' || evaluation === 'ahead') {
     return pts;
   }
-  if (evaluation === 'lost' || evaluation === 'behind') {
-    return -pts;
-  }
-  return 0;
+  return -pts;
 }
 
-/** Classic: +1 on track or pick won; 0 if unsure, off track, or pick lost. */
+/** Classic: +1 on track or pick won; 0 if off track or pick lost. */
 export function scorePick(team: Team, pick: PickSide, lockedOuLine?: number | null): number {
   return classicPointsForEvaluation(evaluatePick(team, pick, lockedOuLine));
 }
 
-/** Stakes: +stake on track or won; −stake off track or lost; 0 while unsure. */
+/** Stakes: +stake on track or won; −stake off track or lost. */
 export function scoreConfidencePick(
   team: Team,
   pick: PickSide,
