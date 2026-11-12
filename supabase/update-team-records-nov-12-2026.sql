@@ -1,4 +1,4 @@
--- NBA regular-season W-L through games of ~12 Nov 2026 (Adelaide). Safe to re-run.
+-- NBA regular-season W-L through games of ~12 Nov 2026 evening (Adelaide). Safe to re-run.
 -- Run in Supabase SQL Editor after game nights; users pull to refresh in the app.
 
 update public.teams t
@@ -9,36 +9,36 @@ from (
   values
     -- Eastern Conference
     ('ATL', 7, 5),
-    ('BOS', 9, 2),
-    ('BKN', 2, 8),
+    ('BOS', 10, 2),
+    ('BKN', 3, 8),
     ('CHA', 4, 7),
-    ('CHI', 1, 8),
-    ('CLE', 5, 6),
+    ('CHI', 1, 9),
+    ('CLE', 6, 6),
     ('DET', 7, 3),
-    ('IND', 3, 8),
+    ('IND', 4, 8),
     ('MIA', 5, 6),
-    ('MIL', 1, 10),
-    ('NYK', 6, 4),
-    ('ORL', 3, 7),
+    ('MIL', 1, 11),
+    ('NYK', 6, 5),
+    ('ORL', 4, 7),
     ('PHI', 9, 3),
-    ('TOR', 5, 5),
-    ('WAS', 4, 7),
+    ('TOR', 5, 6),
+    ('WAS', 4, 8),
     -- Western Conference
     ('DAL', 7, 4),
-    ('DEN', 5, 4),
-    ('GSW', 8, 3),
-    ('HOU', 8, 3),
+    ('DEN', 6, 4),
+    ('GSW', 8, 4),
+    ('HOU', 9, 3),
     ('LAC', 2, 8),
-    ('LAL', 10, 2),
-    ('MEM', 7, 3),
+    ('LAL', 11, 2),
+    ('MEM', 7, 4),
     ('MIN', 8, 3),
-    ('NOP', 4, 7),
-    ('OKC', 8, 3),
+    ('NOP', 4, 8),
+    ('OKC', 8, 4),
     ('PHX', 4, 6),
-    ('POR', 7, 3),
+    ('POR', 8, 3),
     ('SAC', 1, 10),
-    ('SAS', 9, 2),
-    ('UTA', 1, 10)
+    ('SAS', 10, 2),
+    ('UTA', 1, 11)
 ) as v(abbreviation, w, l)
 where t.abbreviation = v.abbreviation;
 
