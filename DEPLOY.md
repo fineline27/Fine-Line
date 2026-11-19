@@ -87,7 +87,7 @@ If login works on localhost but **not** on Vercel, 99% of the time this list is 
 The app does **not** auto-sync NBA scores. After games:
 
 - **Table Editor** → `teams` → edit `current_wins` / `current_losses`, **or**
-- SQL: `update public.teams set current_wins = 10, current_losses = 5 where abbreviation = 'BOS';`
+- SQL: `update public.teams set current_wins = 10, current_losses = 5 where abbreviation = 'BOS';`, **or** run the dated batch script in **`supabase/update-records-nov-19-2026.sql`** (see README database table).
 
 Users **pull to refresh** on My picks (or reload the browser) to see new colors and standings.
 
