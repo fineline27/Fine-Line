@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BonusPickCard } from '../../components/BonusPickCard';
 import { CollapsiblePanel } from '../../components/CollapsiblePanel';
 import { LeagueHeader } from '../../components/LeagueHeader';
+import { NbaConferenceTabs } from '../../components/NbaConferenceTabs';
 import { OverallFormatsGuide } from '../../components/OverallFormatsGuide';
 import { TeamCard } from '../../components/TeamCard';
 import { useAuth } from '../../contexts/AuthContext';
@@ -27,6 +28,11 @@ import { useOverallRank } from '../../hooks/useOverallRank';
 import { usePredictions } from '../../hooks/usePredictions';
 import { useSeasonLock } from '../../hooks/useSeasonLock';
 import { TEAMS_RLS_SQL, useTeams } from '../../hooks/useTeams';
+import {
+  conferenceTitle,
+  filterTeamsByConference,
+  type NbaConferenceId,
+} from '../../lib/nbaConferences';
 import { isOpenPoolInviteCode } from '../../lib/openPool';
 import type { BonusQuestion } from '../../types/bonus';
 import type { Team } from '../../types/team';
@@ -39,6 +45,7 @@ type PicksListRow =
   | { key: string; type: 'bonus'; question: BonusQuestion };
 
 export default function StandingsScreen() {
+  const [conferenceFilter, setConferenceFilter] = useState<NbaConferenceId>('east');
   const { session, isLoading: authLoading } = useAuth();
   const { sport, isLoading: sportLoading } = useSport();
   const { activeLeague, isLoading: leagueLoading, poolError, refreshLeagues } = useLeague();
@@ -95,13 +102,17 @@ export default function StandingsScreen() {
     bonusAllAnswered;
   const lockedOffBoardCount = teams.filter((t) => isLineChangeOfferVisible(t.id)).length;
   const showListLoader = loading || picksLoading || leagueLoading;
+  const visibleTeams = useMemo(
+    () => filterTeamsByConference(teams, conferenceFilter),
+    [teams, conferenceFilter],
+  );
   const pickRows = useMemo((): PicksListRow[] => {
-    const rows: PicksListRow[] = teams.map((team) => ({
+    const rows: PicksListRow[] = visibleTeams.map((team) => ({
       key: team.id,
       type: 'team',
       team,
     }));
-    if (bonusLoading && teams.length > 0) {
+    if (bonusLoading && visibleTeams.length > 0) {
       rows.push({ key: 'bonus-loading', type: 'bonus-loading' });
       return rows;
     }
@@ -112,7 +123,7 @@ export default function StandingsScreen() {
       }
     }
     return rows;
-  }, [teams, bonusQuestions, bonusLoading]);
+  }, [visibleTeams, bonusQuestions, bonusLoading]);
   if (!authLoading && !session) {
     return <Redirect href="/login" />;
   }
@@ -287,6 +298,15 @@ export default function StandingsScreen() {
           }}
           ListHeaderComponent={
             <>
+              {sport === 'NBA' && teams.length > 0 ? (
+                <View style={styles.conferenceBlock}>
+                  <NbaConferenceTabs
+                    value={conferenceFilter}
+                    onChange={setConferenceFilter}
+                  />
+                  <Text style={styles.conferenceHeading}>{conferenceTitle(conferenceFilter)}</Text>
+                </View>
+              ) : null}
               <OverallFormatsGuide compact defaultExpanded={false} />
               <CollapsiblePanel
                 title={seasonLocked ? 'Picks locked for the season' : countdownLabel}
@@ -411,6 +431,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 32,
+  },
+  conferenceBlock: {
+    marginBottom: 8,
+  },
+  conferenceHeading: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 4,
   },
   bonusSectionLabel: {
     color: colors.textMuted,
